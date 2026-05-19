@@ -1,12 +1,14 @@
 // ZYZ
 
 #include "AbilitySystem/GASAttributeSet.h"
-#include "AbilitySystemComponent.h"
 #include "Net/UnrealNetwork.h"
 
 UGASAttributeSet::UGASAttributeSet()
 {
-	
+	InitHealth(100.f);
+	InitMaxHealth(100.f);
+	InitMana(50.f);
+	InitMaxMana(50.f);
 }
 
 //注册复制变量
