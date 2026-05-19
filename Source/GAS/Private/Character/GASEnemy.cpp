@@ -29,3 +29,11 @@ void AGASEnemy::UnHighlightActor()
 	GetMesh()->SetRenderCustomDepth(false);
 	Weapon->SetRenderCustomDepth(false);
 }
+
+void AGASEnemy::BeginPlay()
+{
+	Super::BeginPlay();
+	
+	check(AbilitySystemComponent);
+	AbilitySystemComponent->InitAbilityActorInfo(this, this);
+}

@@ -16,4 +16,9 @@ class GAS_API AGASCharacter : public AGASCharacterBase
 	
 public:
 	AGASCharacter();
+	virtual void PossessedBy(AController* NewController) override;
+	virtual void OnRep_PlayerState() override;
+	
+private:
+	void InitAbilityActorInfo();
 };

@@ -1,7 +1,8 @@
 // ZYZ
 
 #include "Character/GASCharacter.h"
-
+#include "Player/GASPlayerState.h"
+#include "AbilitySystemComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
 AGASCharacter::AGASCharacter()
@@ -14,4 +15,29 @@ AGASCharacter::AGASCharacter()
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationRoll = false;
 	bUseControllerRotationYaw = false;
+}
+
+void AGASCharacter::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+	
+	//Init ability actor info for the server
+	InitAbilityActorInfo();
+}
+
+void AGASCharacter::OnRep_PlayerState()
+{
+	Super::OnRep_PlayerState();
+	
+	//Init ability actor info for the client
+	InitAbilityActorInfo();
+}
+
+void AGASCharacter::InitAbilityActorInfo()
+{
+	AGASPlayerState* GASPlayerState = GetPlayerState<AGASPlayerState>();
+	check(GASPlayerState);
+	GASPlayerState -> GetAbilitySystemComponent() -> InitAbilityActorInfo(GASPlayerState, this);
+	AbilitySystemComponent = GASPlayerState -> GetAbilitySystemComponent();
+	AttributeSet = GASPlayerState -> GetAttributeSet();
 }
