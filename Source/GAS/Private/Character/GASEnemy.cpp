@@ -1,11 +1,18 @@
 // ZYZ
 
 #include "Character/GASEnemy.h"
+#include "AbilitySystem/GASAbilitySystemComponent.h"
+#include "AbilitySystem/GASAttributeSet.h"
 #include "GAS/GAS.h"
 
 AGASEnemy::AGASEnemy()
 {
 	GetMesh()->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
+	
+	AbilitySystemComponent = CreateDefaultSubobject<UGASAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
+	AbilitySystemComponent->SetIsReplicated(true);
+	
+	AttributeSet = CreateDefaultSubobject<UGASAttributeSet>(TEXT("AttributeSet"));
 }
 
 void AGASEnemy::HighlightActor()

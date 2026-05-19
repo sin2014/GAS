@@ -11,6 +11,16 @@ AGASCharacterBase::AGASCharacterBase()
 	Weapon->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
+UAbilitySystemComponent* AGASCharacterBase::GetAbilitySystemComponent() const
+{
+	return AbilitySystemComponent;
+}
+
+UAttributeSet* AGASCharacterBase::GetAttributeSet() const
+{
+	return AttributeSet;
+}
+
 void AGASCharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
