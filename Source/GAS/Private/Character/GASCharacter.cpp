@@ -4,6 +4,8 @@
 #include "Player/GASPlayerState.h"
 #include "AbilitySystemComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Player/GASPlayerController.h"
+#include "UI/HUD/GASHUD.h" 
 
 AGASCharacter::AGASCharacter()
 {
@@ -40,4 +42,14 @@ void AGASCharacter::InitAbilityActorInfo()
 	GASPlayerState -> GetAbilitySystemComponent() -> InitAbilityActorInfo(GASPlayerState, this);
 	AbilitySystemComponent = GASPlayerState -> GetAbilitySystemComponent();
 	AttributeSet = GASPlayerState -> GetAttributeSet();
+	
+	AGASPlayerController* GASPlayerController = Cast<AGASPlayerController>(GetController());
+	if (GASPlayerController)
+	{
+		AGASHUD* GASHUD = Cast<AGASHUD>(GASPlayerController -> GetHUD());
+		if (GASHUD)
+		{
+			GASHUD -> InitOverlay(GASPlayerController, GASPlayerState, AbilitySystemComponent, AttributeSet);
+		}
+	}
 }
