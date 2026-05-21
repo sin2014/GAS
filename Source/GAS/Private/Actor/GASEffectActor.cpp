@@ -29,6 +29,7 @@ void AGASEffectActor::OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor
 		
 		UGASAttributeSet* MutableGASAttributeSet = const_cast<UGASAttributeSet*>(GASAttributeSet);
 		MutableGASAttributeSet->SetHealth(GASAttributeSet->GetHealth() + 10.f);
+		MutableGASAttributeSet->SetMana(GASAttributeSet->GetMana() + 5.f);
 		Destroy();
 	}
 }

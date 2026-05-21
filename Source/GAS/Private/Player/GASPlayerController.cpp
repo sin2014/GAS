@@ -67,8 +67,10 @@ void AGASPlayerController::BeginPlay()
 	
 	check(GasContext);
 	UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer());
-	check(Subsystem);
-	Subsystem->AddMappingContext(GasContext, 0);
+	if (Subsystem)
+	{
+		Subsystem->AddMappingContext(GasContext, 0);
+	}
 	
 	bShowMouseCursor = true;
 	DefaultMouseCursor = EMouseCursor::Default;
