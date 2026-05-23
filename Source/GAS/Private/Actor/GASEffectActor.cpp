@@ -16,6 +16,7 @@ void AGASEffectActor::BeginPlay()
 	Super::BeginPlay();
 }
 
+//应用GE效果，可以蓝图实现该函数内逻辑
 void AGASEffectActor::ApplyEffectToTarget(AActor* TargetActor, TSubclassOf<UGameplayEffect> GameplayEffectClass)
 {
 	UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(TargetActor);
