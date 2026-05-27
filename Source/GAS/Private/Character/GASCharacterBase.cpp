@@ -26,3 +26,7 @@ void AGASCharacterBase::BeginPlay()
 	Super::BeginPlay();
 	
 }
+
+void AGASCharacterBase::InitAbilityActorInfo()
+{
+}

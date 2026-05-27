@@ -33,7 +33,12 @@ void AGASEnemy::UnHighlightActor()
 void AGASEnemy::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	InitAbilityActorInfo();
+}
+
+void AGASEnemy::InitAbilityActorInfo()
+{
 	check(AbilitySystemComponent);
 	AbilitySystemComponent->InitAbilityActorInfo(this, this);
+	Cast<UGASAbilitySystemComponent>(AbilitySystemComponent) -> AbilityActorInfoSet();
 }

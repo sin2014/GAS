@@ -3,6 +3,7 @@
 #include "Character/GASCharacter.h"
 #include "Player/GASPlayerState.h"
 #include "AbilitySystemComponent.h"
+#include "AbilitySystem/GASAbilitySystemComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Player/GASPlayerController.h"
 #include "UI/HUD/GASHUD.h" 
@@ -40,6 +41,7 @@ void AGASCharacter::InitAbilityActorInfo()
 	AGASPlayerState* GASPlayerState = GetPlayerState<AGASPlayerState>();
 	check(GASPlayerState);
 	GASPlayerState -> GetAbilitySystemComponent() -> InitAbilityActorInfo(GASPlayerState, this);
+	Cast<UGASAbilitySystemComponent>(GASPlayerState -> GetAbilitySystemComponent()) -> AbilityActorInfoSet();
 	AbilitySystemComponent = GASPlayerState -> GetAbilitySystemComponent();
 	AttributeSet = GASPlayerState -> GetAttributeSet();
 	

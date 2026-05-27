@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "AbilitySystem/GASAbilitySystemComponent.h"
 #include "AbilitySystemInterface.h"
 #include "GameFramework/Character.h"
 #include "GASCharacterBase.generated.h"
@@ -31,4 +32,6 @@ protected:
 	
 	UPROPERTY()
 	TObjectPtr<UAttributeSet> AttributeSet;
+	
+	virtual void InitAbilityActorInfo();
 };
