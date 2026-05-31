@@ -30,6 +30,11 @@ void AGASEnemy::UnHighlightActor()
 	Weapon->SetRenderCustomDepth(false);
 }
 
+int32 AGASEnemy::GetPlayerLevel()
+{
+	return Level;
+}
+
 void AGASEnemy::BeginPlay()
 {
 	Super::BeginPlay();

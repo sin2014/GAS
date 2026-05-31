@@ -17,10 +17,18 @@ class GAS_API AGASEnemy : public AGASCharacterBase, public IEnemyInterface
 
 public:
 	AGASEnemy();
+	
+	/** Enemy Interface */
 	virtual void HighlightActor() override;
 	virtual void UnHighlightActor() override;
+	
+	/** Combat Interface */
+	virtual int32 GetPlayerLevel() override;
 	
 protected:
 	virtual void BeginPlay() override;
 	virtual void InitAbilityActorInfo() override;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Class Defaults", meta = (AllowPrivateAccess = true))
+	int32 Level = 1;
 };
