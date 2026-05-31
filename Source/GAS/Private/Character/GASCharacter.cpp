@@ -54,5 +54,5 @@ void AGASCharacter::InitAbilityActorInfo()
 			GASHUD -> InitOverlay(GASPlayerController, GASPlayerState, AbilitySystemComponent, AttributeSet);
 		}
 	}
-	InitializePrimaryAttributes();
+	InitializeDefaultAttributes();
 }
