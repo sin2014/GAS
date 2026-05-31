@@ -1,0 +1,32 @@
+# Unreal Engine generated files
+Binaries/
+DerivedDataCache/
+Intermediate/
+Saved/
+
+# Visual Studio / Rider / IDE local files
+.vs/
+.idea/
+*.sln.DotSettings.user
+*.VC.db
+*.VC.opendb
+*.opensdf
+*.sdf
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Build artifacts and logs
+*.log
+*.tlog
+*.obj
+*.pdb
+*.ilk
+*.exp
+*.lib
+
+# OS noise
+Thumbs.db
+Desktop.ini
+.DS_Store
