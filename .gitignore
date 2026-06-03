@@ -5,6 +5,8 @@ Saved
 Build
 
 .idea
+.claude
+.vsconfig
 .vscode
 .vs
 *.VC.db
