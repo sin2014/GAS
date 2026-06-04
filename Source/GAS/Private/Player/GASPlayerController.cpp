@@ -1,9 +1,8 @@
 // ZYZ
 
-
 #include "Player/GASPlayerController.h"
 #include "EnhancedInputSubsystems.h"
-#include "EnhancedInputComponent.h"
+#include "Input/GASInputComponent.h"
 #include "Interaction/EnemyInterface.h"
 
 AGASPlayerController::AGASPlayerController()
@@ -61,6 +60,18 @@ void AGASPlayerController::CursorTrace()
 	}
 }
 
+void AGASPlayerController::AbilityInputTagPressed(FGameplayTag InputTag)
+{
+}
+
+void AGASPlayerController::AbilityInputTagReleased(FGameplayTag InputTag)
+{
+}
+
+void AGASPlayerController::AbilityInputTagHeld(FGameplayTag InputTag)
+{
+}
+
 void AGASPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
@@ -85,8 +96,9 @@ void AGASPlayerController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
 	
-	UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(InputComponent);
-	EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AGASPlayerController::Move);
+	UGASInputComponent* GASInputComponent = CastChecked<UGASInputComponent>(InputComponent);
+	GASInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AGASPlayerController::Move);
+	GASInputComponent->BindAbilityActions(InputConfig, this, &AGASPlayerController::AbilityInputTagPressed, &AGASPlayerController::AbilityInputTagReleased, &AGASPlayerController::AbilityInputTagHeld);
 }
 
 void AGASPlayerController::Move(const FInputActionValue& InputActionValue)

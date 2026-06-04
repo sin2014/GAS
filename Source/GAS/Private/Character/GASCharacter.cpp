@@ -34,6 +34,7 @@ void AGASCharacter::OnRep_PlayerState()
 	
 	//Init ability actor info for the client
 	InitAbilityActorInfo();
+	AddCharacterAbilities();
 }
 
 int32 AGASCharacter::GetPlayerLevel()
