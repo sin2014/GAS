@@ -10,6 +10,7 @@
 class UInputMappingContext;
 class UInputAction;
 class UGASInputConfig;
+class UGASAbilitySystemComponent;
 struct FInputActionValue;
 class IEnemyInterface;
 
@@ -48,4 +49,9 @@ private:
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	TObjectPtr<UGASInputConfig> InputConfig;
+	
+	UPROPERTY()
+	TObjectPtr<UGASAbilitySystemComponent> GASAbilitySystemComponent;
+	
+	UGASAbilitySystemComponent* GetASC();
 };

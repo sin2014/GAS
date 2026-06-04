@@ -1,6 +1,9 @@
 // ZYZ
 
 #include "Player/GASPlayerController.h"
+
+#include "AbilitySystemBlueprintLibrary.h"
+#include "AbilitySystem/GASAbilitySystemComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Input/GASInputComponent.h"
 #include "Interaction/EnemyInterface.h"
@@ -66,10 +69,23 @@ void AGASPlayerController::AbilityInputTagPressed(FGameplayTag InputTag)
 
 void AGASPlayerController::AbilityInputTagReleased(FGameplayTag InputTag)
 {
+	if (GetASC() == nullptr) return;
+	GetASC()->AbilityInputTagReleased(InputTag);
 }
 
 void AGASPlayerController::AbilityInputTagHeld(FGameplayTag InputTag)
 {
+	if (GetASC() == nullptr) return;
+	GetASC()->AbilityInputTagPressed(InputTag);
+}
+
+UGASAbilitySystemComponent* AGASPlayerController::GetASC()
+{
+	if (GASAbilitySystemComponent == nullptr)
+	{
+		GASAbilitySystemComponent  = Cast<UGASAbilitySystemComponent>(UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetPawn<APawn>()));
+	}
+	return GASAbilitySystemComponent;
 }
 
 void AGASPlayerController::BeginPlay()
