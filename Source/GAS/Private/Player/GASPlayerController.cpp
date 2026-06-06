@@ -22,9 +22,7 @@ AGASPlayerController::AGASPlayerController()
 void AGASPlayerController::PlayerTick(float DeltaTime)
 {
 	Super::PlayerTick(DeltaTime);
-	
 	CursorTrace();
-	
 	AutoRun();
 }
 
@@ -47,7 +45,6 @@ void AGASPlayerController::AutoRun()
 
 void AGASPlayerController::CursorTrace()
 {
-	FHitResult CursorHit;
 	GetHitResultUnderCursor(ECC_Visibility, false, CursorHit);
 	if (!CursorHit.bBlockingHit)
 	{
@@ -56,34 +53,16 @@ void AGASPlayerController::CursorTrace()
 	
 	LastActor = ThisActor;
 	ThisActor = Cast<IEnemyInterface>(CursorHit.GetActor());
-	if (LastActor == nullptr)
+	
+	if (LastActor != ThisActor)
 	{
-		if (ThisActor != nullptr)
-		{
-			ThisActor->HighlightActor();
-		}
-		else
-		{
-			//both null, do nothing.
-		}
-	}
-	else
-	{
-		if (ThisActor == nullptr)
+		if (LastActor)
 		{
 			LastActor->UnHighlightActor();
 		}
-		else
+		if (ThisActor)
 		{
-			if (LastActor != ThisActor)
-			{
-				LastActor->UnHighlightActor();
-				ThisActor->HighlightActor();
-			}
-			else
-			{
-				//both valid, do nothing.
-			}
+			ThisActor->HighlightActor();
 		}
 	}
 }
@@ -117,7 +96,7 @@ void AGASPlayerController::AbilityInputTagReleased(FGameplayTag InputTag)
 	}
 	else
 	{
-	    APawn* ControlledPawn = GetPawn();
+	    const APawn* ControlledPawn = GetPawn();
 		if (FollowTime <= ShortPressThreshold && ControlledPawn)
 		{
 			if (UNavigationPath* NavigationPath = UNavigationSystemV1::FindPathToLocationSynchronously(this, ControlledPawn->GetActorLocation(), CahedDestination))
@@ -126,7 +105,6 @@ void AGASPlayerController::AbilityInputTagReleased(FGameplayTag InputTag)
 				for (const FVector& PointLoc : NavigationPath->PathPoints)
 				{
 					Spline->AddSplinePoint(PointLoc, ESplineCoordinateSpace::World);
-					DrawDebugSphere(GetWorld(), PointLoc, 8.f, 8, FColor::Red, false, 5.f);
 				}
 				CahedDestination = NavigationPath->PathPoints[NavigationPath->PathPoints.Num() - 1];
 				bAutoRunning = true;
@@ -159,10 +137,9 @@ void AGASPlayerController::AbilityInputTagHeld(FGameplayTag InputTag)
 	{ 
 		FollowTime += GetWorld()->GetDeltaSeconds();
 		
-		FHitResult Hit;
-		if (GetHitResultUnderCursor(ECC_Visibility, false, Hit))
+		if (CursorHit.bBlockingHit)
 		{
-			CahedDestination = Hit.ImpactPoint;
+			CahedDestination = CursorHit.ImpactPoint;
 		}
 		
 		if (APawn* ControllerPawn = GetPawn())
