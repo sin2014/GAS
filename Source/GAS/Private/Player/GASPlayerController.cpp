@@ -4,13 +4,19 @@
 
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystem/GASAbilitySystemComponent.h"
+#include "Components/SplineComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "GASGameplayTags.h"
+#include "NavigationPath.h"
+#include "NavigationSystem.h"
 #include "Input/GASInputComponent.h"
 #include "Interaction/EnemyInterface.h"
 
 AGASPlayerController::AGASPlayerController()
 {
 	bReplicates = true;    //标记为可复制实体
+	
+	Spline = CreateDefaultSubobject<USplineComponent>(TEXT("Spline"));
 }
 
 void AGASPlayerController::PlayerTick(float DeltaTime)
@@ -18,6 +24,25 @@ void AGASPlayerController::PlayerTick(float DeltaTime)
 	Super::PlayerTick(DeltaTime);
 	
 	CursorTrace();
+	
+	AutoRun();
+}
+
+void AGASPlayerController::AutoRun()
+{
+	if (!bAutoRunning) return;
+	if (APawn* ControlledPawn = GetPawn())
+	{
+		const FVector& LocationOnSpline = Spline->FindLocationClosestToWorldLocation(ControlledPawn->GetActorLocation(), ESplineCoordinateSpace::World);
+		const FVector& Direction = Spline->FindDirectionClosestToWorldLocation(LocationOnSpline, ESplineCoordinateSpace::World);
+		ControlledPawn->AddMovementInput(Direction);
+		
+		const float DistanceToDestination = (LocationOnSpline - CahedDestination).Length();
+		if (DistanceToDestination < AutoRunAcceptanceRadius)
+		{
+			bAutoRunning = false;
+		}
+	}
 }
 
 void AGASPlayerController::CursorTrace()
@@ -65,18 +90,87 @@ void AGASPlayerController::CursorTrace()
 
 void AGASPlayerController::AbilityInputTagPressed(FGameplayTag InputTag)
 {
+	if (InputTag.MatchesTagExact(FGASGameplayTags::Get().InputTag_LMB))
+	{
+		bTargeting = ThisActor ? true : false;
+		bAutoRunning = false;
+	}
 }
 
 void AGASPlayerController::AbilityInputTagReleased(FGameplayTag InputTag)
 {
-	if (GetASC() == nullptr) return;
-	GetASC()->AbilityInputTagReleased(InputTag);
+	if (!InputTag.MatchesTagExact(FGASGameplayTags::Get().InputTag_LMB))
+	{
+		if (GetASC())
+		{
+			GetASC()->AbilityInputTagReleased(InputTag);
+		}
+		return;
+	}
+	
+	if (bTargeting)
+	{
+		if (GetASC())
+		{
+			GetASC()->AbilityInputTagReleased(InputTag);
+		}
+	}
+	else
+	{
+	    APawn* ControlledPawn = GetPawn();
+		if (FollowTime <= ShortPressThreshold && ControlledPawn)
+		{
+			if (UNavigationPath* NavigationPath = UNavigationSystemV1::FindPathToLocationSynchronously(this, ControlledPawn->GetActorLocation(), CahedDestination))
+			{
+				Spline->ClearSplinePoints();
+				for (const FVector& PointLoc : NavigationPath->PathPoints)
+				{
+					Spline->AddSplinePoint(PointLoc, ESplineCoordinateSpace::World);
+					DrawDebugSphere(GetWorld(), PointLoc, 8.f, 8, FColor::Red, false, 5.f);
+				}
+				CahedDestination = NavigationPath->PathPoints[NavigationPath->PathPoints.Num() - 1];
+				bAutoRunning = true;
+			}
+		}
+		FollowTime = 0.f;
+		bTargeting = false;
+	}
 }
 
 void AGASPlayerController::AbilityInputTagHeld(FGameplayTag InputTag)
 {
-	if (GetASC() == nullptr) return;
-	GetASC()->AbilityInputTagPressed(InputTag);
+	if (!InputTag.MatchesTagExact(FGASGameplayTags::Get().InputTag_LMB))
+	{
+		if (GetASC())
+		{
+			GetASC()->AbilityInputTagHeld(InputTag);
+		}
+		return;
+	}
+	
+	if (bTargeting)
+	{
+		if (GetASC())
+		{
+			GetASC()->AbilityInputTagHeld(InputTag);
+		}
+	}
+	else
+	{ 
+		FollowTime += GetWorld()->GetDeltaSeconds();
+		
+		FHitResult Hit;
+		if (GetHitResultUnderCursor(ECC_Visibility, false, Hit))
+		{
+			CahedDestination = Hit.ImpactPoint;
+		}
+		
+		if (APawn* ControllerPawn = GetPawn())
+		{
+			const FVector WorldDirection = (CahedDestination - ControllerPawn->GetActorLocation()).GetSafeNormal();
+			ControllerPawn->AddMovementInput(WorldDirection);
+		}
+	}
 }
 
 UGASAbilitySystemComponent* AGASPlayerController::GetASC()
