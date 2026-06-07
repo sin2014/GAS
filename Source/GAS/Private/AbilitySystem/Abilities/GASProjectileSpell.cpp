@@ -12,7 +12,7 @@ void UGASProjectileSpell::ActivateAbility(const FGameplayAbilitySpecHandle Handl
 	
 }
 
-void UGASProjectileSpell::SpawnProjectile()
+void UGASProjectileSpell::SpawnProjectile(const FVector& ProjectileTargetLocation)
 {
 	const bool bIsServer = GetAvatarActorFromActorInfo()->HasAuthority();
 	if (!bIsServer) return;
@@ -21,17 +21,18 @@ void UGASProjectileSpell::SpawnProjectile()
 	if (CombatInterface)
 	{
 		const FVector& SocketLocation = CombatInterface->GetCombatSocketLocation();
+		FRotator Rotation = (ProjectileTargetLocation - SocketLocation).Rotation();
+		Rotation.Pitch = 0.f;
 		
 		FTransform SpawnTransform;
 		SpawnTransform.SetLocation(SocketLocation);
-		//TODO: Set the Projectile's rotation.
+		SpawnTransform.SetRotation(Rotation.Quaternion());
 		
 		AGASProjectile* Projectile = GetWorld()->SpawnActorDeferred<AGASProjectile>(
 			ProjectileClass, SpawnTransform,
 			GetOwningActorFromActorInfo(),
 			Cast<APawn>(GetOwningActorFromActorInfo()),
-			ESpawnActorCollisionHandlingMethod::AlwaysSpawn
-		);
+			ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
 		
 		//TODO: Give the Projectile a Gameplay Effect Spec for causing Damage.
 		

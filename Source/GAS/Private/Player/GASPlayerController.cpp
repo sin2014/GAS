@@ -87,16 +87,14 @@ void AGASPlayerController::AbilityInputTagReleased(FGameplayTag InputTag)
 		return;
 	}
 	
-	if (bTargeting)
+	if (GetASC())
 	{
-		if (GetASC())
-		{
-			GetASC()->AbilityInputTagReleased(InputTag);
-		}
+		GetASC()->AbilityInputTagReleased(InputTag);
 	}
-	else
+	
+	if (!bTargeting && !bShiftKeyDown)
 	{
-	    const APawn* ControlledPawn = GetPawn();
+		const APawn* ControlledPawn = GetPawn();
 		if (FollowTime <= ShortPressThreshold && ControlledPawn)
 		{
 			if (UNavigationPath* NavigationPath = UNavigationSystemV1::FindPathToLocationSynchronously(this, ControlledPawn->GetActorLocation(), CahedDestination))
@@ -126,7 +124,7 @@ void AGASPlayerController::AbilityInputTagHeld(FGameplayTag InputTag)
 		return;
 	}
 	
-	if (bTargeting)
+	if (bTargeting || bShiftKeyDown)
 	{
 		if (GetASC())
 		{
@@ -185,6 +183,8 @@ void AGASPlayerController::SetupInputComponent()
 	
 	UGASInputComponent* GASInputComponent = CastChecked<UGASInputComponent>(InputComponent);
 	GASInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AGASPlayerController::Move);
+	GASInputComponent->BindAction(ShiftAction, ETriggerEvent::Started, this, &AGASPlayerController::ShiftPressed);
+	GASInputComponent->BindAction(ShiftAction, ETriggerEvent::Completed, this, &AGASPlayerController::ShiftReleased);
 	GASInputComponent->BindAbilityActions(InputConfig, this, &AGASPlayerController::AbilityInputTagPressed, &AGASPlayerController::AbilityInputTagReleased, &AGASPlayerController::AbilityInputTagHeld);
 }
 
