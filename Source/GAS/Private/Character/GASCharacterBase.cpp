@@ -29,6 +29,12 @@ void AGASCharacterBase::BeginPlay()
 	
 }
 
+FVector AGASCharacterBase::GetCombatSocketLocation()
+{
+	check(Weapon);
+	return Weapon->GetSocketLocation(WeaponTipSocketName);
+}
+
 void AGASCharacterBase::InitAbilityActorInfo()
 {
 }

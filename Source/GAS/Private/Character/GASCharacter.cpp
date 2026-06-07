@@ -26,6 +26,7 @@ void AGASCharacter::PossessedBy(AController* NewController)
 	
 	//Init ability actor info for the server
 	InitAbilityActorInfo();
+	AddCharacterAbilities();
 }
 
 void AGASCharacter::OnRep_PlayerState()
@@ -34,7 +35,6 @@ void AGASCharacter::OnRep_PlayerState()
 	
 	//Init ability actor info for the client
 	InitAbilityActorInfo();
-	AddCharacterAbilities();
 }
 
 int32 AGASCharacter::GetPlayerLevel()
