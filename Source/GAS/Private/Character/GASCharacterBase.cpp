@@ -4,13 +4,17 @@
 #include "AbilitySystemComponent.h"
 #include "AbilitySystem/GASAbilitySystemComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "GAS/GAS.h"
 
 AGASCharacterBase::AGASCharacterBase()
 {
 	PrimaryActorTick.bCanEverTick = false;
 	
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+	GetCapsuleComponent()->SetGenerateOverlapEvents(false);
 	GetMesh()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+	GetMesh()->SetCollisionResponseToChannel(ECC_Projectile, ECR_Overlap);
+	GetMesh()->SetGenerateOverlapEvents(true);
 
 	Weapon = CreateDefaultSubobject<USkeletalMeshComponent>("Weapon");
 	Weapon->SetupAttachment(GetMesh(), FName("WeaponHandSocket"));

@@ -1,6 +1,9 @@
 // ZYZ
 
 #include "AbilitySystem/Abilities/GASProjectileSpell.h"
+
+#include "AbilitySystemBlueprintLibrary.h"
+#include "AbilitySystemComponent.h"
 #include "Actor/GASProjectile.h"
 #include "Interaction/CombatInterface.h"
 
@@ -29,12 +32,15 @@ void UGASProjectileSpell::SpawnProjectile(const FVector& ProjectileTargetLocatio
 		SpawnTransform.SetRotation(Rotation.Quaternion());
 		
 		AGASProjectile* Projectile = GetWorld()->SpawnActorDeferred<AGASProjectile>(
-			ProjectileClass, SpawnTransform,
+			ProjectileClass, 
+			SpawnTransform,
 			GetOwningActorFromActorInfo(),
 			Cast<APawn>(GetOwningActorFromActorInfo()),
 			ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
 		
-		//TODO: Give the Projectile a Gameplay Effect Spec for causing Damage.
+		const UAbilitySystemComponent* SourceASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetAvatarActorFromActorInfo());
+		const FGameplayEffectSpecHandle SpecHandle = SourceASC->MakeOutgoingSpec(DamageEffectClass, GetAbilityLevel(), SourceASC->MakeEffectContext());
+		Projectile->DamageEffectSpecHandle = SpecHandle;
 		
 		Projectile->FinishSpawning(SpawnTransform);
 	}
