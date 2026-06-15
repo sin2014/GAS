@@ -17,3 +17,6 @@ Build
 *.suo
 *.xcodeproj
 *.xcworkspace
+
+*.csv
+*.json

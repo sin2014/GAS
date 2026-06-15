@@ -2,6 +2,7 @@
 
 #include "Character/GASEnemy.h"
 #include "AbilitySystem/GASAbilitySystemComponent.h"
+#include "AbilitySystem/GASAbilitySystemLibrary.h"
 #include "AbilitySystem/GASAttributeSet.h"
 #include "Components/WidgetComponent.h"
 #include "GAS/GAS.h"
@@ -77,4 +78,9 @@ void AGASEnemy::InitAbilityActorInfo()
 	Cast<UGASAbilitySystemComponent>(AbilitySystemComponent) -> AbilityActorInfoSet();
 	
 	InitializeDefaultAttributes();
+}
+
+void AGASEnemy::InitializeDefaultAttributes() const
+{
+	UGASAbilitySystemLibrary::InitializeDefaultAttributes(this, CharacterClass, Level, AbilitySystemComponent);
 }
