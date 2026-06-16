@@ -31,6 +31,32 @@ UAttributeSet* AGASCharacterBase::GetAttributeSet() const
 	return AttributeSet;
 }
 
+UAnimMontage* AGASCharacterBase::GetHitReactMontage_Implementation()
+{
+	return HitReactMontage;
+}
+
+void AGASCharacterBase::Die()
+{
+	Weapon->DetachFromComponent(FDetachmentTransformRules(EDetachmentRule::KeepWorld, true));
+	MuticastHandleDeath();
+}
+
+void AGASCharacterBase::MuticastHandleDeath_Implementation()
+{
+	Weapon->SetSimulatePhysics(true);
+	Weapon->SetEnableGravity(true);
+	Weapon->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
+	
+	GetMesh()->SetSimulatePhysics(true);
+	GetMesh()->SetEnableGravity(true);
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
+	GetMesh()->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Block);
+	
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	Dissolve();
+}
+
 void AGASCharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
@@ -69,4 +95,20 @@ void AGASCharacterBase::AddCharacterAbilities()
 	UGASAbilitySystemComponent* GASASC = CastChecked<UGASAbilitySystemComponent>(GetAbilitySystemComponent());
 	if (!HasAuthority()) return;
 	GASASC->AddCharacterAbilities(StartupAbilities);
+}
+
+void AGASCharacterBase::Dissolve()
+{
+	if (IsValid(DissolveMaterialInstance))
+	{
+		UMaterialInstanceDynamic* DynamicMatInst = UMaterialInstanceDynamic::Create(DissolveMaterialInstance, this);
+		GetMesh()->SetMaterial(0, DynamicMatInst);  // 0 is the first material，多个材质的话，需要为每个材质都创建动态材质实例
+		StartDissolveTimeline(DynamicMatInst);
+	}
+	if (IsValid(WeaponDissolveMaterialInstance))
+	{
+		UMaterialInstanceDynamic* DynamicMatInst = UMaterialInstanceDynamic::Create(WeaponDissolveMaterialInstance, this);
+		Weapon->SetMaterial(0, DynamicMatInst);  // 0 is the first material，多个材质的话，需要为每个材质都创建动态材质实例
+		StartWeaponDissolveTimeline(DynamicMatInst);
+	}
 }

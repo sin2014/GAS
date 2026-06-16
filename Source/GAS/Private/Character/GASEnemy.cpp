@@ -7,6 +7,8 @@
 #include "Components/WidgetComponent.h"
 #include "GAS/GAS.h"
 #include "UI/Widget/GASUserWidget.h"
+#include "GASGameplayTags.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 AGASEnemy::AGASEnemy()
 {
@@ -44,7 +46,9 @@ int32 AGASEnemy::GetPlayerLevel()
 void AGASEnemy::BeginPlay()
 {
 	Super::BeginPlay();
+	GetCharacterMovement()->MaxWalkSpeed = BaseWalkSpeed;
 	InitAbilityActorInfo();
+	UGASAbilitySystemLibrary::GiveStartupAbilities(this, AbilitySystemComponent);
 	
 	if (UGASUserWidget* GASUserWidget = Cast<UGASUserWidget>(HealthBar->GetUserWidgetObject()))
 	{
@@ -66,9 +70,20 @@ void AGASEnemy::BeginPlay()
 			}	
 		);
 		
+		AbilitySystemComponent->RegisterGameplayTagEvent(FGASGameplayTags::Get().Effects_HitReact, EGameplayTagEventType::NewOrRemoved).AddUObject(
+			this,
+			&AGASEnemy::HitReactTagChanged
+		);
+		
 		OnHealthChanged.Broadcast(GASAS->GetHealth());
 		OnMaxHealthChanged.Broadcast(GASAS->GetMaxHealth());
 	}
+}
+
+void AGASEnemy::HitReactTagChanged(const FGameplayTag CallbackTag, int32 NewCount)
+{
+	bHitReacting = (NewCount > 0);
+	GetCharacterMovement()->MaxWalkSpeed = bHitReacting ? 0.f : BaseWalkSpeed;
 }
 
 void AGASEnemy::InitAbilityActorInfo()
