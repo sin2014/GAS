@@ -8,6 +8,8 @@
 #include "Net/UnrealNetwork.h"
 #include "GASGameplayTags.h"
 #include "Interaction/CombatInterface.h"
+#include "Kismet/GameplayStatics.h"
+#include "Player/GASPlayerController.h"
 
 UGASAttributeSet::UGASAttributeSet()
 {
@@ -94,7 +96,7 @@ void UGASAttributeSet::SetEffectProperties(const FGameplayEffectModCallbackData&
 		}
 		if (Props.SourceController != nullptr)
 		{
-			ACharacter* SourceCharacter = Cast<ACharacter>(Props.SourceController->GetPawn());
+			Props.SourceCharacter = Cast<ACharacter>(Props.SourceController->GetPawn());
 		}
 	}
 
@@ -147,9 +149,23 @@ void UGASAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbac
 				TagContainer.AddTag(FGASGameplayTags::Get().Effects_HitReact);
 				Props.TargetASC->TryActivateAbilitiesByTag(TagContainer);
 			}
+			
+			ShowFloatingText(Props, LocalIncomingDamage);
 		}
 	}
 }
+
+void UGASAttributeSet::ShowFloatingText(const FEffectProperties& Props, float Damage) const
+{
+	if (Props.SourceCharacter != Props.TargetCharacter)
+	{
+		if (AGASPlayerController* PC = Cast<AGASPlayerController>(UGameplayStatics::GetPlayerController(Props.SourceCharacter, 0)))
+		{
+			PC->ShowDamageNumber(Damage, Props.TargetCharacter);
+		}
+	}
+}
+
 
 void UGASAttributeSet::OnRep_Health(const FGameplayAttributeData& OldHealth) const
 {
