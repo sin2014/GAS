@@ -149,9 +149,8 @@ void UGASAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbac
 				TagContainer.AddTag(FGASGameplayTags::Get().Effects_HitReact);
 				Props.TargetASC->TryActivateAbilitiesByTag(TagContainer);
 			}
-			
-			ShowFloatingText(Props, LocalIncomingDamage);
 		}
+		ShowFloatingText(Props, LocalIncomingDamage);
 	}
 }
 

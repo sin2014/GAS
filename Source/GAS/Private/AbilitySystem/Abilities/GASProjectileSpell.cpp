@@ -45,6 +45,10 @@ void UGASProjectileSpell::SpawnProjectile(const FVector& ProjectileTargetLocatio
 		FGASGameplayTags GameplayTags = FGASGameplayTags::Get();
 		const float ScaledDamage = Damage.GetValueAtLevel(GetAbilityLevel());
 		UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(SpecHandle, GameplayTags.Damage, ScaledDamage);
+
+		const float ScaledDamageMultiplier = DamageMultiplier.GetValueAtLevel(GetAbilityLevel());
+		UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(SpecHandle, GameplayTags.Damage_Multiplier, ScaledDamageMultiplier);
+		
 		Projectile->DamageEffectSpecHandle = SpecHandle;
 		
 		Projectile->FinishSpawning(SpawnTransform);

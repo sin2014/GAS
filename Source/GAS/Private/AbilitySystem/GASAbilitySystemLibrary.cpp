@@ -43,12 +43,9 @@ UAttributeMenuWidgetController* UGASAbilitySystemLibrary::GetAttributeMenuWidget
 
 void UGASAbilitySystemLibrary::InitializeDefaultAttributes(const UObject* WorldContextObject, ECharacterClass CharacterClass, float Level, UAbilitySystemComponent* ASC)
 {
-	AGASGameModeBase* GASGameMode = Cast<AGASGameModeBase>(UGameplayStatics::GetGameMode(WorldContextObject));
-	if (GASGameMode == nullptr) return;
-	
 	AActor* AvatarActor = ASC->GetAvatarActor();
 	
-	UCharacterClassInfo* CharacterClassInfo = GASGameMode->CharacterClassInfo;
+	UCharacterClassInfo* CharacterClassInfo = GetCharacterClassInfo(WorldContextObject);
 	FCharacterClassDefaultInfo ClassDefaultInfo = CharacterClassInfo->GetClassDefaultInfo(CharacterClass);
 	
 	FGameplayEffectContextHandle PrimaryAttributesContextHandle = ASC->MakeEffectContext();
@@ -69,13 +66,31 @@ void UGASAbilitySystemLibrary::InitializeDefaultAttributes(const UObject* WorldC
 
 void UGASAbilitySystemLibrary::GiveStartupAbilities(const UObject* WorldContextObject, UAbilitySystemComponent* ASC)
 {
-	AGASGameModeBase* GASGameMode = Cast<AGASGameModeBase>(UGameplayStatics::GetGameMode(WorldContextObject));
-	if (GASGameMode == nullptr) return;
-	
-	UCharacterClassInfo* CharacterClassInfo = GASGameMode->CharacterClassInfo;
+	UCharacterClassInfo* CharacterClassInfo = GetCharacterClassInfo(WorldContextObject);
 	for (auto AbilityClass : CharacterClassInfo->CommonAbilities)
 	{
 		FGameplayAbilitySpec AbilitySpec = FGameplayAbilitySpec(AbilityClass, 1);
 		ASC->GiveAbility(AbilitySpec);
 	}
+}
+
+UCharacterClassInfo* UGASAbilitySystemLibrary::GetCharacterClassInfo(const UObject* WorldContextObject)
+{
+	AGASGameModeBase* GASGameMode = Cast<AGASGameModeBase>(UGameplayStatics::GetGameMode(WorldContextObject));
+	if (GASGameMode == nullptr) return nullptr;
+	return GASGameMode->CharacterClassInfo;
+}
+
+float UGASAbilitySystemLibrary::ApplyValueVariance(const float Value, const float VariancePercent)
+{
+	if (Value <= 0.f || VariancePercent <= 0.f)
+	{
+		return Value;
+	}
+
+	const float ClampedVariance = FMath::Clamp(VariancePercent, 0.f, 1.f);
+	const float MinMultiplier = 1.f - ClampedVariance;
+	const float MaxMultiplier = 1.f + ClampedVariance;
+
+	return Value * FMath::FRandRange(MinMultiplier, MaxMultiplier);
 }

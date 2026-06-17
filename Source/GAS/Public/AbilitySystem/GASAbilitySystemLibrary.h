@@ -31,4 +31,10 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category = "GASAbilitySystemLibrary|CharacterClassDefaults")
 	static void GiveStartupAbilities(const UObject* WorldContextObject, UAbilitySystemComponent* ASC);
+	
+	UFUNCTION(BlueprintCallable, Category = "GASAbilitySystemLibrary|CharacterClassDefaults")
+	static UCharacterClassInfo* GetCharacterClassInfo(const UObject* WorldContextObject);
+
+	UFUNCTION(BlueprintPure, Category = "GASAbilitySystemLibrary|Value")
+	static float ApplyValueVariance(float Value, float VariancePercent);
 };
