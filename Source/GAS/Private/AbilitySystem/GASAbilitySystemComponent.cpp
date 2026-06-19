@@ -16,7 +16,7 @@ void UGASAbilitySystemComponent::AddCharacterAbilities(const TArray<TSubclassOf<
 		FGameplayAbilitySpec AbilitySpec = FGameplayAbilitySpec(Abilityclass, 1);
 		if (const UGASGameplayAbility* GASAbility = Cast<UGASGameplayAbility>(AbilitySpec.Ability))
 		{
-			AbilitySpec.DynamicAbilityTags.AddTag(GASAbility->StartupInputTag);
+			AbilitySpec.GetDynamicSpecSourceTags().AddTag(GASAbility->StartupInputTag);
 			GiveAbility(AbilitySpec);
 		}
 	}
@@ -32,7 +32,7 @@ void UGASAbilitySystemComponent::AbilityInputTagReleased(const FGameplayTag& Inp
 	
 	for (FGameplayAbilitySpec& AbilitySpec : ActivatableAbilities.Items)
 	{
-		if (AbilitySpec.DynamicAbilityTags.HasTagExact(InputTag))
+		if (AbilitySpec.GetDynamicSpecSourceTags().HasTagExact(InputTag))
 		{
 			AbilitySpecInputReleased(AbilitySpec);
 		}
@@ -45,7 +45,7 @@ void UGASAbilitySystemComponent::AbilityInputTagHeld(const FGameplayTag& InputTa
 	
 	for (FGameplayAbilitySpec& AbilitySpec : ActivatableAbilities.Items)
 	{
-		if (AbilitySpec.DynamicAbilityTags.HasTagExact(InputTag))
+		if (AbilitySpec.GetDynamicSpecSourceTags().HasTagExact(InputTag))
 		{
 			AbilitySpecInputPressed(AbilitySpec);
 			if (!AbilitySpec.IsActive())

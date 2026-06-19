@@ -2,6 +2,7 @@
 
 #include "AbilitySystem/ExecCalc/ExecCalc_Damage.h"
 #include "AbilitySystemComponent.h"
+#include "GASGameplayEffectTypes.h"
 #include "GASGameplayTags.h"
 #include "AbilitySystem/GASAbilitySystemLibrary.h"
 #include "AbilitySystem/GASAttributeSet.h"
@@ -59,6 +60,7 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
 	TargetCombatInterface->GetPlayerLevel();
 	
 	const FGameplayEffectSpec& Spec = ExecutionParams.GetOwningSpec();
+	FGameplayEffectContextHandle EffectContextHandle = Spec.GetContext();
 	
 	const FGameplayTagContainer* SourceTags = Spec.CapturedSourceTags.GetAggregatedTags();
 	const FGameplayTagContainer* TargetTags = Spec.CapturedTargetTags.GetAggregatedTags();
@@ -77,6 +79,7 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
 	TargetBlockChance = FMath::Clamp<float>(TargetBlockChance, 0.f, 100.f);
 
 	const bool bBlocked = FMath::FRandRange(0.f, 100.f) < TargetBlockChance;
+	UGASAbilitySystemLibrary::SetIsBlockedHit(EffectContextHandle, bBlocked);
 	Damage = bBlocked ? Damage * 0.5f : Damage;
 	
 	//Capture Armor On Target and Armor ArmorPenetration On Source, ArmorPenetration ignores a percentage of the Tanget's Armor.
@@ -118,6 +121,7 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
 	
 	const float EffectiveCriticalHitChance = (SourceCriticalHitChance - TargetCriticalHitResistance * CriticalHitResistanceCoefficient);
 	const bool bCriticalHit = FMath::RandRange(0.f, 100.f) < EffectiveCriticalHitChance;
+	UGASAbilitySystemLibrary::SetIsCriticalHit(EffectContextHandle, bCriticalHit);
 	Damage = bCriticalHit ? Damage * 2.f + SourceCriticalHitDamage : Damage;
 
 	// Apply Damage Variance

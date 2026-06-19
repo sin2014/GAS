@@ -4,6 +4,7 @@
 
 #include "AbilitySystemComponent.h"
 #include "Game/GASGameModeBase.h"
+#include "GASGameplayEffectTypes.h"
 #include "Kismet/GameplayStatics.h"
 #include "UI/WidgetController/GASWidgetController.h"
 #include "Player/GASPlayerState.h"
@@ -79,6 +80,41 @@ UCharacterClassInfo* UGASAbilitySystemLibrary::GetCharacterClassInfo(const UObje
 	AGASGameModeBase* GASGameMode = Cast<AGASGameModeBase>(UGameplayStatics::GetGameMode(WorldContextObject));
 	if (GASGameMode == nullptr) return nullptr;
 	return GASGameMode->CharacterClassInfo;
+}
+
+
+bool UGASAbilitySystemLibrary::IsBlockedHit(const FGameplayEffectContextHandle& EffectContextHandle)
+{
+	if (const FGASGameplayEffectContext* GASEffectContext = static_cast<const FGASGameplayEffectContext*>(EffectContextHandle.Get()))
+	{
+		return GASEffectContext ? GASEffectContext->IsBlockedHit() : false;
+	}
+	return false;
+}
+
+bool UGASAbilitySystemLibrary::IsCriticalHit(const FGameplayEffectContextHandle& EffectContextHandle)
+{
+	if (const FGASGameplayEffectContext* GASEffectContext = static_cast<const FGASGameplayEffectContext*>(EffectContextHandle.Get()))
+	{
+		return GASEffectContext ? GASEffectContext->IsCriticalHit() : false;
+	}
+	return false;
+}
+
+void UGASAbilitySystemLibrary::SetIsBlockedHit(FGameplayEffectContextHandle& EffectContextHandle, bool bInIsBlockedHit)
+{
+	if (FGASGameplayEffectContext* GASEffectContext = static_cast<FGASGameplayEffectContext*>(EffectContextHandle.Get()))
+	{
+		GASEffectContext->SetIsBlockedHit(bInIsBlockedHit);
+	}
+}
+
+void UGASAbilitySystemLibrary::SetIsCriticalHit(FGameplayEffectContextHandle& EffectContextHandle, bool bInIsCriticalHit)
+{
+	if (FGASGameplayEffectContext* GASEffectContext = static_cast<FGASGameplayEffectContext*>(EffectContextHandle.Get()))
+	{
+		GASEffectContext->SetIsCriticalHit(bInIsCriticalHit);
+	}
 }
 
 float UGASAbilitySystemLibrary::ApplyValueVariance(const float Value, const float VariancePercent)
