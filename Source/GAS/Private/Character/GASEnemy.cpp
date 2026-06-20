@@ -48,7 +48,10 @@ void AGASEnemy::BeginPlay()
 	Super::BeginPlay();
 	GetCharacterMovement()->MaxWalkSpeed = BaseWalkSpeed;
 	InitAbilityActorInfo();
-	UGASAbilitySystemLibrary::GiveStartupAbilities(this, AbilitySystemComponent);
+	if (HasAuthority())
+	{
+		UGASAbilitySystemLibrary::GiveStartupAbilities(this, AbilitySystemComponent);
+	}
 	
 	if (UGASUserWidget* GASUserWidget = Cast<UGASUserWidget>(HealthBar->GetUserWidgetObject()))
 	{
@@ -91,8 +94,11 @@ void AGASEnemy::InitAbilityActorInfo()
 	check(AbilitySystemComponent);
 	AbilitySystemComponent->InitAbilityActorInfo(this, this);
 	Cast<UGASAbilitySystemComponent>(AbilitySystemComponent) -> AbilityActorInfoSet();
-	
-	InitializeDefaultAttributes();
+
+	if (HasAuthority())
+	{
+		InitializeDefaultAttributes();
+	}
 }
 
 void AGASEnemy::InitializeDefaultAttributes() const
