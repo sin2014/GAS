@@ -52,10 +52,16 @@ void UGASProjectileSpell::SpawnProjectile(const FVector& ProjectileTargetLocatio
 		EffectContextHandle.AddHitResult(HitResult);
 		
 		const FGameplayEffectSpecHandle SpecHandle = SourceASC->MakeOutgoingSpec(DamageEffectClass, GetAbilityLevel(), EffectContextHandle);
+
+		for (auto& pair : DamageTypes)
+		{
+			const float ScaledDamage = pair.Value.GetValueAtLevel(GetAbilityLevel());
+			UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(SpecHandle, pair.Key, ScaledDamage);
+		}
 		
 		FGASGameplayTags GameplayTags = FGASGameplayTags::Get();
-		const float ScaledDamage = Damage.GetValueAtLevel(GetAbilityLevel());
-		UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(SpecHandle, GameplayTags.Damage, ScaledDamage);
+		// const float ScaledDamage = Damage.GetValueAtLevel(GetAbilityLevel());
+		// UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(SpecHandle, GameplayTags.Damage, ScaledDamage);
 
 		const float ScaledDamageMultiplier = DamageMultiplier.GetValueAtLevel(GetAbilityLevel());
 		UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(SpecHandle, GameplayTags.Damage_Multiplier, ScaledDamageMultiplier);

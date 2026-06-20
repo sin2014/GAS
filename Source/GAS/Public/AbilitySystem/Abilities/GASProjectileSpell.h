@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "AbilitySystem/Abilities/GASGameplayAbility.h"
+#include "AbilitySystem/Abilities/GASDamageGameplayAbility.h"
 #include "GASProjectileSpell.generated.h"
 
 class AGASProjectile;
@@ -13,7 +13,7 @@ class UGameplayEffect;
  * 
  */
 UCLASS()
-class GAS_API UGASProjectileSpell : public UGASGameplayAbility
+class GAS_API UGASProjectileSpell : public UGASDamageGameplayAbility
 {
 	GENERATED_BODY()
 
@@ -25,7 +25,4 @@ protected:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TSubclassOf<AGASProjectile> ProjectileClass;
-	
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	TSubclassOf<UGameplayEffect> DamageEffectClass;
 };
