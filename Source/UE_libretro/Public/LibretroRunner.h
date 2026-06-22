@@ -298,8 +298,8 @@ private:
     /** 释放当前 core DLL，并清空函数表。 */
     void UnloadCore();
 
-    /** 使用路径形式的 retro_game_info 调用 retro_load_game()。 */
-    bool LoadGame(const FString& InRomPath);
+    /** 根据 core 的 need_fullpath 要求填充 retro_game_info 并调用 retro_load_game()。 */
+    bool LoadGame(const FString& InRomPath, const retro_system_info& SystemInfo);
 
     /** 按 libretro 生命周期顺序在 Runner 线程中清理：保存 SRAM、卸载游戏、反初始化 core。 */
     void CleanupCoreOnRunnerThread();
@@ -357,6 +357,21 @@ private:
 
     /** 配置 libretro OpenGL 硬件渲染回调和隐藏帧缓冲。 */
     bool ConfigureHardwareRendering(retro_hw_render_callback* Callback);
+
+    /** 保存一个长期有效的 core 选项值，供 RETRO_ENVIRONMENT_GET_VARIABLE 返回。 */
+    void StoreCoreOptionValue(const FString& Key, const FString& Value, bool bOverwriteExisting);
+
+    /** 保存 core 通过 UTF-8 C 字符串声明的选项值。 */
+    void StoreCoreOptionValueUtf8(const char* Key, const char* Value, bool bOverwriteExisting);
+
+    /** 注册旧版 RETRO_ENVIRONMENT_SET_VARIABLES 选项，并提取默认值。 */
+    void RegisterLegacyCoreOptions(const retro_variable* Variables);
+
+    /** 注册 RETRO_ENVIRONMENT_SET_CORE_OPTIONS / INTL 选项，并提取默认值。 */
+    void RegisterCoreOptionDefinitions(const retro_core_option_definition* Definitions);
+
+    /** 注册 RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2 / V2_INTL 选项，并提取默认值。 */
+    void RegisterCoreOptionsV2(const retro_core_options_v2* Options);
 
     /** 查找某个 core 选项的 UTF-8 值，供 RETRO_ENVIRONMENT_GET_VARIABLE 返回。 */
     const char* FindCoreOptionValue(const char* Key) const;

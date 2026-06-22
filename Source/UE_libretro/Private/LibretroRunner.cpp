@@ -554,6 +554,7 @@ namespace
 {
     // 运行速度只提供几个固定档位，避免任意倍率造成音频采样率和帧节流难以判断。
     constexpr double LibretroSpeedLevels[] = { 0.5, 1.0, 1.5, 2.0 };
+    const ANSICHAR EmptyCoreOptionValue[] = "";
 }
 
 FLibretroRunner::FLibretroRunner()
@@ -655,10 +656,7 @@ bool FLibretroRunner::PrepareLaunch(const FLibretroLaunchConfig& Config)
     CoreOptionValueUtf8.Reset();
     for (const TPair<FString, FString>& Pair : LaunchConfig.CoreOptions)
     {
-        FTCHARToUTF8 Converted(*Pair.Value);
-        TArray<ANSICHAR>& Buffer = CoreOptionValueUtf8.Add(Pair.Key);
-        Buffer.Append(Converted.Get(), Converted.Length());
-        Buffer.Add('\0');
+        StoreCoreOptionValue(Pair.Key, Pair.Value, true);
     }
 
     if (!FPaths::FileExists(RomPath))
@@ -824,7 +822,7 @@ uint32 FLibretroRunner::Run()
         *CoreName,
         *CoreVersion);
 
-    if (!LoadGame(RomPath))
+    if (!LoadGame(RomPath, SystemInfo))
     {
         CleanupCoreOnRunnerThread();
         bRunning = false;
@@ -1036,16 +1034,43 @@ void FLibretroRunner::CleanupCoreOnRunnerThread()
     UnloadCore();
 }
 
-bool FLibretroRunner::LoadGame(const FString& InRomPath)
+bool FLibretroRunner::LoadGame(const FString& InRomPath, const retro_system_info& SystemInfo)
 {
     FTCHARToUTF8 RomPathUtf8(*InRomPath);
+    TArray<uint8> RomData;
+    const void* GameData = nullptr;
+    size_t GameDataSize = 0;
+
+    if (!SystemInfo.need_fullpath)
+    {
+        if (!FFileHelper::LoadFileToArray(RomData, *InRomPath))
+        {
+            SetError(FString::Printf(TEXT("无法读取 ROM 数据：%s"), *InRomPath));
+            return false;
+        }
+
+        if (RomData.IsEmpty())
+        {
+            SetError(FString::Printf(TEXT("ROM 文件为空：%s"), *InRomPath));
+            return false;
+        }
+
+        GameData = RomData.GetData();
+        GameDataSize = static_cast<size_t>(RomData.Num());
+    }
+
     const retro_game_info Game =
     {
         RomPathUtf8.Get(),
-        nullptr,
-        0,
-        nullptr
+        GameData,
+        GameDataSize,
+        ""
     };
+
+    UE_LOG(LogLibretroRunner, Log, TEXT("Loading ROM via %s: path=%s data_size=%llu"),
+        SystemInfo.need_fullpath ? TEXT("path") : TEXT("memory"),
+        *InRomPath,
+        static_cast<unsigned long long>(GameDataSize));
 
     if (!CoreApi.retro_load_game(&Game))
     {
@@ -1614,32 +1639,74 @@ bool FLibretroRunner::HandleEnvironment(unsigned Cmd, void* Data)
         return true;
 
     case RETRO_ENVIRONMENT_SET_PIXEL_FORMAT:
+        if (!Data)
+        {
+            return false;
+        }
         PixelFormat = *static_cast<retro_pixel_format*>(Data);
         return PixelFormat == RETRO_PIXEL_FORMAT_XRGB8888 ||
             PixelFormat == RETRO_PIXEL_FORMAT_RGB565 ||
             PixelFormat == RETRO_PIXEL_FORMAT_0RGB1555;
 
     case RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY:
+        if (!Data)
+        {
+            return false;
+        }
         *static_cast<const char**>(Data) = SystemDirUtf8 ? SystemDirUtf8->Get() : nullptr;
         return true;
 
     case RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY:
+        if (!Data)
+        {
+            return false;
+        }
         *static_cast<const char**>(Data) = SaveDirUtf8 ? SaveDirUtf8->Get() : nullptr;
         return true;
 
-    case RETRO_ENVIRONMENT_GET_CONTENT_DIRECTORY:
-        *static_cast<const char**>(Data) = ContentDirUtf8 ? ContentDirUtf8->Get() : nullptr;
+    case RETRO_ENVIRONMENT_GET_CORE_ASSETS_DIRECTORY:
+        if (!Data)
+        {
+            return false;
+        }
+        *static_cast<const char**>(Data) = CoreAssetsDirUtf8 ? CoreAssetsDirUtf8->Get() : nullptr;
         return true;
 
     case RETRO_ENVIRONMENT_GET_LIBRETRO_PATH:
+        if (!Data)
+        {
+            return false;
+        }
         *static_cast<const char**>(Data) = LibretroPathUtf8 ? LibretroPathUtf8->Get() : nullptr;
         return true;
 
     case RETRO_ENVIRONMENT_SET_VARIABLES:
+        RegisterLegacyCoreOptions(static_cast<const retro_variable*>(Data));
+        return true;
+
     case RETRO_ENVIRONMENT_SET_CORE_OPTIONS:
+        RegisterCoreOptionDefinitions(static_cast<const retro_core_option_definition*>(Data));
+        return true;
+
     case RETRO_ENVIRONMENT_SET_CORE_OPTIONS_INTL:
+    {
+        const retro_core_options_intl* IntlOptions = static_cast<const retro_core_options_intl*>(Data);
+        RegisterCoreOptionDefinitions(IntlOptions ? IntlOptions->us : nullptr);
+        return true;
+    }
+
     case RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2:
+        RegisterCoreOptionsV2(static_cast<const retro_core_options_v2*>(Data));
+        return true;
+
     case RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2_INTL:
+    {
+        const retro_core_options_v2_intl* IntlOptions = static_cast<const retro_core_options_v2_intl*>(Data);
+        RegisterCoreOptionsV2(IntlOptions ? IntlOptions->us : nullptr);
+        return true;
+    }
+
+    case RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY:
     case RETRO_ENVIRONMENT_SET_CORE_OPTIONS_UPDATE_DISPLAY_CALLBACK:
     case RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS:
     case RETRO_ENVIRONMENT_SET_CONTROLLER_INFO:
@@ -1650,9 +1717,15 @@ bool FLibretroRunner::HandleEnvironment(unsigned Cmd, void* Data)
     case RETRO_ENVIRONMENT_GET_VARIABLE:
     {
         retro_variable* Variable = static_cast<retro_variable*>(Data);
-        if (!Variable || !Variable->key)
+        if (!Variable)
         {
-            return false;
+            return true;
+        }
+
+        if (!Variable->key)
+        {
+            Variable->value = nullptr;
+            return true;
         }
 
         Variable->value = FindCoreOptionValue(Variable->key);
@@ -1660,14 +1733,26 @@ bool FLibretroRunner::HandleEnvironment(unsigned Cmd, void* Data)
     }
 
     case RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE:
+        if (!Data)
+        {
+            return false;
+        }
         *static_cast<bool*>(Data) = false;
         return true;
 
     case RETRO_ENVIRONMENT_GET_OVERSCAN:
+        if (!Data)
+        {
+            return false;
+        }
         *static_cast<bool*>(Data) = false;
         return true;
 
     case RETRO_ENVIRONMENT_GET_CAN_DUPE:
+        if (!Data)
+        {
+            return false;
+        }
         *static_cast<bool*>(Data) = true;
         return true;
 
@@ -1692,6 +1777,10 @@ bool FLibretroRunner::HandleEnvironment(unsigned Cmd, void* Data)
     }
 
     case RETRO_ENVIRONMENT_GET_INPUT_DEVICE_CAPABILITIES:
+        if (!Data)
+        {
+            return false;
+        }
         *static_cast<uint64*>(Data) =
             (1ULL << RETRO_DEVICE_JOYPAD) |
             (1ULL << RETRO_DEVICE_ANALOG) |
@@ -1700,6 +1789,10 @@ bool FLibretroRunner::HandleEnvironment(unsigned Cmd, void* Data)
         return true;
 
     case RETRO_ENVIRONMENT_GET_INPUT_MAX_USERS:
+        if (!Data)
+        {
+            return false;
+        }
         *static_cast<unsigned*>(Data) = 1;
         return true;
 
@@ -1707,10 +1800,18 @@ bool FLibretroRunner::HandleEnvironment(unsigned Cmd, void* Data)
         return true;
 
     case RETRO_ENVIRONMENT_GET_CORE_OPTIONS_VERSION:
+        if (!Data)
+        {
+            return false;
+        }
         *static_cast<unsigned*>(Data) = 2;
         return true;
 
     case RETRO_ENVIRONMENT_GET_MESSAGE_INTERFACE_VERSION:
+        if (!Data)
+        {
+            return false;
+        }
         *static_cast<unsigned*>(Data) = 1;
         return true;
 
@@ -1729,14 +1830,26 @@ bool FLibretroRunner::HandleEnvironment(unsigned Cmd, void* Data)
         return true;
 
     case RETRO_ENVIRONMENT_GET_LANGUAGE:
+        if (!Data)
+        {
+            return false;
+        }
         *static_cast<unsigned*>(Data) = RETRO_LANGUAGE_ENGLISH;
         return true;
 
     case RETRO_ENVIRONMENT_GET_JIT_CAPABLE:
+        if (!Data)
+        {
+            return false;
+        }
         *static_cast<bool*>(Data) = true;
         return true;
 
     case RETRO_ENVIRONMENT_GET_AUDIO_VIDEO_ENABLE:
+        if (!Data)
+        {
+            return false;
+        }
         *static_cast<int*>(Data) = 3;
         return true;
 
@@ -1787,6 +1900,95 @@ bool FLibretroRunner::ConfigureHardwareRendering(retro_hw_render_callback* Callb
 #endif
 }
 
+void FLibretroRunner::StoreCoreOptionValue(const FString& Key, const FString& Value, bool bOverwriteExisting)
+{
+    if (Key.IsEmpty() || (!bOverwriteExisting && CoreOptionValueUtf8.Contains(Key)))
+    {
+        return;
+    }
+
+    FTCHARToUTF8 Converted(*Value);
+    TArray<ANSICHAR>& Buffer = CoreOptionValueUtf8.FindOrAdd(Key);
+    Buffer.Reset(Converted.Length() + 1);
+    if (Converted.Length() > 0)
+    {
+        Buffer.Append(Converted.Get(), Converted.Length());
+    }
+    Buffer.Add('\0');
+}
+
+void FLibretroRunner::StoreCoreOptionValueUtf8(const char* Key, const char* Value, bool bOverwriteExisting)
+{
+    if (!Key)
+    {
+        return;
+    }
+
+    StoreCoreOptionValue(UTF8_TO_TCHAR(Key), Value ? UTF8_TO_TCHAR(Value) : TEXT(""), bOverwriteExisting);
+}
+
+void FLibretroRunner::RegisterLegacyCoreOptions(const retro_variable* Variables)
+{
+    if (!Variables)
+    {
+        return;
+    }
+
+    for (const retro_variable* Variable = Variables; Variable->key; ++Variable)
+    {
+        FString DefaultValue;
+        if (Variable->value)
+        {
+            const FString Definition = UTF8_TO_TCHAR(Variable->value);
+            int32 SeparatorIndex = INDEX_NONE;
+            if (Definition.FindChar(TEXT(';'), SeparatorIndex))
+            {
+                DefaultValue = Definition.Mid(SeparatorIndex + 1).TrimStartAndEnd();
+                int32 PipeIndex = INDEX_NONE;
+                if (DefaultValue.FindChar(TEXT('|'), PipeIndex))
+                {
+                    DefaultValue.LeftInline(PipeIndex, EAllowShrinking::No);
+                }
+                DefaultValue = DefaultValue.TrimStartAndEnd();
+            }
+            else
+            {
+                DefaultValue = Definition.TrimStartAndEnd();
+            }
+        }
+
+        StoreCoreOptionValue(UTF8_TO_TCHAR(Variable->key), DefaultValue, false);
+    }
+}
+
+void FLibretroRunner::RegisterCoreOptionDefinitions(const retro_core_option_definition* Definitions)
+{
+    if (!Definitions)
+    {
+        return;
+    }
+
+    for (const retro_core_option_definition* Definition = Definitions; Definition->key; ++Definition)
+    {
+        const char* DefaultValue = Definition->default_value ? Definition->default_value : Definition->values[0].value;
+        StoreCoreOptionValueUtf8(Definition->key, DefaultValue ? DefaultValue : "", false);
+    }
+}
+
+void FLibretroRunner::RegisterCoreOptionsV2(const retro_core_options_v2* Options)
+{
+    if (!Options || !Options->definitions)
+    {
+        return;
+    }
+
+    for (const retro_core_option_v2_definition* Definition = Options->definitions; Definition->key; ++Definition)
+    {
+        const char* DefaultValue = Definition->default_value ? Definition->default_value : Definition->values[0].value;
+        StoreCoreOptionValueUtf8(Definition->key, DefaultValue ? DefaultValue : "", false);
+    }
+}
+
 const char* FLibretroRunner::FindCoreOptionValue(const char* Key) const
 {
     const FString KeyString = UTF8_TO_TCHAR(Key);
@@ -1794,7 +1996,7 @@ const char* FLibretroRunner::FindCoreOptionValue(const char* Key) const
     {
         return Value->GetData();
     }
-    return nullptr;
+    return EmptyCoreOptionValue;
 }
 
 void FLibretroRunner::SetError(const FString& Error)
