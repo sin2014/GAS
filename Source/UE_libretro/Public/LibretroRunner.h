@@ -150,6 +150,21 @@ public:
     /** 请求在下一帧执行一次 core 软重置。 */
     void Reset();
 
+    /** 请求在 Runner 线程下一帧把当前模拟器状态写入单槽即时存档。 */
+    void RequestQuickSave();
+
+    /** 请求在 Runner 线程下一帧从单槽即时存档恢复当前模拟器状态。 */
+    void RequestQuickLoad();
+
+    /** 把模拟运行速度切换到下一个更慢档位，最低 0.5 倍速。 */
+    void DecreaseSpeed();
+
+    /** 把模拟运行速度切换到下一个更快档位，最高 2.0 倍速。 */
+    void IncreaseSpeed();
+
+    /** 返回当前模拟运行速度倍率。 */
+    double GetSpeedMultiplier() const;
+
     /** 返回显示最新视频帧的临时纹理。 */
     UTexture2D* GetVideoTexture() const { return VideoTexture; }
 
@@ -292,6 +307,21 @@ private:
     /** 如果 core 暴露了 SRAM，就写入 Saved/Libretro/Saves。 */
     void SaveSRAM();
 
+    /** 返回当前 ROM 对应的单槽即时存档路径。 */
+    FString GetQuickStatePath() const;
+
+    /** 处理用户在游戏线程发来的即时存档、即时读档等运行时请求。 */
+    void ProcessRuntimeRequests();
+
+    /** 使用 retro_serialize 把当前模拟器完整状态写入单槽文件。 */
+    bool SaveQuickState();
+
+    /** 使用 retro_unserialize 从单槽文件恢复当前模拟器完整状态。 */
+    bool LoadQuickState();
+
+    /** 按固定速度档位设置当前模拟运行倍率。 */
+    void SetSpeedIndex(int32 NewSpeedIndex);
+
     /** 记录错误日志，并把错误保存为 UI 状态文本。 */
     void SetError(const FString& Error);
 
@@ -383,6 +413,9 @@ private:
     /** 提供给 RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY 的存档目录。 */
     FString SaveDir;
 
+    /** 即时存档单槽状态文件所在目录。 */
+    FString StateDir;
+
     /** 当前 ROM/内容所在目录，提供给内容目录查询。 */
     FString ContentDir;
 
@@ -428,7 +461,7 @@ private:
     /** Windows OpenGL 上下文与帧缓冲桥接对象，用于硬件渲染 core。 */
     TUniquePtr<FLibretroOpenGLRenderContext> OpenGLRenderContext;
 
-    /** 保护 LastError、StatusText、按键状态和触摸状态。 */
+    /** 保护 LastError、StatusText、按键状态、触摸状态和速度设置。 */
     mutable FCriticalSection StateMutex;
 
     /** 最近一次用户可见错误。 */
@@ -491,6 +524,12 @@ private:
     /** Runner 线程读取的软重置请求标记。 */
     FThreadSafeBool bResetRequested = false;
 
+    /** Runner 线程读取的即时存档请求标记。 */
+    FThreadSafeBool bQuickSaveRequested = false;
+
+    /** Runner 线程读取的即时读档请求标记。 */
+    FThreadSafeBool bQuickLoadRequested = false;
+
     /** retro_init() 成功后到 retro_deinit() 前为 true。 */
     bool bCoreInitialized = false;
 
@@ -502,4 +541,10 @@ private:
 
     /** 当前 core 报告的目标音频采样率。 */
     double TargetSampleRate = 48000.0;
+
+    /** 当前速度档位索引：0=0.5x，1=1.0x，2=1.5x，3=2.0x。 */
+    int32 SpeedIndex = 1;
+
+    /** 当前模拟速度倍率，影响 retro_run() 主循环节流间隔。 */
+    double SpeedMultiplier = 1.0;
 };

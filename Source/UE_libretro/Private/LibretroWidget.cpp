@@ -28,7 +28,7 @@ namespace
 
     FText DefaultStatusText()
     {
-        return FText::FromString(TEXT("选择一个 ROM 启动。WASD 方向/Circle Pad，J=A/确认，K=B/取消，U=X，I=Y，Q=L，E=R，Z=ZL，C=ZR，Enter=Start，Backspace=Select，Space=触摸下屏中心。"));
+        return FText::FromString(TEXT("选择一个 ROM 启动。WASD 方向/Circle Pad，J=A/确认，K=B/取消，U=X，I=Y，Q=L，E=R，Z=ZL，C=ZR，Enter=Start，Backspace=Select，Space=触摸下屏中心。↓即时存档，↑即时读档，←降速，→提速。"));
     }
 }
 
@@ -108,6 +108,10 @@ TSharedRef<SWidget> ULibretroWidget::RebuildWidget()
 UButton* ULibretroWidget::CreateLauncherButton(UPanelWidget* Parent, const FName& Name, const FString& Text)
 {
     UButton* Button = WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), Name);
+    // 启动按钮不占用键盘焦点，避免方向键快捷功能被 UMG 导航拦截。
+PRAGMA_DISABLE_DEPRECATION_WARNINGS
+    Button->IsFocusable = false;
+PRAGMA_ENABLE_DEPRECATION_WARNINGS
     UHorizontalBoxSlot* ButtonSlot = Cast<UHorizontalBoxSlot>(Parent->AddChild(Button));
     if (ButtonSlot)
     {

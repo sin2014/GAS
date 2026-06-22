@@ -82,6 +82,10 @@ void ALibretroPawn::Tick(float DeltaSeconds)
             AudioComponent->RegisterComponent();
             AudioComponent->Play();
         }
+        if (AudioComponent)
+        {
+            AudioComponent->SetPitchMultiplier(static_cast<float>(Runner->GetSpeedMultiplier()));
+        }
 
         if (bAutoScreenshot && bUpdatedTexture && !bScreenshotRequested)
         {
@@ -165,6 +169,12 @@ void ALibretroPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
     PlayerInputComponent->BindKey(EKeys::Enter, IE_Released, this, &ALibretroPawn::ReleaseStart);
     PlayerInputComponent->BindKey(EKeys::SpaceBar, IE_Pressed, this, &ALibretroPawn::PressTouch);
     PlayerInputComponent->BindKey(EKeys::SpaceBar, IE_Released, this, &ALibretroPawn::ReleaseTouch);
+
+    // 方向键不再映射到游戏方向，专门作为前端快捷功能键。
+    PlayerInputComponent->BindKey(EKeys::Down, IE_Pressed, this, &ALibretroPawn::QuickSave);
+    PlayerInputComponent->BindKey(EKeys::Up, IE_Pressed, this, &ALibretroPawn::QuickLoad);
+    PlayerInputComponent->BindKey(EKeys::Left, IE_Pressed, this, &ALibretroPawn::DecreaseEmulationSpeed);
+    PlayerInputComponent->BindKey(EKeys::Right, IE_Pressed, this, &ALibretroPawn::IncreaseEmulationSpeed);
 }
 
 void ALibretroPawn::StartNesRom()
@@ -317,6 +327,38 @@ void ALibretroPawn::SetButton(ELibretroButton Button, bool bPressed)
     if (Runner)
     {
         Runner->SetButtonState(Button, bPressed);
+    }
+}
+
+void ALibretroPawn::QuickSave()
+{
+    if (Runner)
+    {
+        Runner->RequestQuickSave();
+    }
+}
+
+void ALibretroPawn::QuickLoad()
+{
+    if (Runner)
+    {
+        Runner->RequestQuickLoad();
+    }
+}
+
+void ALibretroPawn::DecreaseEmulationSpeed()
+{
+    if (Runner)
+    {
+        Runner->DecreaseSpeed();
+    }
+}
+
+void ALibretroPawn::IncreaseEmulationSpeed()
+{
+    if (Runner)
+    {
+        Runner->IncreaseSpeed();
     }
 }
 

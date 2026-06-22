@@ -6,6 +6,7 @@
 #include "Logging/LogMacros.h"
 #include "Misc/FileHelper.h"
 #include "Misc/ScopeLock.h"
+#include "Serialization/Archive.h"
 #include "Sound/SoundWaveProcedural.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogLibretroRunner, Log, All);
@@ -542,17 +543,25 @@ private:
 // core，因此用这个指针把静态回调转发到当前活动 Runner 实例。
 static FLibretroRunner* GActiveLibretroRunner = nullptr;
 
+namespace
+{
+    // 运行速度只提供几个固定档位，避免任意倍率造成音频采样率和帧节流难以判断。
+    constexpr double LibretroSpeedLevels[] = { 0.5, 1.0, 1.5, 2.0 };
+}
+
 FLibretroRunner::FLibretroRunner()
 {
     const FString ProjectDir = FPaths::ProjectDir();
     CorePath = FPaths::ConvertRelativePathToFull(ProjectDir / TEXT("ThirdParty/Libretro/Cores/Win64/fceumm_libretro.dll"));
     SystemDir = FPaths::ConvertRelativePathToFull(ProjectDir / TEXT("Saved/Libretro/System"));
     SaveDir = FPaths::ConvertRelativePathToFull(ProjectDir / TEXT("Saved/Libretro/Saves"));
+    StateDir = FPaths::ConvertRelativePathToFull(ProjectDir / TEXT("Saved/Libretro/States"));
     CoreAssetsDir = FPaths::ConvertRelativePathToFull(ProjectDir / TEXT("Saved/Libretro/Cache"));
     LibretroPath = CorePath;
 
     IFileManager::Get().MakeDirectory(*SystemDir, true);
     IFileManager::Get().MakeDirectory(*SaveDir, true);
+    IFileManager::Get().MakeDirectory(*StateDir, true);
     IFileManager::Get().MakeDirectory(*CoreAssetsDir, true);
 
     SystemDirUtf8 = new FTCHARToUTF8(*SystemDir);
@@ -595,6 +604,8 @@ bool FLibretroRunner::Start(const FLibretroLaunchConfig& Config)
 
     bStopRequested = false;
     bResetRequested = false;
+    bQuickSaveRequested = false;
+    bQuickLoadRequested = false;
     bLoggedFirstFrame = false;
     VideoFrameCounter = 0;
     ActualRunFps = 0.0;
@@ -715,6 +726,56 @@ void FLibretroRunner::Reset()
     bResetRequested = true;
 }
 
+void FLibretroRunner::RequestQuickSave()
+{
+    if (!Thread && !bRunning)
+    {
+        SetStatus(TEXT("当前没有运行中的 ROM，无法即时存档"));
+        return;
+    }
+
+    bQuickSaveRequested = true;
+    SetStatus(TEXT("正在请求即时存档..."));
+}
+
+void FLibretroRunner::RequestQuickLoad()
+{
+    if (!Thread && !bRunning)
+    {
+        SetStatus(TEXT("当前没有运行中的 ROM，无法即时读档"));
+        return;
+    }
+
+    bQuickLoadRequested = true;
+    SetStatus(TEXT("正在请求即时读档..."));
+}
+
+void FLibretroRunner::DecreaseSpeed()
+{
+    int32 NewSpeedIndex = 0;
+    {
+        FScopeLock Lock(&StateMutex);
+        NewSpeedIndex = SpeedIndex - 1;
+    }
+    SetSpeedIndex(NewSpeedIndex);
+}
+
+void FLibretroRunner::IncreaseSpeed()
+{
+    int32 NewSpeedIndex = 0;
+    {
+        FScopeLock Lock(&StateMutex);
+        NewSpeedIndex = SpeedIndex + 1;
+    }
+    SetSpeedIndex(NewSpeedIndex);
+}
+
+double FLibretroRunner::GetSpeedMultiplier() const
+{
+    FScopeLock Lock(&StateMutex);
+    return SpeedMultiplier;
+}
+
 void FLibretroRunner::Stop()
 {
     bStopRequested = true;
@@ -764,6 +825,7 @@ uint32 FLibretroRunner::Run()
     CoreApi.retro_get_system_av_info(&AvInfo);
     TargetFps = AvInfo.timing.fps > 1.0 ? AvInfo.timing.fps : 60.0;
     TargetSampleRate = AvInfo.timing.sample_rate > 1.0 ? AvInfo.timing.sample_rate : 48000.0;
+    const double InitialSpeed = GetSpeedMultiplier();
     UE_LOG(LogLibretroRunner, Log, TEXT("Loaded ROM: %s"), *RomPath);
     UE_LOG(LogLibretroRunner, Log, TEXT("AV info: base=%ux%u max=%ux%u aspect=%.4f fps=%.6f sample_rate=%.1f"),
         AvInfo.geometry.base_width,
@@ -783,9 +845,9 @@ uint32 FLibretroRunner::Run()
     });
 
     bRunning = true;
-    SetStatus(FString::Printf(TEXT("运行中：%s  %.3f FPS  %.0f Hz"), *FPaths::GetCleanFilename(RomPath), TargetFps, TargetSampleRate));
+    SetStatus(FString::Printf(TEXT("运行中：%s  速度 %.1fx  %.3f FPS  %.0f Hz"), *FPaths::GetCleanFilename(RomPath), InitialSpeed, TargetFps, TargetSampleRate * InitialSpeed));
 
-    const double FrameTime = 1.0 / TargetFps;
+    const double BaseFrameTime = 1.0 / TargetFps;
     double NextFrameTime = FPlatformTime::Seconds();
     double LastFrameTime = NextFrameTime;
     double StatsStartTime = NextFrameTime;
@@ -802,6 +864,8 @@ uint32 FLibretroRunner::Run()
             }
             bResetRequested = false;
         }
+
+        ProcessRuntimeRequests();
 
         if (FrameTimeCallback.callback)
         {
@@ -824,19 +888,23 @@ uint32 FLibretroRunner::Run()
         RunMsAccumulator += (RunEndTime - RunStartTime) * 1000.0;
         ++FramesSinceStats;
         const double StatsElapsed = RunEndTime - StatsStartTime;
+        const double CurrentSpeed = GetSpeedMultiplier();
+        const double TargetRunFps = TargetFps * CurrentSpeed;
         if (StatsElapsed >= 1.0)
         {
             ActualRunFps = FramesSinceStats / StatsElapsed;
             AverageRetroRunMs = RunMsAccumulator / FramesSinceStats;
             SetStatus(FString::Printf(
-                TEXT("运行中：%s  实测 %.1f/%.1f FPS  retro_run %.2f ms"),
+                TEXT("运行中：%s  速度 %.1fx  实测 %.1f/%.1f FPS  retro_run %.2f ms"),
                 *FPaths::GetCleanFilename(RomPath),
+                CurrentSpeed,
                 ActualRunFps,
-                TargetFps,
+                TargetRunFps,
                 AverageRetroRunMs));
-            UE_LOG(LogLibretroRunner, Log, TEXT("Runtime stats: actual_fps=%.2f target_fps=%.2f retro_run_avg_ms=%.2f hw_render=%s"),
+            UE_LOG(LogLibretroRunner, Log, TEXT("Runtime stats: actual_fps=%.2f target_fps=%.2f speed=%.2f retro_run_avg_ms=%.2f hw_render=%s"),
                 ActualRunFps,
-                TargetFps,
+                TargetRunFps,
+                CurrentSpeed,
                 AverageRetroRunMs,
                 OpenGLRenderContext && OpenGLRenderContext->IsValid() ? TEXT("yes") : TEXT("no"));
             StatsStartTime = RunEndTime;
@@ -845,6 +913,7 @@ uint32 FLibretroRunner::Run()
         }
 
         const double Now = FPlatformTime::Seconds();
+        const double FrameTime = BaseFrameTime / FMath::Max(CurrentSpeed, 0.1);
         NextFrameTime += FrameTime;
         const double SleepTime = NextFrameTime - Now;
         // 主动按 core 报告的 FPS 节流，避免 retro_run() 空转占满 CPU。
@@ -992,6 +1061,134 @@ void FLibretroRunner::SaveSRAM()
 
     const FString SavePath = SaveDir / (FPaths::GetBaseFilename(RomPath) + TEXT(".srm"));
     FFileHelper::SaveArrayToFile(TArrayView64<const uint8>(static_cast<const uint8*>(SaveData), static_cast<int64>(SaveSize)), *SavePath);
+}
+
+FString FLibretroRunner::GetQuickStatePath() const
+{
+    const FString StateFileName = FPaths::GetBaseFilename(RomPath) + TEXT(".state");
+    return StateDir / StateFileName;
+}
+
+void FLibretroRunner::ProcessRuntimeRequests()
+{
+    if (bQuickSaveRequested)
+    {
+        bQuickSaveRequested = false;
+        SaveQuickState();
+    }
+
+    if (bQuickLoadRequested)
+    {
+        bQuickLoadRequested = false;
+        LoadQuickState();
+    }
+}
+
+bool FLibretroRunner::SaveQuickState()
+{
+    if (!bGameLoaded || !CoreApi.retro_serialize_size || !CoreApi.retro_serialize)
+    {
+        SetError(TEXT("当前 core 不支持即时存档"));
+        return false;
+    }
+
+    const size_t StateSize = CoreApi.retro_serialize_size();
+    if (StateSize == 0)
+    {
+        SetError(TEXT("当前 core 不支持即时存档：状态大小为 0"));
+        return false;
+    }
+
+    if (StateSize > static_cast<size_t>(MAX_int32))
+    {
+        SetError(FString::Printf(TEXT("即时存档失败：状态数据过大（%llu 字节）"), static_cast<unsigned long long>(StateSize)));
+        return false;
+    }
+
+    TArray<uint8> StateData;
+    StateData.SetNumUninitialized(static_cast<int32>(StateSize));
+    if (!CoreApi.retro_serialize(StateData.GetData(), StateSize))
+    {
+        SetError(TEXT("即时存档失败：core 无法序列化当前状态"));
+        return false;
+    }
+
+    const FString StatePath = GetQuickStatePath();
+    IFileManager::Get().MakeDirectory(*FPaths::GetPath(StatePath), true);
+    if (!FFileHelper::SaveArrayToFile(TArrayView64<const uint8>(StateData.GetData(), StateData.Num()), *StatePath))
+    {
+        SetError(FString::Printf(TEXT("即时存档失败：无法写入 %s"), *StatePath));
+        return false;
+    }
+
+    SetStatus(FString::Printf(TEXT("即时存档成功：%s"), *FPaths::GetCleanFilename(StatePath)));
+    UE_LOG(LogLibretroRunner, Log, TEXT("Saved quick state: %s (%llu bytes)"), *StatePath, static_cast<unsigned long long>(StateSize));
+    return true;
+}
+
+bool FLibretroRunner::LoadQuickState()
+{
+    if (!bGameLoaded || !CoreApi.retro_unserialize)
+    {
+        SetError(TEXT("当前 core 不支持即时读档"));
+        return false;
+    }
+
+    const FString StatePath = GetQuickStatePath();
+    IFileManager& FileManager = IFileManager::Get();
+    const int64 FileSize = FileManager.FileSize(*StatePath);
+    if (FileSize <= 0)
+    {
+        SetError(FString::Printf(TEXT("即时读档失败：状态文件不存在或为空：%s"), *StatePath));
+        return false;
+    }
+
+    if (FileSize > MAX_int32)
+    {
+        SetError(FString::Printf(TEXT("即时读档失败：状态文件过大（%lld 字节）"), FileSize));
+        return false;
+    }
+
+    TUniquePtr<FArchive> Reader(FileManager.CreateFileReader(*StatePath));
+    if (!Reader)
+    {
+        SetError(FString::Printf(TEXT("即时读档失败：无法打开 %s"), *StatePath));
+        return false;
+    }
+
+    TArray<uint8> StateData;
+    StateData.SetNumUninitialized(static_cast<int32>(FileSize));
+    Reader->Serialize(StateData.GetData(), StateData.Num());
+    if (Reader->IsError())
+    {
+        SetError(FString::Printf(TEXT("即时读档失败：读取 %s 时发生错误"), *StatePath));
+        return false;
+    }
+
+    if (!CoreApi.retro_unserialize(StateData.GetData(), StateData.Num()))
+    {
+        SetError(TEXT("即时读档失败：core 拒绝恢复该状态文件"));
+        return false;
+    }
+
+    SetStatus(FString::Printf(TEXT("即时读档成功：%s"), *FPaths::GetCleanFilename(StatePath)));
+    UE_LOG(LogLibretroRunner, Log, TEXT("Loaded quick state: %s (%lld bytes)"), *StatePath, FileSize);
+    return true;
+}
+
+void FLibretroRunner::SetSpeedIndex(int32 NewSpeedIndex)
+{
+    double NewSpeedMultiplier = 1.0;
+    {
+        FScopeLock Lock(&StateMutex);
+        const int32 ClampedSpeedIndex = FMath::Clamp(NewSpeedIndex, 0, UE_ARRAY_COUNT(LibretroSpeedLevels) - 1);
+        SpeedIndex = ClampedSpeedIndex;
+        SpeedMultiplier = LibretroSpeedLevels[SpeedIndex];
+        NewSpeedMultiplier = SpeedMultiplier;
+    }
+
+    SetStatus(FString::Printf(TEXT("当前速度：%.1fx"), NewSpeedMultiplier));
+    UE_LOG(LogLibretroRunner, Log, TEXT("Set libretro speed multiplier: %.2f"), NewSpeedMultiplier);
 }
 
 bool FLibretroRunner::ExportSymbol(const ANSICHAR* Name, void*& OutPtr)

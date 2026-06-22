@@ -37,6 +37,8 @@ ThirdParty\Libretro\Include\libretro.h
 - 已实现程序化音频播放：libretro stereo int16 音频样本写入 `USoundWaveProcedural`，由 `UAudioComponent` 播放。
 - 已实现基础输入：键盘映射到 RetroPad、左模拟摇杆方向和 pointer/touch 设备。
 - 已实现基础触摸入口：`Space` 固定按下合成下屏中心点。
+- 已实现即时存档/读档：`↓` 写入当前 ROM 的单槽状态文件，`↑` 从单槽状态文件恢复，文件位于 `Saved/Libretro/States/*.state`。
+- 已实现游戏速度调节：`←` 降速、`→` 提速，固定档位为 `0.5x`、`1.0x`、`1.5x`、`2.0x`。
 - 已实现 core 选项注入：不同 core 使用各自选项 key 配置画面布局、JIT、硬件渲染、触摸等行为。
 - 已实现 SRAM 保存：core 暴露 `RETRO_MEMORY_SAVE_RAM` 时会写入 `Saved/Libretro/Saves/*.srm`。
 - 已实现状态与错误显示：Runner 状态会显示到 UMG 底部文本。
@@ -51,7 +53,7 @@ libretro 前端的能力不只限于当前三个 core。只要 core 能在 Win64
 - 更多街机 core：例如 FinalBurn Neo、MAME 系列 core，用于街机 ROM 或合集前端。
 - 更多 Nintendo 相关平台：例如 SNES、N64、GameCube/Wii 等，但 3D 平台通常需要更完整的硬件渲染、输入和性能调优。
 - 更多 Sega / Sony / NEC 等平台 core：按 core 要求补齐 BIOS、系统目录、core 选项、输入映射和硬件渲染支持。
-- 即时存档/读档：当前已绑定 `retro_serialize`、`retro_unserialize`、`retro_serialize_size` 函数指针，但还没有 UI 和文件格式封装。
+- 即时存档增强：多槽位、槽位名称、缩略图、覆盖确认和损坏状态文件提示。
 - 作弊码：当前已绑定 `retro_cheat_reset`、`retro_cheat_set`，后续可以做作弊码列表、开关和导入。
 - 更完整的触摸和鼠标输入：把 UMG 鼠标坐标换算到 NDS/3DS 下屏，支持点击、拖拽、多点触摸或光标显示。
 - 手柄输入：接入 UE Enhanced Input 或 XInput，把真实手柄映射到 RetroPad、模拟摇杆、L2/R2、触摸快捷键。
@@ -113,6 +115,15 @@ libretro 前端的能力不只限于当前三个 core。只要 core 能在 Win64
 | `Space` | 触摸下屏中心点 |
 
 触摸目前先做成基础入口：`Space` 会在合成双屏画面的下屏中心按下触摸点。后续如果要做鼠标点击/拖拽下屏，可以在 `FLibretroRunner::SetPointerState` 和 UI 鼠标事件上继续扩展。
+
+### 前端快捷功能
+
+| PC 按键 | 功能 |
+| --- | --- |
+| `↓` | 即时存档到 `Saved/Libretro/States/*.state` |
+| `↑` | 从 `Saved/Libretro/States/*.state` 即时读档 |
+| `←` | 降低速度档位：`2.0x` -> `1.5x` -> `1.0x` -> `0.5x` |
+| `→` | 提高速度档位：`0.5x` -> `1.0x` -> `1.5x` -> `2.0x` |
 
 ## 关键源码
 

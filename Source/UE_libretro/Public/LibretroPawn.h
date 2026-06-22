@@ -98,6 +98,18 @@ private:
     /** 把一个 RetroPad 按键状态转发给 Runner。 */
     void SetButton(ELibretroButton Button, bool bPressed);
 
+    /** 方向键下：请求即时存档到当前 ROM 的单槽状态文件。 */
+    void QuickSave();
+
+    /** 方向键上：请求从当前 ROM 的单槽状态文件即时读档。 */
+    void QuickLoad();
+
+    /** 方向键左：把 libretro 主循环速度降低一个档位。 */
+    void DecreaseEmulationSpeed();
+
+    /** 方向键右：把 libretro 主循环速度提高一个档位。 */
+    void IncreaseEmulationSpeed();
+
     /** 以下 Press/Release 函数是键盘绑定入口，分别转成 RetroPad 状态。 */
     void PressUp();
     void ReleaseUp();
