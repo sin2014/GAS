@@ -1,0 +1,157 @@
+# UE_libretro 多 ROM 运行示例
+
+这个 UE5.8 C++ 工程演示在 UE 游戏中作为 libretro frontend 运行 FC/NES 与 NDS ROM。
+
+## 已接入的 ROM
+
+```text
+E:\Z_Game\VirtuaNESex-FC模拟器\游戏\重装机兵1.nes
+E:\Z_Game\MM3&2R\MetalMax2R_Ver0.94.nds
+E:\Z_Game\MM3&2R\Metal_Max_3_chs_v1.0-Union_of_MM3.nds
+```
+
+## 已接入的 libretro core
+
+```text
+ThirdParty\Libretro\Cores\Win64\fceumm_libretro.dll
+ThirdParty\Libretro\Cores\Win64\desmume_libretro.dll
+ThirdParty\Libretro\Include\libretro.h
+```
+
+- FC/NES 使用 FCEUmm。
+- NDS 使用 DeSmuME libretro core。
+- DeSmuME 当前设置为软件渲染、原始 256x192 双屏纵向布局，UE 中显示为 256x384 画面。
+
+## UE 游戏入口
+
+运行游戏后，界面底部有三个按钮：
+
+- `重装机兵1 FC`
+- `Metal Max 2R NDS`
+- `Metal Max 3 NDS`
+
+点击对应按钮会停止当前 core，加载对应 core 和 ROM，然后把 libretro 视频帧显示到 UMG `Image`，音频送入 `USoundWaveProcedural` 播放。
+
+## 键盘映射
+
+### 通用方向
+
+| PC 按键 | libretro / NDS |
+| --- | --- |
+| `W` | 上 |
+| `S` | 下 |
+| `A` | 左 |
+| `D` | 右 |
+
+### FC/NES
+
+| PC 按键 | FC |
+| --- | --- |
+| `J` | A / 确认 |
+| `K` | B / 取消 |
+| `Enter` | Start |
+
+### NDS 临时映射
+
+| PC 按键 | NDS |
+| --- | --- |
+| `J` | A / 常用确认 |
+| `K` | B / 常用取消 |
+| `U` | X |
+| `I` | Y |
+| `Q` | L |
+| `E` | R |
+| `Enter` | Start |
+| `Backspace` | Select |
+| `Space` | 触摸下屏中心点 |
+
+触摸目前先做成基础入口：`Space` 会在合成双屏画面的下屏中心按下触摸点。后续如果要做鼠标点击/拖拽下屏，可以在 `FLibretroNESRunner::SetPointerState` 和 UI 鼠标事件上继续扩展。
+
+## 关键源码
+
+```text
+Source\UE_libretro\Public\LibretroNESRunner.h
+Source\UE_libretro\Private\LibretroNESRunner.cpp
+Source\UE_libretro\Public\LibretroPawn.h
+Source\UE_libretro\Private\LibretroPawn.cpp
+Source\UE_libretro\Public\LibretroWidget.h
+Source\UE_libretro\Private\LibretroWidget.cpp
+```
+
+说明：
+
+- `FLibretroNESRunner` 是实际 libretro frontend，负责动态加载 core、绑定 `retro_*` 符号、提供 environment/video/audio/input 回调。
+- `FLibretroLaunchConfig` 描述一次启动需要的 core、ROM、系统类型和 core options。
+- `ALibretroPawn` 负责创建 runner、UMG、音频组件、按钮入口和键盘映射。
+- `ULibretroWidget` 是纯 C++ UMG，提供三个 ROM 启动按钮和视频画面显示。
+
+## 打开工程
+
+工程位置：
+
+```text
+D:\GameDev\插件\UE_libretro\UE_libretro.uproject
+```
+
+UE5.8 安装位置：
+
+```text
+D:\GameEngine\Epic Games\UE_5.8
+```
+
+由于本机 UE/编译器链路对中文路径的 Intermediate 目录处理会出现乱码，已创建一个目录联接用于编译和命令行运行：
+
+```text
+D:\GameDev\UE_libretro_build -> D:\GameDev\插件\UE_libretro
+```
+
+建议命令行使用联接路径：
+
+```powershell
+& "D:\GameEngine\Epic Games\UE_5.8\Engine\Binaries\Win64\UnrealEditor.exe" "D:\GameDev\UE_libretro_build\UE_libretro.uproject" -game
+```
+
+也可以直接双击原始路径下的 `.uproject` 打开编辑器。
+
+## 编译命令
+
+```powershell
+& "D:\GameEngine\Epic Games\UE_5.8\Engine\Build\BatchFiles\Build.bat" UE_libretroEditor Win64 Development -Project="D:\GameDev\UE_libretro_build\UE_libretro.uproject" -WaitMutex -NoHotReloadFromIDE
+```
+
+## 自动验证命令
+
+自动启动 MM2R：
+
+```powershell
+& "D:\GameEngine\Epic Games\UE_5.8\Engine\Binaries\Win64\UnrealEditor.exe" "D:\GameDev\UE_libretro_build\UE_libretro.uproject" -game -AutoScreenshot -AutoRom=MM2R -log
+```
+
+自动启动 MM3：
+
+```powershell
+& "D:\GameEngine\Epic Games\UE_5.8\Engine\Binaries\Win64\UnrealEditor.exe" "D:\GameDev\UE_libretro_build\UE_libretro.uproject" -game -AutoScreenshot -AutoRom=MM3 -log
+```
+
+截图输出：
+
+```text
+Saved\Screenshots\Metal_Max_2_Reloaded_Auto.png
+Saved\Screenshots\Metal_Max_3_Auto.png
+```
+
+## 当前验证结果
+
+- `UE_libretroEditor Win64 Development` 编译通过。
+- `desmume_libretro.dll` 成功加载，日志显示 `Loaded core: DeSmuME git ae0f7f5`。
+- `MetalMax2R_Ver0.94.nds` 成功加载，日志确认：
+  - `Loaded ROM: E:/Z_Game/MM3&2R/MetalMax2R_Ver0.94.nds`
+  - `AV info: base=256x384 max=256x384 ... fps=59.826100 sample_rate=44100.0`
+  - `First video frame received: 256x384 pitch=512 pixel_format=2`
+  - `Frame 360 stats` 非黑像素正常。
+- `Metal_Max_3_chs_v1.0-Union_of_MM3.nds` 成功加载，日志确认：
+  - `Loaded ROM: E:/Z_Game/MM3&2R/Metal_Max_3_chs_v1.0-Union_of_MM3.nds`
+  - `AV info: base=256x384 max=256x384 ... fps=59.826100 sample_rate=44100.0`
+  - `First video frame received: 256x384 pitch=512 pixel_format=2`
+  - `Frame 360 stats` 非黑像素正常。
+- 自动截图已确认能看到 UE 中的 NDS 双屏画面。
