@@ -22,6 +22,7 @@ DEFINE_LOG_CATEGORY_STATIC(LogLibretroWidget, Log, All);
 
 namespace
 {
+    // 固定显示区域用于容纳 FC/NES 单屏、NDS 双屏和 3DS Top-Bottom 合成画面。
     constexpr float VideoBoxWidth = 860.0f;
     constexpr float VideoBoxHeight = 720.0f;
 
@@ -38,6 +39,7 @@ void ULibretroWidget::SetOwningPawn(ALibretroPawn* InPawn)
 
 TSharedRef<SWidget> ULibretroWidget::RebuildWidget()
 {
+    // 当前项目不依赖界面蓝图，所有控件都在 C++ 中构建，便于版本控制。
     UCanvasPanel* Root = WidgetTree->ConstructWidget<UCanvasPanel>(UCanvasPanel::StaticClass(), TEXT("Root"));
     WidgetTree->RootWidget = Root;
 
@@ -62,6 +64,7 @@ TSharedRef<SWidget> ULibretroWidget::RebuildWidget()
     VideoScale->SetStretch(EStretch::ScaleToFit);
     VideoSize->AddChild(VideoScale);
 
+    // Runner 每次尺寸变化可能创建新 UTexture2D；RefreshFromRunner 会重新绑定这里的 Image。
     VideoImage = WidgetTree->ConstructWidget<UImage>(UImage::StaticClass(), TEXT("VideoImage"));
     VideoImage->SetColorAndOpacity(FLinearColor::Black);
     VideoScale->AddChild(VideoImage);
@@ -113,6 +116,7 @@ UButton* ULibretroWidget::CreateLauncherButton(UPanelWidget* Parent, const FName
         ButtonSlot->SetVerticalAlignment(VAlign_Center);
     }
 
+    // 使用 SizeBox 固定按钮尺寸，避免中英文标题长度变化导致布局跳动。
     USizeBox* SizeBox = WidgetTree->ConstructWidget<USizeBox>(USizeBox::StaticClass(), FName(*(Name.ToString() + TEXT("_Size"))));
     SizeBox->SetWidthOverride(210.0f);
     SizeBox->SetHeightOverride(48.0f);
@@ -133,6 +137,7 @@ void ULibretroWidget::NativeConstruct()
 {
     Super::NativeConstruct();
 
+    // 按钮只通知 Pawn 启动哪个 ROM；core 路径、ROM 路径和 options 由 Pawn 构造。
     if (StartNesButton)
     {
         StartNesButton->OnClicked.AddDynamic(this, &ULibretroWidget::HandleStartNesClicked);
@@ -197,6 +202,7 @@ void ULibretroWidget::RefreshFromRunner()
         UTexture2D* Texture = Runner->GetVideoTexture();
         if (CurrentVideoTexture != Texture)
         {
+            // 纹理对象只有在尺寸变化或新会话初始化时才会变，避免每帧重复 SetBrush。
             CurrentVideoTexture = Texture;
             VideoImage->SetBrushFromTexture(Texture, false);
             VideoImage->SetDesiredSizeOverride(FVector2D(Texture->GetSizeX(), Texture->GetSizeY()));

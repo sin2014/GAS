@@ -1,6 +1,6 @@
 # UE_libretro 多平台 ROM 运行示例
 
-这个 UE5.8 C++ 工程演示在 UE 游戏中作为 libretro frontend 运行 FC/NES、NDS 与 3DS ROM。
+这个 UE5.8 C++ 工程演示在 UE 游戏中作为 libretro 前端运行 FC/NES、NDS 与 3DS ROM。
 
 ## 已接入的 ROM
 
@@ -23,6 +23,48 @@ ThirdParty\Libretro\Include\libretro.h
 - FC/NES 使用 FCEUmm。
 - NDS 使用 DeSmuME libretro core。
 - 3DS 当前按钮使用 Azahar libretro core，配置为 OpenGL 硬件渲染、硬件 shader、CPU JIT、原生 400x240 上屏 + 320x240 下屏的 Top-Bottom 布局。
+
+## 已实现功能
+
+- 在 UE5.8 中实现了一个最小 libretro 前端，可以动态加载 Win64 libretro core DLL。
+- 已接入 FC/NES、NDS、3DS 三类 ROM 启动入口。
+- 已接入 FCEUmm、DeSmuME、Azahar 三个 core。
+- 已实现 libretro core 生命周期：加载 DLL、绑定 `retro_*` 函数、注册回调、`retro_init`、`retro_load_game`、循环 `retro_run`、`retro_unload_game`、`retro_deinit`、卸载 DLL。
+- 已实现 libretro environment 回调，支持系统目录、存档目录、内容目录、core 路径、core 选项、像素格式、输入能力、日志接口、AV 信息更新、OpenGL 硬件渲染请求等。
+- 已实现软件视频帧转换：支持 `XRGB8888`、`RGB565`、`0RGB1555` 转成 UE 可上传的 BGRA 数据。
+- 已实现硬件视频帧读回：Azahar/3DS 通过 `RETRO_ENVIRONMENT_SET_HW_RENDER` 获取 Windows OpenGL context 和帧缓冲，再读回到 UE `UTexture2D`。
+- 已实现 UMG 视频显示：把 libretro 输出帧上传到临时 `UTexture2D`，再绑定到 C++ 构建的 UMG `Image`。
+- 已实现程序化音频播放：libretro stereo int16 音频样本写入 `USoundWaveProcedural`，由 `UAudioComponent` 播放。
+- 已实现基础输入：键盘映射到 RetroPad、左模拟摇杆方向和 pointer/touch 设备。
+- 已实现基础触摸入口：`Space` 固定按下合成下屏中心点。
+- 已实现 core 选项注入：不同 core 使用各自选项 key 配置画面布局、JIT、硬件渲染、触摸等行为。
+- 已实现 SRAM 保存：core 暴露 `RETRO_MEMORY_SAVE_RAM` 时会写入 `Saved/Libretro/Saves/*.srm`。
+- 已实现状态与错误显示：Runner 状态会显示到 UMG 底部文本。
+- 已实现自动验证参数：`-AutoRom=...`、`-AutoScreenshot` 可以自动启动 ROM、等待出帧、截图并退出。
+- 已实现运行诊断日志：记录 core 名称、AV 信息、实际 FPS、`retro_run` 平均耗时、硬件渲染状态和关键帧非黑像素统计。
+
+## 后续可扩展功能
+
+libretro 前端的能力不只限于当前三个 core。只要 core 能在 Win64 下运行，并且所需 environment 回调已经实现或可以补齐，UE 中还可以继续扩展这些方向：
+
+- 更多主机/掌机 core：例如 SNES、Game Boy / Game Boy Color、Game Boy Advance、Genesis / Mega Drive、PC Engine、Neo Geo Pocket、WonderSwan、PlayStation、PSP 等。
+- 更多街机 core：例如 FinalBurn Neo、MAME 系列 core，用于街机 ROM 或合集前端。
+- 更多 Nintendo 相关平台：例如 SNES、N64、GameCube/Wii 等，但 3D 平台通常需要更完整的硬件渲染、输入和性能调优。
+- 更多 Sega / Sony / NEC 等平台 core：按 core 要求补齐 BIOS、系统目录、core 选项、输入映射和硬件渲染支持。
+- 即时存档/读档：当前已绑定 `retro_serialize`、`retro_unserialize`、`retro_serialize_size` 函数指针，但还没有 UI 和文件格式封装。
+- 作弊码：当前已绑定 `retro_cheat_reset`、`retro_cheat_set`，后续可以做作弊码列表、开关和导入。
+- 更完整的触摸和鼠标输入：把 UMG 鼠标坐标换算到 NDS/3DS 下屏，支持点击、拖拽、多点触摸或光标显示。
+- 手柄输入：接入 UE Enhanced Input 或 XInput，把真实手柄映射到 RetroPad、模拟摇杆、L2/R2、触摸快捷键。
+- 多玩家输入：当前只支持 port 0，后续可以扩展到多个 libretro input port。
+- Core 选项界面：把 core 暴露的选项做成设置界面，支持运行前配置或部分运行时刷新。
+- BIOS/system 文件管理：为需要 BIOS 的 core 提供 UI 提示、目录检查和文件完整性提示。
+- 存档管理：展示 SRAM、即时存档、截图、配置文件，支持导入、备份、恢复。
+- 渲染优化：把 OpenGL 帧缓冲读回改为更低延迟的共享纹理路径，或按平台扩展 D3D/Vulkan 硬件渲染桥接。
+- 画面处理：整数缩放、保持宽高比、滤镜、扫描线、shader、双屏布局切换、上下屏单独缩放。
+- 音频增强：音量控制、静音、缓冲大小配置、欠载统计、音频延迟调优。
+- 性能工具：在 UI 中显示 FPS、`retro_run` 耗时、音频缓冲、帧队列状态和硬件渲染状态。
+- 录像/截图：扩展手动截图、连续截图、录制视频或导出运行日志。
+- 前端内容库：扫描 ROM 目录、生成游戏列表、按平台分组、记录最近运行和封面图。
 
 ## UE 游戏入口
 
@@ -85,9 +127,9 @@ Source\UE_libretro\Private\LibretroWidget.cpp
 
 说明：
 
-- `FLibretroRunner` 是实际 libretro frontend，负责动态加载 core、绑定 `retro_*` 符号、提供 environment/video/audio/input 回调。
+- `FLibretroRunner` 是实际 libretro 前端，负责动态加载 core、绑定 `retro_*` 符号、提供 environment/video/audio/input 回调。
 - 3DS/Azahar 通过 `RETRO_ENVIRONMENT_SET_HW_RENDER` 接入 Windows OpenGL 3.3+ 硬件渲染，再把硬件 framebuffer 读回到 UE `UTexture2D` 显示。
-- `FLibretroLaunchConfig` 描述一次启动需要的 core、ROM、系统类型和 core options。
+- `FLibretroLaunchConfig` 描述一次启动需要的 core、ROM、系统类型和 core 选项。
 - `ALibretroPawn` 负责创建 runner、UMG、音频组件、按钮入口和键盘映射。
 - `ULibretroWidget` 是纯 C++ UMG，提供四个 ROM 启动按钮和视频画面显示。
 

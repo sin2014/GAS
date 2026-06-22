@@ -17,6 +17,9 @@ DEFINE_LOG_CATEGORY_STATIC(LogLibretroRunner, Log, All);
 #include "Windows/HideWindowsPlatformTypes.h"
 #pragma comment(lib, "opengl32.lib")
 
+// 这里直接声明少量 OpenGL/WGL 常量和函数指针，避免额外引入 OpenGL
+// 加载库。Azahar 通过 libretro HW render 回调拿到的是 OpenGL 函数地址和
+// 帧缓冲，因此本前端只需要创建隐藏上下文、提供帧缓冲、读回像素。
 #ifndef WGL_CONTEXT_MAJOR_VERSION_ARB
 #define WGL_CONTEXT_MAJOR_VERSION_ARB 0x2091
 #endif
@@ -105,6 +108,14 @@ typedef void (APIENTRY* PFNGLGENVERTEXARRAYSPROC)(GLsizei, GLuint*);
 typedef void (APIENTRY* PFNGLDELETEVERTEXARRAYSPROC)(GLsizei, const GLuint*);
 typedef void (APIENTRY* PFNGLBINDVERTEXARRAYPROC)(GLuint);
 
+/**
+ * Windows OpenGL 硬件渲染桥接。
+ *
+ * libretro 硬件渲染 core 不会直接渲染到 UE 的 RHI 纹理；它只要求前端
+ * 提供一个 OpenGL 上下文、当前帧缓冲和 GL 函数地址。这个类创建一个
+ * 1x1 隐藏 Win32 窗口和 OpenGL context，再为 core 准备可调整尺寸的 FBO。
+ * 每帧结束后 Runner 会把 FBO 像素读回为 BGRA，再上传到 UTexture2D。
+ */
 class FLibretroOpenGLRenderContext
 {
 public:
@@ -258,6 +269,8 @@ public:
         Width = NewWidth;
         Height = NewHeight;
 
+        // libretro core 可能在 SET_GEOMETRY 或视频回调中改变输出尺寸，
+        // 因此 FBO、颜色纹理和深度/模板附件都按当前帧尺寸延迟重建。
         if (!Framebuffer)
         {
             glGenFramebuffersPtr(1, &Framebuffer);
@@ -338,6 +351,8 @@ public:
         RawBottomUp.SetNumUninitialized(OutBGRA.Num());
         glReadPixels(0, 0, ReadWidth, ReadHeight, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, RawBottomUp.GetData());
 
+        // OpenGL 原点通常在左下角，而 UE 纹理上传按左上角行序处理。
+        // bottom_left_origin 由 core 指明，因此这里按需翻转行顺序。
         const uint32 RowBytes = ReadWidth * 4;
         for (unsigned Y = 0; Y < ReadHeight; ++Y)
         {
@@ -363,6 +378,8 @@ private:
     {
         HINSTANCE Instance = GetModuleHandle(nullptr);
 
+        // WGL 需要一个窗口 DC 才能创建 OpenGL context；这个窗口不显示，只作为
+        // core 渲染用的离屏上下文载体。
         WNDCLASS WindowClass = {};
         WindowClass.style = CS_OWNDC;
         WindowClass.lpfnWndProc = &FLibretroOpenGLRenderContext::WindowProc;
@@ -428,6 +445,8 @@ private:
         PFNWGLCREATECONTEXTATTRIBSARBPROC CreateContextAttribs =
             reinterpret_cast<PFNWGLCREATECONTEXTATTRIBSARBPROC>(wglGetProcAddress("wglCreateContextAttribsARB"));
 
+        // 先用临时 context 拿到 wglCreateContextAttribsARB，再尽量创建 core
+        // 请求的 OpenGL 版本。若驱动不支持扩展，则退回临时 context。
         if (CreateContextAttribs)
         {
             const int Major = static_cast<int>(RequestedCallback.version_major ? RequestedCallback.version_major : 3);
@@ -519,6 +538,8 @@ private:
 };
 #endif
 
+// libretro 的回调都是 C 函数指针，没有用户数据参数。本项目一次只运行一个
+// core，因此用这个指针把静态回调转发到当前活动 Runner 实例。
 static FLibretroRunner* GActiveLibretroRunner = nullptr;
 
 FLibretroRunner::FLibretroRunner()
@@ -581,6 +602,8 @@ bool FLibretroRunner::Start(const FLibretroLaunchConfig& Config)
     FrameTimeCallback = {};
     SetStatus(FString::Printf(TEXT("正在启动 %s..."), *LaunchConfig.DisplayName));
 
+    // libretro core 的生命周期和 retro_run() 放到独立线程，避免阻塞 UE 游戏线程。
+    // 纹理和音频 UObject 仍通过 AsyncTask/Tick 回到游戏线程处理。
     Thread = FRunnableThread::Create(this, TEXT("LibretroRunner"), 0, TPri_Normal);
     if (!Thread)
     {
@@ -609,6 +632,8 @@ bool FLibretroRunner::PrepareLaunch(const FLibretroLaunchConfig& Config)
     ContentDirUtf8 = new FTCHARToUTF8(*ContentDir);
     LibretroPathUtf8 = new FTCHARToUTF8(*LibretroPath);
 
+    // libretro 要求返回 const char*，所以 core 选项值必须拥有稳定生命周期，
+    // 不能直接返回临时 FTCHARToUTF8 缓冲区。
     CoreOptionValueUtf8.Reset();
     for (const TPair<FString, FString>& Pair : LaunchConfig.CoreOptions)
     {
@@ -699,6 +724,13 @@ uint32 FLibretroRunner::Run()
 {
     GActiveLibretroRunner = this;
 
+    // libretro 标准生命周期：
+    // 1. 加载 DLL 并绑定 retro_* 符号
+    // 2. 注册 environment/video/audio/input 回调
+    // 3. retro_init()
+    // 4. retro_load_game()
+    // 5. 循环 retro_run()
+    // 6. retro_unload_game()、retro_deinit()、卸载 DLL
     if (!LoadCore())
     {
         CleanupCoreOnRunnerThread();
@@ -773,6 +805,7 @@ uint32 FLibretroRunner::Run()
 
         if (FrameTimeCallback.callback)
         {
+            // 一些 core 需要前端每帧告知真实经过时间，以便内部动态调速。
             const double BeforeFrameCallbackTime = FPlatformTime::Seconds();
             const retro_usec_t DeltaUsec = static_cast<retro_usec_t>(FMath::Clamp((BeforeFrameCallbackTime - LastFrameTime) * 1000000.0, 0.0, 1000000.0));
             FrameTimeCallback.callback(DeltaUsec > 0 ? DeltaUsec : FrameTimeCallback.reference);
@@ -814,6 +847,7 @@ uint32 FLibretroRunner::Run()
         const double Now = FPlatformTime::Seconds();
         NextFrameTime += FrameTime;
         const double SleepTime = NextFrameTime - Now;
+        // 主动按 core 报告的 FPS 节流，避免 retro_run() 空转占满 CPU。
         if (SleepTime > 0.001)
         {
             FPlatformProcess::Sleep(static_cast<float>(SleepTime));
@@ -844,6 +878,8 @@ bool FLibretroRunner::LoadCore()
         return false; \
     }
 
+    // 这里按 libretro.h 的必需导出逐个绑定；如果 core 缺少任何基础函数，
+    // 后续生命周期调用就不可靠，因此直接启动失败。
     LOAD_RETRO_SYMBOL(retro_set_environment);
     LOAD_RETRO_SYMBOL(retro_set_video_refresh);
     LOAD_RETRO_SYMBOL(retro_set_audio_sample);
@@ -874,7 +910,7 @@ bool FLibretroRunner::LoadCore()
 
     if (CoreApi.retro_api_version() != RETRO_API_VERSION)
     {
-        SetError(FString::Printf(TEXT("libretro API 版本不匹配。core=%u frontend=%u"), CoreApi.retro_api_version(), RETRO_API_VERSION));
+        SetError(FString::Printf(TEXT("libretro API 版本不匹配。core=%u 前端=%u"), CoreApi.retro_api_version(), RETRO_API_VERSION));
         return false;
     }
 
@@ -1013,6 +1049,8 @@ bool FLibretroRunner::ConsumeFrameForTextureUpdate()
     unsigned LocalWidth = 0;
     unsigned LocalHeight = 0;
     {
+        // 视频回调发生在 Runner 线程，纹理上传发生在游戏线程。
+        // 这里只复制最新一帧，允许高帧率情况下丢弃旧帧以保持 UI 低延迟。
         FScopeLock Lock(&FrameMutex);
         if (!bNewFrame || FrameBGRA.Num() == 0)
         {
@@ -1079,6 +1117,7 @@ void FLibretroRunner::SubmitConvertedVideoFrame(TArray<uint8>&& Converted, unsig
         NonBlackPixels += (R | G | B) ? 1u : 0u;
     }
 
+    // 记录前几帧的非黑像素和亮度总和，自动验证时可以判断是否真的读到了画面。
     ++VideoFrameCounter;
     if (VideoFrameCounter == 1 || VideoFrameCounter == 60 || VideoFrameCounter == 180 || VideoFrameCounter == 360)
     {
@@ -1156,6 +1195,7 @@ void FLibretroRunner::QueueSoftwareVideoFrame(const void* Data, unsigned Width, 
 
         if (PixelFormat == RETRO_PIXEL_FORMAT_RGB565)
         {
+            // RGB565 是许多 2D core 的常见输出格式，需要扩展到 8-bit BGRA。
             const uint16* Src = reinterpret_cast<const uint16*>(SrcRow);
             for (unsigned X = 0; X < Width; ++X)
             {
@@ -1171,6 +1211,7 @@ void FLibretroRunner::QueueSoftwareVideoFrame(const void* Data, unsigned Width, 
         }
         else if (PixelFormat == RETRO_PIXEL_FORMAT_0RGB1555)
         {
+            // 0RGB1555 也是 libretro 支持的软件帧格式，最高位忽略。
             const uint16* Src = reinterpret_cast<const uint16*>(SrcRow);
             for (unsigned X = 0; X < Width; ++X)
             {
@@ -1186,6 +1227,7 @@ void FLibretroRunner::QueueSoftwareVideoFrame(const void* Data, unsigned Width, 
         }
         else
         {
+            // 默认路径按 XRGB8888/ARGB8888 内存布局读取，再写成 UE 需要的 BGRA。
             const uint32* Src = reinterpret_cast<const uint32*>(SrcRow);
             for (unsigned X = 0; X < Width; ++X)
             {
@@ -1268,6 +1310,7 @@ int16 FLibretroRunner::QueryInput(unsigned Port, unsigned Device, unsigned Index
 
     if (BaseDevice == RETRO_DEVICE_ANALOG)
     {
+        // 目前没有真正的模拟摇杆输入，先把 WASD/方向键映射为左摇杆满量程。
         const bool bLeftStick = Index == RETRO_DEVICE_INDEX_ANALOG_LEFT;
         if (bLeftStick && Id == RETRO_DEVICE_ID_ANALOG_X)
         {
@@ -1295,6 +1338,7 @@ int16 FLibretroRunner::QueryInput(unsigned Port, unsigned Device, unsigned Index
 
     if (BaseDevice == RETRO_DEVICE_POINTER)
     {
+        // NDS/3DS 触摸屏通过 libretro pointer 设备表达，坐标范围是 -32767..32767。
         if (Index > 0)
         {
             return 0;
@@ -1320,6 +1364,8 @@ int16 FLibretroRunner::QueryInput(unsigned Port, unsigned Device, unsigned Index
 
 bool FLibretroRunner::HandleEnvironment(unsigned Cmd, void* Data)
 {
+    // environment 是 libretro core 向前端查询能力、目录、core 选项、
+    // 硬件渲染和日志接口的主通道。这里支持当前三个 core 运行所需的最小集合。
     switch (Cmd)
     {
     case RETRO_ENVIRONMENT_SET_HW_RENDER:
@@ -1502,6 +1548,8 @@ bool FLibretroRunner::ConfigureHardwareRendering(retro_hw_render_callback* Callb
     Callback->get_proc_address = &FLibretroRunner::RetroGetProcAddress;
     Callback->cache_context = true;
 
+    // Azahar 会通过 get_current_framebuffer 获取 FBO，再通过 get_proc_address
+    // 获取 OpenGL 函数。初始尺寸优先使用 core 已报告的最大尺寸。
     const unsigned InitialWidth = AvInfo.geometry.max_width > 0 ? AvInfo.geometry.max_width : 400;
     const unsigned InitialHeight = AvInfo.geometry.max_height > 0 ? AvInfo.geometry.max_height : 480;
 
@@ -1514,7 +1562,7 @@ bool FLibretroRunner::ConfigureHardwareRendering(retro_hw_render_callback* Callb
     }
     return true;
 #else
-    UE_LOG(LogLibretroRunner, Error, TEXT("Hardware-rendered libretro cores are only implemented for Windows in this frontend"));
+    UE_LOG(LogLibretroRunner, Error, TEXT("当前前端只在 Windows 上实现了 libretro 硬件渲染 core"));
     return false;
 #endif
 }

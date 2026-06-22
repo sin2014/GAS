@@ -23,6 +23,7 @@ void ALibretroPawn::BeginPlay()
 
     Runner = MakeUnique<FLibretroRunner>();
 
+    // 让鼠标和键盘都能在游戏界面中使用，后续扩展鼠标触摸下屏时也能复用。
     if (APlayerController* PC = Cast<APlayerController>(GetController()))
     {
         PC->bShowMouseCursor = true;
@@ -38,6 +39,8 @@ void ALibretroPawn::BeginPlay()
 
     bAutoScreenshot = FParse::Param(FCommandLine::Get(), TEXT("AutoScreenshot"));
 
+    // 命令行自动启动用于冒烟验证：
+    // -AutoRom=MM4 选择目标，-AutoScreenshot 表示等待出帧后截图并退出。
     const EAutoRomTarget AutoTarget = ParseAutoRomTarget();
     if (FParse::Param(FCommandLine::Get(), TEXT("AutoStartROM")) || bAutoScreenshot || AutoTarget != EAutoRomTarget::None)
     {
@@ -69,6 +72,8 @@ void ALibretroPawn::Tick(float DeltaSeconds)
     {
         const bool bUpdatedTexture = Runner->ConsumeFrameForTextureUpdate();
 
+        // SoundWave 由 Runner 在游戏线程创建，但 AudioComponent 由 Pawn 持有，
+        // 这样切换 ROM 时可以停止旧音频组件并绑定新音频流。
         if (!AudioComponent && Runner->GetSoundWave())
         {
             AudioComponent = NewObject<UAudioComponent>(this);
@@ -80,6 +85,7 @@ void ALibretroPawn::Tick(float DeltaSeconds)
 
         if (bAutoScreenshot && bUpdatedTexture && !bScreenshotRequested)
         {
+            // 首帧到达并不代表游戏画面已经稳定，延迟数秒再截图更适合自动验证。
             bScreenshotRequested = true;
             ScreenshotDelay = 10.0f;
         }
@@ -101,6 +107,7 @@ void ALibretroPawn::Tick(float DeltaSeconds)
         ScreenshotDelay += DeltaSeconds;
         if (ScreenshotDelay >= 0.0f)
         {
+            // 截图请求交给 UE 异步处理，等待短暂时间后再退出，避免文件还未写完。
             FPlatformMisc::RequestExit(false, TEXT("AutoScreenshot completed"));
         }
     }
@@ -126,6 +133,7 @@ void ALibretroPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 {
     Super::SetupPlayerInputComponent(PlayerInputComponent);
 
+    // 当前项目使用最小键盘映射：WASD 同时作为十字键和左模拟摇杆方向。
     PlayerInputComponent->BindKey(EKeys::W, IE_Pressed, this, &ALibretroPawn::PressUp);
     PlayerInputComponent->BindKey(EKeys::W, IE_Released, this, &ALibretroPawn::ReleaseUp);
     PlayerInputComponent->BindKey(EKeys::S, IE_Pressed, this, &ALibretroPawn::PressDown);
@@ -217,6 +225,7 @@ FLibretroLaunchConfig ALibretroPawn::MakeNdsConfig(const FString& RomFileName, c
     Config.SystemType = ELibretroSystemType::NDS;
     Config.CorePath = FPaths::ProjectDir() / TEXT("ThirdParty/Libretro/Cores/Win64/desmume_libretro.dll");
     Config.RomPath = FindRomByFileName(TEXT("E:/Z_Game/MM3&2R"), RomFileName);
+    // DeSmuME 的选项 key 是 core 自己定义的字符串，必须按 core 识别的名称传入。
     Config.CoreOptions.Add(TEXT("desmume_screens_layout"), TEXT("top/bottom"));
     Config.CoreOptions.Add(TEXT("desmume_internal_resolution"), TEXT("256x192"));
     Config.CoreOptions.Add(TEXT("desmume_opengl_mode"), TEXT("disabled"));
@@ -237,6 +246,7 @@ FLibretroLaunchConfig ALibretroPawn::Make3dsConfig() const
     Config.SystemType = ELibretroSystemType::ThreeDS;
     Config.CorePath = FPaths::ProjectDir() / TEXT("ThirdParty/Libretro/Cores/Win64/azahar_libretro.dll");
     Config.RomPath = FindRomByFileName(TEXT("E:/Z_Game/MM4"), TEXT("重装机兵4月光歌姬515.cci"));
+    // Azahar 兼容/沿用 Citra 的 core 选项 key，这些 key 不能按项目命名随意改名。
     Config.CoreOptions.Add(TEXT("citra_graphics_api"), TEXT("OpenGL"));
     Config.CoreOptions.Add(TEXT("citra_layout_option"), TEXT("Default Top-Bottom"));
     Config.CoreOptions.Add(TEXT("citra_resolution_factor"), TEXT("1x (Native 400x240)"));
@@ -262,6 +272,7 @@ FString ALibretroPawn::FindRomByFileName(const FString& Directory, const FString
 {
     TArray<FString> Matches;
     IFileManager::Get().FindFilesRecursive(Matches, *Directory, *FileName, true, false, false);
+    // 找不到时仍返回预期路径，让 Runner 给出明确的“ROM 不存在”错误。
     return Matches.Num() > 0 ? Matches[0] : Directory / FileName;
 }
 
@@ -341,6 +352,7 @@ void ALibretroPawn::PressTouch()
 {
     if (Runner)
     {
+        // 当前触摸先固定在合成双屏下屏中心，后续可由鼠标坐标换算成 NormalizedX/Y。
         Runner->SetPointerState(0.5f, 0.75f, true);
     }
 }
