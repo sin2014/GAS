@@ -17,15 +17,12 @@ E:\Z_Game\MM4\重装机兵4月光歌姬515.cci
 ThirdParty\Libretro\Cores\Win64\fceumm_libretro.dll
 ThirdParty\Libretro\Cores\Win64\desmume_libretro.dll
 ThirdParty\Libretro\Cores\Win64\azahar_libretro.dll
-ThirdParty\Libretro\Cores\Win64\citra_libretro.dll
-ThirdParty\Libretro\Cores\Win64\panda3ds_libretro.dll
 ThirdParty\Libretro\Include\libretro.h
 ```
 
 - FC/NES 使用 FCEUmm。
 - NDS 使用 DeSmuME libretro core。
 - 3DS 当前按钮使用 Azahar libretro core，配置为 OpenGL 硬件渲染、硬件 shader、CPU JIT、原生 400x240 上屏 + 320x240 下屏的 Top-Bottom 布局。
-- Citra 与 Panda3DS core 也已下载到工程中，作为后续对比和切换备用。
 
 ## UE 游戏入口
 
