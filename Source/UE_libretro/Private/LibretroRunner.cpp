@@ -6,6 +6,7 @@
 #include "Logging/LogMacros.h"
 #include "Misc/FileHelper.h"
 #include "Misc/ScopeLock.h"
+#include "RHITypes.h"
 #include "Serialization/Archive.h"
 #include "Sound/SoundWaveProcedural.h"
 
@@ -164,7 +165,10 @@ public:
 
     void Shutdown()
     {
-        MakeCurrent();
+        if (!MakeCurrent())
+        {
+            UE_LOG(LogLibretroRunner, Verbose, TEXT("OpenGL context was not current during shutdown"));
+        }
 
         if (bValid && RequestedCallback.context_destroy)
         {
@@ -229,7 +233,10 @@ public:
 
     uintptr_t GetCurrentFramebuffer()
     {
-        MakeCurrent();
+        if (!MakeCurrent())
+        {
+            return 0;
+        }
         return static_cast<uintptr_t>(Framebuffer);
     }
 
@@ -752,21 +759,21 @@ void FLibretroRunner::RequestQuickLoad()
 
 void FLibretroRunner::DecreaseSpeed()
 {
-    int32 NewSpeedIndex = 0;
+    const int32 NewSpeedIndex = [this]()
     {
         FScopeLock Lock(&StateMutex);
-        NewSpeedIndex = SpeedIndex - 1;
-    }
+        return SpeedIndex - 1;
+    }();
     SetSpeedIndex(NewSpeedIndex);
 }
 
 void FLibretroRunner::IncreaseSpeed()
 {
-    int32 NewSpeedIndex = 0;
+    const int32 NewSpeedIndex = [this]()
     {
         FScopeLock Lock(&StateMutex);
-        NewSpeedIndex = SpeedIndex + 1;
-    }
+        return SpeedIndex + 1;
+    }();
     SetSpeedIndex(NewSpeedIndex);
 }
 
@@ -811,9 +818,11 @@ uint32 FLibretroRunner::Run()
 
     retro_system_info SystemInfo = {};
     CoreApi.retro_get_system_info(&SystemInfo);
+    const FString CoreName = UTF8_TO_TCHAR(SystemInfo.library_name ? SystemInfo.library_name : "");
+    const FString CoreVersion = UTF8_TO_TCHAR(SystemInfo.library_version ? SystemInfo.library_version : "");
     UE_LOG(LogLibretroRunner, Log, TEXT("Loaded core: %s %s"),
-        UTF8_TO_TCHAR(SystemInfo.library_name ? SystemInfo.library_name : ""),
-        UTF8_TO_TCHAR(SystemInfo.library_version ? SystemInfo.library_version : ""));
+        *CoreName,
+        *CoreVersion);
 
     if (!LoadGame(RomPath))
     {
@@ -878,7 +887,10 @@ uint32 FLibretroRunner::Run()
 
         if (OpenGLRenderContext)
         {
-            OpenGLRenderContext->MakeCurrent();
+            if (!OpenGLRenderContext->MakeCurrent())
+            {
+                UE_LOG(LogLibretroRunner, Warning, TEXT("无法激活 OpenGL context，当前帧可能无法正确渲染"));
+            }
         }
 
         const double RunStartTime = FPlatformTime::Seconds();
@@ -1000,7 +1012,10 @@ void FLibretroRunner::CleanupCoreOnRunnerThread()
 {
     if (OpenGLRenderContext)
     {
-        OpenGLRenderContext->MakeCurrent();
+        if (!OpenGLRenderContext->MakeCurrent())
+        {
+            UE_LOG(LogLibretroRunner, Verbose, TEXT("清理 core 时 OpenGL context 未处于激活状态"));
+        }
     }
 
     SaveSRAM();
@@ -1024,11 +1039,13 @@ void FLibretroRunner::CleanupCoreOnRunnerThread()
 bool FLibretroRunner::LoadGame(const FString& InRomPath)
 {
     FTCHARToUTF8 RomPathUtf8(*InRomPath);
-    retro_game_info Game = {};
-    Game.path = RomPathUtf8.Get();
-    Game.data = nullptr;
-    Game.size = 0;
-    Game.meta = nullptr;
+    const retro_game_info Game =
+    {
+        RomPathUtf8.Get(),
+        nullptr,
+        0,
+        nullptr
+    };
 
     if (!CoreApi.retro_load_game(&Game))
     {
@@ -1060,7 +1077,10 @@ void FLibretroRunner::SaveSRAM()
     }
 
     const FString SavePath = SaveDir / (FPaths::GetBaseFilename(RomPath) + TEXT(".srm"));
-    FFileHelper::SaveArrayToFile(TArrayView64<const uint8>(static_cast<const uint8*>(SaveData), static_cast<int64>(SaveSize)), *SavePath);
+    if (!FFileHelper::SaveArrayToFile(TArrayView64<const uint8>(static_cast<const uint8*>(SaveData), static_cast<int64>(SaveSize)), *SavePath))
+    {
+        UE_LOG(LogLibretroRunner, Warning, TEXT("SRAM 保存失败：%s"), *SavePath);
+    }
 }
 
 FString FLibretroRunner::GetQuickStatePath() const
@@ -1183,8 +1203,8 @@ void FLibretroRunner::SetSpeedIndex(int32 NewSpeedIndex)
         FScopeLock Lock(&StateMutex);
         const int32 ClampedSpeedIndex = FMath::Clamp(NewSpeedIndex, 0, UE_ARRAY_COUNT(LibretroSpeedLevels) - 1);
         SpeedIndex = ClampedSpeedIndex;
-        SpeedMultiplier = LibretroSpeedLevels[SpeedIndex];
-        NewSpeedMultiplier = SpeedMultiplier;
+        NewSpeedMultiplier = LibretroSpeedLevels[SpeedIndex];
+        SpeedMultiplier = NewSpeedMultiplier;
     }
 
     SetStatus(FString::Printf(TEXT("当前速度：%.1fx"), NewSpeedMultiplier));
@@ -1196,7 +1216,8 @@ bool FLibretroRunner::ExportSymbol(const ANSICHAR* Name, void*& OutPtr)
     OutPtr = FPlatformProcess::GetDllExport(CoreHandle, ANSI_TO_TCHAR(Name));
     if (!OutPtr)
     {
-        SetError(FString::Printf(TEXT("core 缺少导出函数：%s"), ANSI_TO_TCHAR(Name)));
+        const FString SymbolName = ANSI_TO_TCHAR(Name);
+        SetError(FString::Printf(TEXT("core 缺少导出函数：%s"), *SymbolName));
         return false;
     }
     return true;
@@ -1242,9 +1263,14 @@ bool FLibretroRunner::ConsumeFrameForTextureUpdate()
         return false;
     }
 
-    TArray<uint8> LocalFrame;
-    unsigned LocalWidth = 0;
-    unsigned LocalHeight = 0;
+    struct FPendingFrameSnapshot
+    {
+        TArray<uint8> BGRA;
+        unsigned Width = 0;
+        unsigned Height = 0;
+    };
+
+    FPendingFrameSnapshot Snapshot;
     {
         // 视频回调发生在 Runner 线程，纹理上传发生在游戏线程。
         // 这里只复制最新一帧，允许高帧率情况下丢弃旧帧以保持 UI 低延迟。
@@ -1254,35 +1280,35 @@ bool FLibretroRunner::ConsumeFrameForTextureUpdate()
             return false;
         }
 
-        LocalFrame = FrameBGRA;
-        LocalWidth = FrameWidth;
-        LocalHeight = FrameHeight;
+        Snapshot.BGRA = FrameBGRA;
+        Snapshot.Width = FrameWidth;
+        Snapshot.Height = FrameHeight;
         bNewFrame = false;
     }
 
-    if (LocalWidth == 0 || LocalHeight == 0)
+    if (Snapshot.Width == 0 || Snapshot.Height == 0)
     {
         return false;
     }
 
-    if (LocalWidth != TextureWidth || LocalHeight != TextureHeight)
+    if (Snapshot.Width != TextureWidth || Snapshot.Height != TextureHeight)
     {
-        InitializeVideoTexture(LocalWidth, LocalHeight);
+        InitializeVideoTexture(Snapshot.Width, Snapshot.Height);
         if (!VideoTexture)
         {
             return false;
         }
     }
 
-    FUpdateTextureRegion2D* HeapRegion = new FUpdateTextureRegion2D(0, 0, 0, 0, LocalWidth, LocalHeight);
-    uint8* HeapData = static_cast<uint8*>(FMemory::Malloc(LocalFrame.Num()));
-    FMemory::Memcpy(HeapData, LocalFrame.GetData(), LocalFrame.Num());
+    FUpdateTextureRegion2D* HeapRegion = new FUpdateTextureRegion2D(0, 0, 0, 0, Snapshot.Width, Snapshot.Height);
+    uint8* HeapData = static_cast<uint8*>(FMemory::Malloc(Snapshot.BGRA.Num()));
+    FMemory::Memcpy(HeapData, Snapshot.BGRA.GetData(), Snapshot.BGRA.Num());
 
     VideoTexture->UpdateTextureRegions(
         0,
         1,
         HeapRegion,
-        LocalWidth * 4,
+        Snapshot.Width * 4,
         4,
         HeapData,
         [](uint8* Data, const FUpdateTextureRegion2D* Regions)
@@ -1647,8 +1673,7 @@ bool FLibretroRunner::HandleEnvironment(unsigned Cmd, void* Data)
 
     case RETRO_ENVIRONMENT_SET_GEOMETRY:
     {
-        const retro_game_geometry* Geometry = static_cast<const retro_game_geometry*>(Data);
-        if (Geometry)
+        if (const retro_game_geometry* Geometry = static_cast<const retro_game_geometry*>(Data))
         {
             AvInfo.geometry = *Geometry;
         }
@@ -1657,8 +1682,7 @@ bool FLibretroRunner::HandleEnvironment(unsigned Cmd, void* Data)
 
     case RETRO_ENVIRONMENT_SET_SYSTEM_AV_INFO:
     {
-        const retro_system_av_info* Info = static_cast<const retro_system_av_info*>(Data);
-        if (Info)
+        if (const retro_system_av_info* Info = static_cast<const retro_system_av_info*>(Data))
         {
             AvInfo = *Info;
             TargetFps = Info->timing.fps > 1.0 ? Info->timing.fps : TargetFps;
@@ -1692,8 +1716,7 @@ bool FLibretroRunner::HandleEnvironment(unsigned Cmd, void* Data)
 
     case RETRO_ENVIRONMENT_GET_LOG_INTERFACE:
     {
-        retro_log_callback* Log = static_cast<retro_log_callback*>(Data);
-        if (Log)
+        if (retro_log_callback* Log = static_cast<retro_log_callback*>(Data))
         {
             Log->log = &FLibretroRunner::RetroLog;
             return true;
