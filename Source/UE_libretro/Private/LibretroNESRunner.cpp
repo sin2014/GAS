@@ -10,6 +10,515 @@
 
 DEFINE_LOG_CATEGORY_STATIC(LogLibretroRunner, Log, All);
 
+#if PLATFORM_WINDOWS
+#include "Windows/AllowWindowsPlatformTypes.h"
+#include "Windows/WindowsHWrapper.h"
+#include <gl/GL.h>
+#include "Windows/HideWindowsPlatformTypes.h"
+#pragma comment(lib, "opengl32.lib")
+
+#ifndef WGL_CONTEXT_MAJOR_VERSION_ARB
+#define WGL_CONTEXT_MAJOR_VERSION_ARB 0x2091
+#endif
+#ifndef WGL_CONTEXT_MINOR_VERSION_ARB
+#define WGL_CONTEXT_MINOR_VERSION_ARB 0x2092
+#endif
+#ifndef WGL_CONTEXT_PROFILE_MASK_ARB
+#define WGL_CONTEXT_PROFILE_MASK_ARB 0x9126
+#endif
+#ifndef WGL_CONTEXT_CORE_PROFILE_BIT_ARB
+#define WGL_CONTEXT_CORE_PROFILE_BIT_ARB 0x00000001
+#endif
+#ifndef GL_FRAMEBUFFER
+#define GL_FRAMEBUFFER 0x8D40
+#endif
+#ifndef GL_RENDERBUFFER
+#define GL_RENDERBUFFER 0x8D41
+#endif
+#ifndef GL_COLOR_ATTACHMENT0
+#define GL_COLOR_ATTACHMENT0 0x8CE0
+#endif
+#ifndef GL_DEPTH_STENCIL_ATTACHMENT
+#define GL_DEPTH_STENCIL_ATTACHMENT 0x821A
+#endif
+#ifndef GL_DEPTH_ATTACHMENT
+#define GL_DEPTH_ATTACHMENT 0x8D00
+#endif
+#ifndef GL_STENCIL_ATTACHMENT
+#define GL_STENCIL_ATTACHMENT 0x8D20
+#endif
+#ifndef GL_DEPTH24_STENCIL8
+#define GL_DEPTH24_STENCIL8 0x88F0
+#endif
+#ifndef GL_DEPTH_COMPONENT24
+#define GL_DEPTH_COMPONENT24 0x81A6
+#endif
+#ifndef GL_TEXTURE_2D
+#define GL_TEXTURE_2D 0x0DE1
+#endif
+#ifndef GL_TEXTURE_MIN_FILTER
+#define GL_TEXTURE_MIN_FILTER 0x2801
+#endif
+#ifndef GL_TEXTURE_MAG_FILTER
+#define GL_TEXTURE_MAG_FILTER 0x2800
+#endif
+#ifndef GL_TEXTURE_WRAP_S
+#define GL_TEXTURE_WRAP_S 0x2802
+#endif
+#ifndef GL_TEXTURE_WRAP_T
+#define GL_TEXTURE_WRAP_T 0x2803
+#endif
+#ifndef GL_CLAMP_TO_EDGE
+#define GL_CLAMP_TO_EDGE 0x812F
+#endif
+#ifndef GL_RGBA8
+#define GL_RGBA8 0x8058
+#endif
+#ifndef GL_BGRA
+#define GL_BGRA 0x80E1
+#endif
+#ifndef GL_UNSIGNED_INT_8_8_8_8_REV
+#define GL_UNSIGNED_INT_8_8_8_8_REV 0x8367
+#endif
+#ifndef GL_READ_FRAMEBUFFER
+#define GL_READ_FRAMEBUFFER 0x8CA8
+#endif
+#ifndef GL_DRAW_FRAMEBUFFER
+#define GL_DRAW_FRAMEBUFFER 0x8CA9
+#endif
+#ifndef GL_FRAMEBUFFER_COMPLETE
+#define GL_FRAMEBUFFER_COMPLETE 0x8CD5
+#endif
+
+typedef HGLRC(WINAPI* PFNWGLCREATECONTEXTATTRIBSARBPROC)(HDC, HGLRC, const int*);
+typedef void (APIENTRY* PFNGLGENFRAMEBUFFERSPROC)(GLsizei, GLuint*);
+typedef void (APIENTRY* PFNGLDELETEFRAMEBUFFERSPROC)(GLsizei, const GLuint*);
+typedef void (APIENTRY* PFNGLBINDFRAMEBUFFERPROC)(GLenum, GLuint);
+typedef void (APIENTRY* PFNGLFRAMEBUFFERTEXTURE2DPROC)(GLenum, GLenum, GLenum, GLuint, GLint);
+typedef void (APIENTRY* PFNGLGENRENDERBUFFERSPROC)(GLsizei, GLuint*);
+typedef void (APIENTRY* PFNGLDELETERENDERBUFFERSPROC)(GLsizei, const GLuint*);
+typedef void (APIENTRY* PFNGLBINDRENDERBUFFERPROC)(GLenum, GLuint);
+typedef void (APIENTRY* PFNGLRENDERBUFFERSTORAGEPROC)(GLenum, GLenum, GLsizei, GLsizei);
+typedef void (APIENTRY* PFNGLFRAMEBUFFERRENDERBUFFERPROC)(GLenum, GLenum, GLenum, GLuint);
+typedef GLenum(APIENTRY* PFNGLCHECKFRAMEBUFFERSTATUSPROC)(GLenum);
+typedef void (APIENTRY* PFNGLGENVERTEXARRAYSPROC)(GLsizei, GLuint*);
+typedef void (APIENTRY* PFNGLDELETEVERTEXARRAYSPROC)(GLsizei, const GLuint*);
+typedef void (APIENTRY* PFNGLBINDVERTEXARRAYPROC)(GLuint);
+
+class FLibretroHwRenderContext
+{
+public:
+    bool Initialize(const retro_hw_render_callback& Callback, unsigned InitialWidth, unsigned InitialHeight)
+    {
+        RequestedCallback = Callback;
+        InitialWidth = FMath::Max(InitialWidth, 1u);
+        InitialHeight = FMath::Max(InitialHeight, 1u);
+
+        if (RequestedCallback.context_type != RETRO_HW_CONTEXT_OPENGL &&
+            RequestedCallback.context_type != RETRO_HW_CONTEXT_OPENGL_CORE)
+        {
+            UE_LOG(LogLibretroRunner, Warning, TEXT("Unsupported libretro HW context requested: %d"), static_cast<int32>(RequestedCallback.context_type));
+            return false;
+        }
+
+        if (!CreateWindowAndContext())
+        {
+            return false;
+        }
+
+        if (!LoadFramebufferFunctions())
+        {
+            UE_LOG(LogLibretroRunner, Error, TEXT("OpenGL framebuffer entry points are unavailable"));
+            Shutdown();
+            return false;
+        }
+
+        Resize(InitialWidth, InitialHeight);
+        if (!Framebuffer)
+        {
+            Shutdown();
+            return false;
+        }
+
+        if (RequestedCallback.context_reset)
+        {
+            RequestedCallback.context_reset();
+        }
+
+        bValid = true;
+        UE_LOG(LogLibretroRunner, Log, TEXT("Initialized libretro OpenGL HW context %ux%u"), InitialWidth, InitialHeight);
+        return true;
+    }
+
+    void Shutdown()
+    {
+        MakeCurrent();
+
+        if (bValid && RequestedCallback.context_destroy)
+        {
+            RequestedCallback.context_destroy();
+        }
+
+        if (glDeleteVertexArraysPtr && VertexArray)
+        {
+            glDeleteVertexArraysPtr(1, &VertexArray);
+            VertexArray = 0;
+        }
+        if (glDeleteRenderbuffersPtr && DepthStencilRenderbuffer)
+        {
+            glDeleteRenderbuffersPtr(1, &DepthStencilRenderbuffer);
+            DepthStencilRenderbuffer = 0;
+        }
+        if (glDeleteFramebuffersPtr && Framebuffer)
+        {
+            glDeleteFramebuffersPtr(1, &Framebuffer);
+            Framebuffer = 0;
+        }
+        if (ColorTexture)
+        {
+            glDeleteTextures(1, &ColorTexture);
+            ColorTexture = 0;
+        }
+
+        if (GLContext)
+        {
+            wglMakeCurrent(nullptr, nullptr);
+            wglDeleteContext(GLContext);
+            GLContext = nullptr;
+        }
+        if (DeviceContext && WindowHandle)
+        {
+            ReleaseDC(WindowHandle, DeviceContext);
+            DeviceContext = nullptr;
+        }
+        if (WindowHandle)
+        {
+            DestroyWindow(WindowHandle);
+            WindowHandle = nullptr;
+        }
+        if (WindowClassAtom)
+        {
+            UnregisterClass(GetWindowClassName(), GetModuleHandle(nullptr));
+            WindowClassAtom = 0;
+        }
+
+        bValid = false;
+    }
+
+    bool IsValid() const
+    {
+        return bValid;
+    }
+
+    bool MakeCurrent() const
+    {
+        return DeviceContext && GLContext && wglMakeCurrent(DeviceContext, GLContext);
+    }
+
+    uintptr_t GetCurrentFramebuffer()
+    {
+        MakeCurrent();
+        return static_cast<uintptr_t>(Framebuffer);
+    }
+
+    retro_proc_address_t GetProcAddress(const char* Sym) const
+    {
+        if (!Sym)
+        {
+            return nullptr;
+        }
+
+        PROC Proc = wglGetProcAddress(Sym);
+        if (!Proc || Proc == reinterpret_cast<PROC>(1) || Proc == reinterpret_cast<PROC>(2) ||
+            Proc == reinterpret_cast<PROC>(3) || Proc == reinterpret_cast<PROC>(-1))
+        {
+            HMODULE OpenGL = GetModuleHandle(TEXT("opengl32.dll"));
+            Proc = OpenGL ? ::GetProcAddress(OpenGL, Sym) : nullptr;
+        }
+
+        return reinterpret_cast<retro_proc_address_t>(Proc);
+    }
+
+    void Resize(unsigned NewWidth, unsigned NewHeight)
+    {
+        NewWidth = FMath::Max(NewWidth, 1u);
+        NewHeight = FMath::Max(NewHeight, 1u);
+        if (!MakeCurrent())
+        {
+            return;
+        }
+
+        if (NewWidth == Width && NewHeight == Height && Framebuffer && ColorTexture)
+        {
+            glBindFramebufferPtr(GL_FRAMEBUFFER, Framebuffer);
+            glViewport(0, 0, Width, Height);
+            return;
+        }
+
+        Width = NewWidth;
+        Height = NewHeight;
+
+        if (!Framebuffer)
+        {
+            glGenFramebuffersPtr(1, &Framebuffer);
+        }
+        if (!ColorTexture)
+        {
+            glGenTextures(1, &ColorTexture);
+        }
+
+        glBindTexture(GL_TEXTURE_2D, ColorTexture);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, Width, Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+
+        glBindFramebufferPtr(GL_FRAMEBUFFER, Framebuffer);
+        glFramebufferTexture2DPtr(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ColorTexture, 0);
+
+        if (RequestedCallback.depth || RequestedCallback.stencil)
+        {
+            if (!DepthStencilRenderbuffer)
+            {
+                glGenRenderbuffersPtr(1, &DepthStencilRenderbuffer);
+            }
+            glBindRenderbufferPtr(GL_RENDERBUFFER, DepthStencilRenderbuffer);
+            const GLenum StorageFormat = (RequestedCallback.depth && RequestedCallback.stencil) ? GL_DEPTH24_STENCIL8 : GL_DEPTH_COMPONENT24;
+            glRenderbufferStoragePtr(GL_RENDERBUFFER, StorageFormat, Width, Height);
+
+            if (RequestedCallback.depth && RequestedCallback.stencil)
+            {
+                glFramebufferRenderbufferPtr(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, DepthStencilRenderbuffer);
+            }
+            else if (RequestedCallback.depth)
+            {
+                glFramebufferRenderbufferPtr(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, DepthStencilRenderbuffer);
+            }
+            else if (RequestedCallback.stencil)
+            {
+                glFramebufferRenderbufferPtr(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, DepthStencilRenderbuffer);
+            }
+        }
+
+        const GLenum Status = glCheckFramebufferStatusPtr ? glCheckFramebufferStatusPtr(GL_FRAMEBUFFER) : 0;
+        if (Status != GL_FRAMEBUFFER_COMPLETE)
+        {
+            UE_LOG(LogLibretroRunner, Error, TEXT("OpenGL framebuffer incomplete: 0x%04x"), Status);
+            return;
+        }
+
+        if (glGenVertexArraysPtr && !VertexArray)
+        {
+            glGenVertexArraysPtr(1, &VertexArray);
+        }
+        if (glBindVertexArrayPtr && VertexArray)
+        {
+            glBindVertexArrayPtr(VertexArray);
+        }
+
+        glViewport(0, 0, Width, Height);
+    }
+
+    bool ReadFrame(TArray<uint8>& OutBGRA, unsigned ReadWidth, unsigned ReadHeight)
+    {
+        ReadWidth = FMath::Max(ReadWidth, 1u);
+        ReadHeight = FMath::Max(ReadHeight, 1u);
+        Resize(ReadWidth, ReadHeight);
+
+        if (!Framebuffer || !MakeCurrent())
+        {
+            return false;
+        }
+
+        glBindFramebufferPtr(GL_FRAMEBUFFER, Framebuffer);
+        OutBGRA.SetNumUninitialized(ReadWidth * ReadHeight * 4);
+
+        TArray<uint8> RawBottomUp;
+        RawBottomUp.SetNumUninitialized(OutBGRA.Num());
+        glReadPixels(0, 0, ReadWidth, ReadHeight, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, RawBottomUp.GetData());
+
+        const uint32 RowBytes = ReadWidth * 4;
+        for (unsigned Y = 0; Y < ReadHeight; ++Y)
+        {
+            const unsigned SrcY = RequestedCallback.bottom_left_origin ? (ReadHeight - 1 - Y) : Y;
+            FMemory::Memcpy(OutBGRA.GetData() + Y * RowBytes, RawBottomUp.GetData() + SrcY * RowBytes, RowBytes);
+        }
+
+        return true;
+    }
+
+private:
+    static const TCHAR* GetWindowClassName()
+    {
+        return TEXT("UE_libretro_Hidden_GL_Context");
+    }
+
+    static LRESULT CALLBACK WindowProc(HWND Hwnd, UINT Message, WPARAM WParam, LPARAM LParam)
+    {
+        return DefWindowProc(Hwnd, Message, WParam, LParam);
+    }
+
+    bool CreateWindowAndContext()
+    {
+        HINSTANCE Instance = GetModuleHandle(nullptr);
+
+        WNDCLASS WindowClass = {};
+        WindowClass.style = CS_OWNDC;
+        WindowClass.lpfnWndProc = &FLibretroHwRenderContext::WindowProc;
+        WindowClass.hInstance = Instance;
+        WindowClass.lpszClassName = GetWindowClassName();
+        WindowClassAtom = RegisterClass(&WindowClass);
+        if (!WindowClassAtom && GetLastError() != ERROR_CLASS_ALREADY_EXISTS)
+        {
+            UE_LOG(LogLibretroRunner, Error, TEXT("Failed to register hidden OpenGL window class"));
+            return false;
+        }
+
+        WindowHandle = CreateWindowEx(
+            0,
+            GetWindowClassName(),
+            TEXT("UE libretro OpenGL"),
+            WS_OVERLAPPEDWINDOW,
+            0,
+            0,
+            1,
+            1,
+            nullptr,
+            nullptr,
+            Instance,
+            nullptr);
+        if (!WindowHandle)
+        {
+            UE_LOG(LogLibretroRunner, Error, TEXT("Failed to create hidden OpenGL window"));
+            return false;
+        }
+
+        DeviceContext = GetDC(WindowHandle);
+        if (!DeviceContext)
+        {
+            UE_LOG(LogLibretroRunner, Error, TEXT("Failed to acquire OpenGL device context"));
+            return false;
+        }
+
+        PIXELFORMATDESCRIPTOR PixelFormatDesc = {};
+        PixelFormatDesc.nSize = sizeof(PixelFormatDesc);
+        PixelFormatDesc.nVersion = 1;
+        PixelFormatDesc.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
+        PixelFormatDesc.iPixelType = PFD_TYPE_RGBA;
+        PixelFormatDesc.cColorBits = 32;
+        PixelFormatDesc.cDepthBits = RequestedCallback.depth ? 24 : 0;
+        PixelFormatDesc.cStencilBits = RequestedCallback.stencil ? 8 : 0;
+        PixelFormatDesc.iLayerType = PFD_MAIN_PLANE;
+
+        const int PixelFormatIndex = ChoosePixelFormat(DeviceContext, &PixelFormatDesc);
+        if (PixelFormatIndex == 0 || !SetPixelFormat(DeviceContext, PixelFormatIndex, &PixelFormatDesc))
+        {
+            UE_LOG(LogLibretroRunner, Error, TEXT("Failed to set OpenGL pixel format"));
+            return false;
+        }
+
+        HGLRC TemporaryContext = wglCreateContext(DeviceContext);
+        if (!TemporaryContext || !wglMakeCurrent(DeviceContext, TemporaryContext))
+        {
+            UE_LOG(LogLibretroRunner, Error, TEXT("Failed to create temporary OpenGL context"));
+            return false;
+        }
+
+        PFNWGLCREATECONTEXTATTRIBSARBPROC CreateContextAttribs =
+            reinterpret_cast<PFNWGLCREATECONTEXTATTRIBSARBPROC>(wglGetProcAddress("wglCreateContextAttribsARB"));
+
+        if (CreateContextAttribs)
+        {
+            const int Major = static_cast<int>(RequestedCallback.version_major ? RequestedCallback.version_major : 3);
+            const int Minor = static_cast<int>(RequestedCallback.version_minor ? RequestedCallback.version_minor : 3);
+            const bool bCore = RequestedCallback.context_type == RETRO_HW_CONTEXT_OPENGL_CORE;
+            const int Attributes[] =
+            {
+                WGL_CONTEXT_MAJOR_VERSION_ARB, Major,
+                WGL_CONTEXT_MINOR_VERSION_ARB, Minor,
+                WGL_CONTEXT_PROFILE_MASK_ARB, bCore ? WGL_CONTEXT_CORE_PROFILE_BIT_ARB : 0,
+                0
+            };
+
+            GLContext = CreateContextAttribs(DeviceContext, nullptr, Attributes);
+        }
+
+        if (!GLContext)
+        {
+            GLContext = TemporaryContext;
+            TemporaryContext = nullptr;
+        }
+
+        wglMakeCurrent(nullptr, nullptr);
+        if (TemporaryContext)
+        {
+            wglDeleteContext(TemporaryContext);
+        }
+
+        if (!wglMakeCurrent(DeviceContext, GLContext))
+        {
+            UE_LOG(LogLibretroRunner, Error, TEXT("Failed to activate OpenGL context"));
+            return false;
+        }
+
+        return true;
+    }
+
+    template <typename T>
+    bool LoadGlFunction(T& OutFunction, const char* Name)
+    {
+        OutFunction = reinterpret_cast<T>(GetProcAddress(Name));
+        return OutFunction != nullptr;
+    }
+
+    bool LoadFramebufferFunctions()
+    {
+        return LoadGlFunction(glGenFramebuffersPtr, "glGenFramebuffers") &&
+            LoadGlFunction(glDeleteFramebuffersPtr, "glDeleteFramebuffers") &&
+            LoadGlFunction(glBindFramebufferPtr, "glBindFramebuffer") &&
+            LoadGlFunction(glFramebufferTexture2DPtr, "glFramebufferTexture2D") &&
+            LoadGlFunction(glGenRenderbuffersPtr, "glGenRenderbuffers") &&
+            LoadGlFunction(glDeleteRenderbuffersPtr, "glDeleteRenderbuffers") &&
+            LoadGlFunction(glBindRenderbufferPtr, "glBindRenderbuffer") &&
+            LoadGlFunction(glRenderbufferStoragePtr, "glRenderbufferStorage") &&
+            LoadGlFunction(glFramebufferRenderbufferPtr, "glFramebufferRenderbuffer") &&
+            LoadGlFunction(glCheckFramebufferStatusPtr, "glCheckFramebufferStatus") &&
+            LoadGlFunction(glGenVertexArraysPtr, "glGenVertexArrays") &&
+            LoadGlFunction(glDeleteVertexArraysPtr, "glDeleteVertexArrays") &&
+            LoadGlFunction(glBindVertexArrayPtr, "glBindVertexArray");
+    }
+
+private:
+    retro_hw_render_callback RequestedCallback = {};
+    ATOM WindowClassAtom = 0;
+    HWND WindowHandle = nullptr;
+    HDC DeviceContext = nullptr;
+    HGLRC GLContext = nullptr;
+    GLuint Framebuffer = 0;
+    GLuint ColorTexture = 0;
+    GLuint DepthStencilRenderbuffer = 0;
+    GLuint VertexArray = 0;
+    unsigned Width = 0;
+    unsigned Height = 0;
+    bool bValid = false;
+
+    PFNGLGENFRAMEBUFFERSPROC glGenFramebuffersPtr = nullptr;
+    PFNGLDELETEFRAMEBUFFERSPROC glDeleteFramebuffersPtr = nullptr;
+    PFNGLBINDFRAMEBUFFERPROC glBindFramebufferPtr = nullptr;
+    PFNGLFRAMEBUFFERTEXTURE2DPROC glFramebufferTexture2DPtr = nullptr;
+    PFNGLGENRENDERBUFFERSPROC glGenRenderbuffersPtr = nullptr;
+    PFNGLDELETERENDERBUFFERSPROC glDeleteRenderbuffersPtr = nullptr;
+    PFNGLBINDRENDERBUFFERPROC glBindRenderbufferPtr = nullptr;
+    PFNGLRENDERBUFFERSTORAGEPROC glRenderbufferStoragePtr = nullptr;
+    PFNGLFRAMEBUFFERRENDERBUFFERPROC glFramebufferRenderbufferPtr = nullptr;
+    PFNGLCHECKFRAMEBUFFERSTATUSPROC glCheckFramebufferStatusPtr = nullptr;
+    PFNGLGENVERTEXARRAYSPROC glGenVertexArraysPtr = nullptr;
+    PFNGLDELETEVERTEXARRAYSPROC glDeleteVertexArraysPtr = nullptr;
+    PFNGLBINDVERTEXARRAYPROC glBindVertexArrayPtr = nullptr;
+};
+#endif
+
 static FLibretroNESRunner* GActiveLibretroRunner = nullptr;
 
 FLibretroNESRunner::FLibretroNESRunner()
@@ -67,6 +576,9 @@ bool FLibretroNESRunner::Start(const FLibretroLaunchConfig& Config)
     bResetRequested = false;
     bLoggedFirstFrame = false;
     VideoFrameCounter = 0;
+    ActualRunFps = 0.0;
+    AverageRetroRunMs = 0.0;
+    FrameTimeCallback = {};
     SetStatus(FString::Printf(TEXT("正在启动 %s..."), *LaunchConfig.DisplayName));
 
     Thread = FRunnableThread::Create(this, TEXT("LibretroRunner"), 0, TPri_Normal);
@@ -135,6 +647,8 @@ bool FLibretroNESRunner::PrepareLaunch(const FLibretroLaunchConfig& Config)
         bNewFrame = false;
     }
 
+    HwRenderContext.Reset();
+
     return true;
 }
 
@@ -158,22 +672,6 @@ void FLibretroNESRunner::StopAndUnload()
         delete Thread;
         Thread = nullptr;
     }
-
-    SaveSRAM();
-
-    if (bGameLoaded && Api.retro_unload_game)
-    {
-        Api.retro_unload_game();
-        bGameLoaded = false;
-    }
-
-    if (bCoreInitialized && Api.retro_deinit)
-    {
-        Api.retro_deinit();
-        bCoreInitialized = false;
-    }
-
-    UnloadCore();
 
     if (GActiveLibretroRunner == this)
     {
@@ -203,6 +701,7 @@ uint32 FLibretroNESRunner::Run()
 
     if (!LoadCore())
     {
+        CleanupCoreOnRunnerThread();
         bRunning = false;
         return 1;
     }
@@ -225,6 +724,7 @@ uint32 FLibretroNESRunner::Run()
 
     if (!LoadGame(RomPath))
     {
+        CleanupCoreOnRunnerThread();
         bRunning = false;
         return 1;
     }
@@ -242,11 +742,11 @@ uint32 FLibretroNESRunner::Run()
         TargetFps,
         TargetSampleRate);
 
-    const unsigned MaxWidth = FMath::Max(AvInfo.geometry.max_width, AvInfo.geometry.base_width);
-    const unsigned MaxHeight = FMath::Max(AvInfo.geometry.max_height, AvInfo.geometry.base_height);
-    AsyncTask(ENamedThreads::GameThread, [this, MaxWidth, MaxHeight]()
+    const unsigned DisplayWidth = AvInfo.geometry.base_width > 0 ? AvInfo.geometry.base_width : AvInfo.geometry.max_width;
+    const unsigned DisplayHeight = AvInfo.geometry.base_height > 0 ? AvInfo.geometry.base_height : AvInfo.geometry.max_height;
+    AsyncTask(ENamedThreads::GameThread, [this, DisplayWidth, DisplayHeight]()
     {
-        InitializeTexture(MaxWidth > 0 ? MaxWidth : 256, MaxHeight > 0 ? MaxHeight : 240);
+        InitializeTexture(DisplayWidth > 0 ? DisplayWidth : 256, DisplayHeight > 0 ? DisplayHeight : 240);
     });
 
     bRunning = true;
@@ -254,6 +754,10 @@ uint32 FLibretroNESRunner::Run()
 
     const double FrameTime = 1.0 / TargetFps;
     double NextFrameTime = FPlatformTime::Seconds();
+    double LastFrameTime = NextFrameTime;
+    double StatsStartTime = NextFrameTime;
+    uint32 FramesSinceStats = 0;
+    double RunMsAccumulator = 0.0;
 
     while (!bStopRequested)
     {
@@ -266,7 +770,45 @@ uint32 FLibretroNESRunner::Run()
             bResetRequested = false;
         }
 
+        if (FrameTimeCallback.callback)
+        {
+            const double BeforeFrameCallbackTime = FPlatformTime::Seconds();
+            const retro_usec_t DeltaUsec = static_cast<retro_usec_t>(FMath::Clamp((BeforeFrameCallbackTime - LastFrameTime) * 1000000.0, 0.0, 1000000.0));
+            FrameTimeCallback.callback(DeltaUsec > 0 ? DeltaUsec : FrameTimeCallback.reference);
+            LastFrameTime = BeforeFrameCallbackTime;
+        }
+
+        if (HwRenderContext)
+        {
+            HwRenderContext->MakeCurrent();
+        }
+
+        const double RunStartTime = FPlatformTime::Seconds();
         Api.retro_run();
+        const double RunEndTime = FPlatformTime::Seconds();
+
+        RunMsAccumulator += (RunEndTime - RunStartTime) * 1000.0;
+        ++FramesSinceStats;
+        const double StatsElapsed = RunEndTime - StatsStartTime;
+        if (StatsElapsed >= 1.0)
+        {
+            ActualRunFps = FramesSinceStats / StatsElapsed;
+            AverageRetroRunMs = RunMsAccumulator / FramesSinceStats;
+            SetStatus(FString::Printf(
+                TEXT("运行中：%s  实测 %.1f/%.1f FPS  retro_run %.2f ms"),
+                *FPaths::GetCleanFilename(RomPath),
+                ActualRunFps,
+                TargetFps,
+                AverageRetroRunMs));
+            UE_LOG(LogLibretroRunner, Log, TEXT("Runtime stats: actual_fps=%.2f target_fps=%.2f retro_run_avg_ms=%.2f hw_render=%s"),
+                ActualRunFps,
+                TargetFps,
+                AverageRetroRunMs,
+                HwRenderContext && HwRenderContext->IsValid() ? TEXT("yes") : TEXT("no"));
+            StatsStartTime = RunEndTime;
+            FramesSinceStats = 0;
+            RunMsAccumulator = 0.0;
+        }
 
         const double Now = FPlatformTime::Seconds();
         NextFrameTime += FrameTime;
@@ -281,6 +823,7 @@ uint32 FLibretroNESRunner::Run()
         }
     }
 
+    CleanupCoreOnRunnerThread();
     bRunning = false;
     return 0;
 }
@@ -345,6 +888,31 @@ void FLibretroNESRunner::UnloadCore()
         CoreHandle = nullptr;
     }
     Api = FApi();
+}
+
+void FLibretroNESRunner::CleanupCoreOnRunnerThread()
+{
+    if (HwRenderContext)
+    {
+        HwRenderContext->MakeCurrent();
+    }
+
+    SaveSRAM();
+
+    if (bGameLoaded && Api.retro_unload_game)
+    {
+        Api.retro_unload_game();
+        bGameLoaded = false;
+    }
+
+    if (bCoreInitialized && Api.retro_deinit)
+    {
+        Api.retro_deinit();
+        bCoreInitialized = false;
+    }
+
+    HwRenderContext.Reset();
+    UnloadCore();
 }
 
 bool FLibretroNESRunner::LoadGame(const FString& InRomPath)
@@ -458,6 +1026,15 @@ bool FLibretroNESRunner::ConsumeFrameForTextureUpdate()
         return false;
     }
 
+    if (LocalWidth != TextureWidth || LocalHeight != TextureHeight)
+    {
+        InitializeTexture(LocalWidth, LocalHeight);
+        if (!VideoTexture)
+        {
+            return false;
+        }
+    }
+
     FUpdateTextureRegion2D* HeapRegion = new FUpdateTextureRegion2D(0, 0, 0, 0, LocalWidth, LocalHeight);
     uint8* HeapData = static_cast<uint8*>(FMemory::Malloc(LocalFrame.Num()));
     FMemory::Memcpy(HeapData, LocalFrame.GetData(), LocalFrame.Num());
@@ -476,6 +1053,75 @@ bool FLibretroNESRunner::ConsumeFrameForTextureUpdate()
         });
 
     return true;
+}
+
+void FLibretroNESRunner::SubmitVideoFrame(TArray<uint8>&& Converted, unsigned Width, unsigned Height, const TCHAR* SourceName)
+{
+    if (Converted.Num() == 0 || Width == 0 || Height == 0)
+    {
+        return;
+    }
+
+    uint64 BrightnessSum = 0;
+    uint32 NonBlackPixels = 0;
+    const uint8* Pixels = Converted.GetData();
+    const int32 PixelCount = static_cast<int32>(Width * Height);
+    for (int32 Index = 0; Index < PixelCount; ++Index)
+    {
+        const uint8 B = Pixels[Index * 4 + 0];
+        const uint8 G = Pixels[Index * 4 + 1];
+        const uint8 R = Pixels[Index * 4 + 2];
+        BrightnessSum += R + G + B;
+        NonBlackPixels += (R | G | B) ? 1u : 0u;
+    }
+
+    ++VideoFrameCounter;
+    if (VideoFrameCounter == 1 || VideoFrameCounter == 60 || VideoFrameCounter == 180 || VideoFrameCounter == 360)
+    {
+        UE_LOG(LogLibretroRunner, Log, TEXT("Frame %llu stats (%s): nonblack=%u brightness=%llu"),
+            static_cast<unsigned long long>(VideoFrameCounter),
+            SourceName ? SourceName : TEXT("video"),
+            NonBlackPixels,
+            static_cast<unsigned long long>(BrightnessSum));
+    }
+
+    {
+        FScopeLock Lock(&FrameMutex);
+        FrameBGRA = MoveTemp(Converted);
+        FrameWidth = Width;
+        FrameHeight = Height;
+        bNewFrame = true;
+    }
+}
+
+void FLibretroNESRunner::CopyHardwareVideoFrame(unsigned Width, unsigned Height)
+{
+#if PLATFORM_WINDOWS
+    if (!HwRenderContext || !HwRenderContext->IsValid())
+    {
+        return;
+    }
+
+    if (Width == 0 || Height == 0)
+    {
+        Width = AvInfo.geometry.base_width > 0 ? AvInfo.geometry.base_width : AvInfo.geometry.max_width;
+        Height = AvInfo.geometry.base_height > 0 ? AvInfo.geometry.base_height : AvInfo.geometry.max_height;
+    }
+
+    TArray<uint8> Converted;
+    if (HwRenderContext->ReadFrame(Converted, Width, Height))
+    {
+        if (!bLoggedFirstFrame)
+        {
+            bLoggedFirstFrame = true;
+            UE_LOG(LogLibretroRunner, Log, TEXT("First hardware video frame read: %ux%u"), Width, Height);
+        }
+        SubmitVideoFrame(MoveTemp(Converted), Width, Height, TEXT("opengl"));
+    }
+#else
+    UE_UNUSED(Width);
+    UE_UNUSED(Height);
+#endif
 }
 
 void FLibretroNESRunner::CopyVideoFrame(const void* Data, unsigned Width, unsigned Height, size_t Pitch)
@@ -497,8 +1143,6 @@ void FLibretroNESRunner::CopyVideoFrame(const void* Data, unsigned Width, unsign
 
     TArray<uint8> Converted;
     Converted.SetNumUninitialized(Width * Height * 4);
-    uint64 BrightnessSum = 0;
-    uint32 NonBlackPixels = 0;
 
     const uint8* SrcBytes = static_cast<const uint8*>(Data);
     for (unsigned Y = 0; Y < Height; ++Y)
@@ -519,8 +1163,6 @@ void FLibretroNESRunner::CopyVideoFrame(const void* Data, unsigned Width, unsign
                 DstRow[X * 4 + 1] = G;
                 DstRow[X * 4 + 2] = R;
                 DstRow[X * 4 + 3] = 255;
-                BrightnessSum += R + G + B;
-                NonBlackPixels += (R | G | B) ? 1u : 0u;
             }
         }
         else if (PixelFormat == RETRO_PIXEL_FORMAT_0RGB1555)
@@ -536,8 +1178,6 @@ void FLibretroNESRunner::CopyVideoFrame(const void* Data, unsigned Width, unsign
                 DstRow[X * 4 + 1] = G;
                 DstRow[X * 4 + 2] = R;
                 DstRow[X * 4 + 3] = 255;
-                BrightnessSum += R + G + B;
-                NonBlackPixels += (R | G | B) ? 1u : 0u;
             }
         }
         else
@@ -553,28 +1193,11 @@ void FLibretroNESRunner::CopyVideoFrame(const void* Data, unsigned Width, unsign
                 DstRow[X * 4 + 1] = G;
                 DstRow[X * 4 + 2] = R;
                 DstRow[X * 4 + 3] = 255;
-                BrightnessSum += R + G + B;
-                NonBlackPixels += (R | G | B) ? 1u : 0u;
             }
         }
     }
 
-    ++VideoFrameCounter;
-    if (VideoFrameCounter == 1 || VideoFrameCounter == 60 || VideoFrameCounter == 180 || VideoFrameCounter == 360)
-    {
-        UE_LOG(LogLibretroRunner, Log, TEXT("Frame %llu stats: nonblack=%u brightness=%llu"),
-            static_cast<unsigned long long>(VideoFrameCounter),
-            NonBlackPixels,
-            static_cast<unsigned long long>(BrightnessSum));
-    }
-
-    {
-        FScopeLock Lock(&FrameMutex);
-        FrameBGRA = MoveTemp(Converted);
-        FrameWidth = Width;
-        FrameHeight = Height;
-        bNewFrame = true;
-    }
+    SubmitVideoFrame(MoveTemp(Converted), Width, Height, TEXT("software"));
 }
 
 void FLibretroNESRunner::QueueAudio(const int16* Data, size_t Frames)
@@ -695,6 +1318,28 @@ bool FLibretroNESRunner::HandleEnvironment(unsigned Cmd, void* Data)
 {
     switch (Cmd)
     {
+    case RETRO_ENVIRONMENT_SET_HW_RENDER:
+        return ConfigureHardwareRendering(static_cast<retro_hw_render_callback*>(Data));
+
+    case RETRO_ENVIRONMENT_GET_PREFERRED_HW_RENDER:
+        if (Data)
+        {
+            *static_cast<retro_hw_context_type*>(Data) = RETRO_HW_CONTEXT_OPENGL_CORE;
+        }
+        return true;
+
+    case RETRO_ENVIRONMENT_SET_FRAME_TIME_CALLBACK:
+        if (Data)
+        {
+            FrameTimeCallback = *static_cast<retro_frame_time_callback*>(Data);
+            return true;
+        }
+        FrameTimeCallback = {};
+        return false;
+
+    case RETRO_ENVIRONMENT_SET_HW_SHARED_CONTEXT:
+        return true;
+
     case RETRO_ENVIRONMENT_SET_PIXEL_FORMAT:
         PixelFormat = *static_cast<retro_pixel_format*>(Data);
         return PixelFormat == RETRO_PIXEL_FORMAT_XRGB8888 ||
@@ -738,7 +1383,7 @@ bool FLibretroNESRunner::HandleEnvironment(unsigned Cmd, void* Data)
         }
 
         Variable->value = FindCoreOptionValue(Variable->key);
-        return Variable->value != nullptr;
+        return true;
     }
 
     case RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE:
@@ -831,6 +1476,45 @@ bool FLibretroNESRunner::HandleEnvironment(unsigned Cmd, void* Data)
     }
 }
 
+bool FLibretroNESRunner::ConfigureHardwareRendering(retro_hw_render_callback* Callback)
+{
+    if (!Callback)
+    {
+        return false;
+    }
+
+    if (LaunchConfig.SystemType != ELibretroSystemType::ThreeDS)
+    {
+        UE_LOG(LogLibretroRunner, Warning, TEXT("Core requested hardware rendering for non-3DS content; accepting OpenGL path anyway"));
+    }
+
+    if (Callback->context_type != RETRO_HW_CONTEXT_OPENGL && Callback->context_type != RETRO_HW_CONTEXT_OPENGL_CORE)
+    {
+        UE_LOG(LogLibretroRunner, Warning, TEXT("libretro core requested unsupported HW context: %d"), static_cast<int32>(Callback->context_type));
+        return false;
+    }
+
+    Callback->get_current_framebuffer = &FLibretroNESRunner::RetroGetCurrentFramebuffer;
+    Callback->get_proc_address = &FLibretroNESRunner::RetroGetProcAddress;
+    Callback->cache_context = true;
+
+    const unsigned InitialWidth = AvInfo.geometry.max_width > 0 ? AvInfo.geometry.max_width : 400;
+    const unsigned InitialHeight = AvInfo.geometry.max_height > 0 ? AvInfo.geometry.max_height : 480;
+
+#if PLATFORM_WINDOWS
+    HwRenderContext = MakeUnique<FLibretroHwRenderContext>();
+    if (!HwRenderContext->Initialize(*Callback, InitialWidth, InitialHeight))
+    {
+        HwRenderContext.Reset();
+        return false;
+    }
+    return true;
+#else
+    UE_LOG(LogLibretroRunner, Error, TEXT("Hardware-rendered libretro cores are only implemented for Windows in this frontend"));
+    return false;
+#endif
+}
+
 const char* FLibretroNESRunner::FindCoreOptionValue(const char* Key) const
 {
     const FString KeyString = UTF8_TO_TCHAR(Key);
@@ -886,7 +1570,16 @@ bool FLibretroNESRunner::RetroEnvironment(unsigned Cmd, void* Data)
 
 void FLibretroNESRunner::RetroVideoRefresh(const void* Data, unsigned Width, unsigned Height, size_t Pitch)
 {
-    if (GActiveLibretroRunner && Data)
+    if (!GActiveLibretroRunner)
+    {
+        return;
+    }
+
+    if (Data == RETRO_HW_FRAME_BUFFER_VALID)
+    {
+        GActiveLibretroRunner->CopyHardwareVideoFrame(Width, Height);
+    }
+    else if (Data)
     {
         GActiveLibretroRunner->CopyVideoFrame(Data, Width, Height, Pitch);
     }
@@ -917,6 +1610,29 @@ void FLibretroNESRunner::RetroInputPoll()
 int16 FLibretroNESRunner::RetroInputState(unsigned Port, unsigned Device, unsigned Index, unsigned Id)
 {
     return GActiveLibretroRunner ? GActiveLibretroRunner->QueryInput(Port, Device, Index, Id) : 0;
+}
+
+uintptr_t FLibretroNESRunner::RetroGetCurrentFramebuffer()
+{
+#if PLATFORM_WINDOWS
+    return GActiveLibretroRunner && GActiveLibretroRunner->HwRenderContext
+        ? GActiveLibretroRunner->HwRenderContext->GetCurrentFramebuffer()
+        : 0;
+#else
+    return 0;
+#endif
+}
+
+retro_proc_address_t FLibretroNESRunner::RetroGetProcAddress(const char* Sym)
+{
+#if PLATFORM_WINDOWS
+    return GActiveLibretroRunner && GActiveLibretroRunner->HwRenderContext
+        ? GActiveLibretroRunner->HwRenderContext->GetProcAddress(Sym)
+        : nullptr;
+#else
+    UE_UNUSED(Sym);
+    return nullptr;
+#endif
 }
 
 void FLibretroNESRunner::RetroLog(enum retro_log_level Level, const char* Fmt, ...)

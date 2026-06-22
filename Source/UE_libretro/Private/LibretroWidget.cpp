@@ -22,12 +22,12 @@ DEFINE_LOG_CATEGORY_STATIC(LogLibretroWidget, Log, All);
 
 namespace
 {
-    constexpr float VideoBoxWidth = 768.0f;
+    constexpr float VideoBoxWidth = 860.0f;
     constexpr float VideoBoxHeight = 720.0f;
 
     FText DefaultStatusText()
     {
-        return FText::FromString(TEXT("选择一个 ROM 启动。WASD 方向，J=A/确认，K=B/取消，U=X，I=Y，Q=L，E=R，Enter=Start，Backspace=Select，Space=触摸下屏中心。"));
+        return FText::FromString(TEXT("选择一个 ROM 启动。WASD 方向/Circle Pad，J=A/确认，K=B/取消，U=X，I=Y，Q=L，E=R，Z=ZL，C=ZR，Enter=Start，Backspace=Select，Space=触摸下屏中心。"));
     }
 }
 
@@ -81,8 +81,8 @@ TSharedRef<SWidget> ULibretroWidget::RebuildWidget()
     StatusText->SetColorAndOpacity(FSlateColor(FLinearColor(0.78f, 0.84f, 0.90f, 1.0f)));
     StatusText->SetJustification(ETextJustify::Center);
     StatusText->SetAutoWrapText(true);
-    StatusText->SetWrapTextAt(1120.0f);
-    StatusText->SetFont(FCoreStyle::GetDefaultFontStyle("Regular", 17));
+    StatusText->SetWrapTextAt(1260.0f);
+    StatusText->SetFont(FCoreStyle::GetDefaultFontStyle("Regular", 16));
     UOverlaySlot* StatusSlot = Panel->AddChildToOverlay(StatusText);
     StatusSlot->SetHorizontalAlignment(HAlign_Center);
     StatusSlot->SetVerticalAlignment(VAlign_Bottom);
@@ -97,6 +97,7 @@ TSharedRef<SWidget> ULibretroWidget::RebuildWidget()
     StartNesButton = CreateLauncherButton(ButtonRow, TEXT("StartNesButton"), TEXT("重装机兵1 FC"));
     StartMM2RButton = CreateLauncherButton(ButtonRow, TEXT("StartMM2RButton"), TEXT("Metal Max 2R NDS"));
     StartMM3Button = CreateLauncherButton(ButtonRow, TEXT("StartMM3Button"), TEXT("Metal Max 3 NDS"));
+    StartMM4Button = CreateLauncherButton(ButtonRow, TEXT("StartMM4Button"), TEXT("重装机兵4 3DS"));
 
     return Super::RebuildWidget();
 }
@@ -107,18 +108,18 @@ UButton* ULibretroWidget::CreateLauncherButton(UPanelWidget* Parent, const FName
     UHorizontalBoxSlot* ButtonSlot = Cast<UHorizontalBoxSlot>(Parent->AddChild(Button));
     if (ButtonSlot)
     {
-        ButtonSlot->SetPadding(FMargin(8.0f, 0.0f));
+        ButtonSlot->SetPadding(FMargin(6.0f, 0.0f));
         ButtonSlot->SetHorizontalAlignment(HAlign_Center);
         ButtonSlot->SetVerticalAlignment(VAlign_Center);
     }
 
     USizeBox* SizeBox = WidgetTree->ConstructWidget<USizeBox>(USizeBox::StaticClass(), FName(*(Name.ToString() + TEXT("_Size"))));
-    SizeBox->SetWidthOverride(220.0f);
+    SizeBox->SetWidthOverride(210.0f);
     SizeBox->SetHeightOverride(48.0f);
 
     UTextBlock* ButtonText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), FName(*(Name.ToString() + TEXT("_Text"))));
     ButtonText->SetText(FText::FromString(Text));
-    ButtonText->SetFont(FCoreStyle::GetDefaultFontStyle("Bold", 18));
+    ButtonText->SetFont(FCoreStyle::GetDefaultFontStyle("Bold", 17));
     ButtonText->SetColorAndOpacity(FSlateColor(FLinearColor(0.05f, 0.07f, 0.10f, 1.0f)));
     ButtonText->SetJustification(ETextJustify::Center);
     ButtonText->SetAutoWrapText(false);
@@ -143,6 +144,10 @@ void ULibretroWidget::NativeConstruct()
     if (StartMM3Button)
     {
         StartMM3Button->OnClicked.AddDynamic(this, &ULibretroWidget::HandleStartMM3Clicked);
+    }
+    if (StartMM4Button)
+    {
+        StartMM4Button->OnClicked.AddDynamic(this, &ULibretroWidget::HandleStartMM4Clicked);
     }
 }
 
@@ -170,6 +175,14 @@ void ULibretroWidget::HandleStartMM3Clicked()
     }
 }
 
+void ULibretroWidget::HandleStartMM4Clicked()
+{
+    if (ALibretroPawn* Pawn = OwningPawn.Get())
+    {
+        Pawn->StartMetalMax4();
+    }
+}
+
 void ULibretroWidget::RefreshFromRunner()
 {
     ALibretroPawn* Pawn = OwningPawn.Get();
@@ -186,7 +199,7 @@ void ULibretroWidget::RefreshFromRunner()
         {
             CurrentVideoTexture = Texture;
             VideoImage->SetBrushFromTexture(Texture, false);
-            VideoImage->SetDesiredSizeOverride(FVector2D(256.0f, 384.0f));
+            VideoImage->SetDesiredSizeOverride(FVector2D(Texture->GetSizeX(), Texture->GetSizeY()));
             VideoImage->SetColorAndOpacity(FLinearColor::White);
             UE_LOG(LogLibretroWidget, Log, TEXT("Bound video texture to UMG image: %s"), *GetNameSafe(Texture));
         }

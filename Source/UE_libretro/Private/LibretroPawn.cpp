@@ -49,6 +49,9 @@ void ALibretroPawn::BeginPlay()
         case EAutoRomTarget::MM3:
             StartMetalMax3();
             break;
+        case EAutoRomTarget::MM4:
+            StartMetalMax4();
+            break;
         case EAutoRomTarget::NES:
         case EAutoRomTarget::None:
         default:
@@ -78,7 +81,7 @@ void ALibretroPawn::Tick(float DeltaSeconds)
         if (bAutoScreenshot && bUpdatedTexture && !bScreenshotRequested)
         {
             bScreenshotRequested = true;
-            ScreenshotDelay = 8.0f;
+            ScreenshotDelay = 10.0f;
         }
     }
 
@@ -144,6 +147,10 @@ void ALibretroPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
     PlayerInputComponent->BindKey(EKeys::Q, IE_Released, this, &ALibretroPawn::ReleaseL);
     PlayerInputComponent->BindKey(EKeys::E, IE_Pressed, this, &ALibretroPawn::PressR);
     PlayerInputComponent->BindKey(EKeys::E, IE_Released, this, &ALibretroPawn::ReleaseR);
+    PlayerInputComponent->BindKey(EKeys::Z, IE_Pressed, this, &ALibretroPawn::PressZL);
+    PlayerInputComponent->BindKey(EKeys::Z, IE_Released, this, &ALibretroPawn::ReleaseZL);
+    PlayerInputComponent->BindKey(EKeys::C, IE_Pressed, this, &ALibretroPawn::PressZR);
+    PlayerInputComponent->BindKey(EKeys::C, IE_Released, this, &ALibretroPawn::ReleaseZR);
     PlayerInputComponent->BindKey(EKeys::BackSpace, IE_Pressed, this, &ALibretroPawn::PressSelect);
     PlayerInputComponent->BindKey(EKeys::BackSpace, IE_Released, this, &ALibretroPawn::ReleaseSelect);
     PlayerInputComponent->BindKey(EKeys::Enter, IE_Pressed, this, &ALibretroPawn::PressStart);
@@ -165,6 +172,11 @@ void ALibretroPawn::StartMetalMax2R()
 void ALibretroPawn::StartMetalMax3()
 {
     StartRom(MakeNdsConfig(TEXT("Metal_Max_3_chs_v1.0-Union_of_MM3.nds"), TEXT("Metal Max 3")));
+}
+
+void ALibretroPawn::StartMetalMax4()
+{
+    StartRom(Make3dsConfig());
 }
 
 void ALibretroPawn::StartRom(const FLibretroLaunchConfig& Config)
@@ -218,6 +230,34 @@ FLibretroLaunchConfig ALibretroPawn::MakeNdsConfig(const FString& RomFileName, c
     return Config;
 }
 
+FLibretroLaunchConfig ALibretroPawn::Make3dsConfig() const
+{
+    FLibretroLaunchConfig Config;
+    Config.DisplayName = TEXT("重装机兵4 月光歌姬");
+    Config.SystemType = ELibretroSystemType::ThreeDS;
+    Config.CorePath = FPaths::ProjectDir() / TEXT("ThirdParty/Libretro/Cores/Win64/azahar_libretro.dll");
+    Config.RomPath = FindRomByFileName(TEXT("E:/Z_Game/MM4"), TEXT("重装机兵4月光歌姬515.cci"));
+    Config.CoreOptions.Add(TEXT("citra_graphics_api"), TEXT("OpenGL"));
+    Config.CoreOptions.Add(TEXT("citra_layout_option"), TEXT("Default Top-Bottom"));
+    Config.CoreOptions.Add(TEXT("citra_resolution_factor"), TEXT("1x (Native 400x240)"));
+    Config.CoreOptions.Add(TEXT("citra_use_hw_renderer"), TEXT("enabled"));
+    Config.CoreOptions.Add(TEXT("citra_use_hw_shader"), TEXT("enabled"));
+    Config.CoreOptions.Add(TEXT("citra_use_disk_shader_cache"), TEXT("enabled"));
+    Config.CoreOptions.Add(TEXT("citra_shaders_accurate_mul"), TEXT("disabled"));
+    Config.CoreOptions.Add(TEXT("citra_use_shader_jit"), TEXT("enabled"));
+    Config.CoreOptions.Add(TEXT("citra_use_cpu_jit"), TEXT("enabled"));
+    Config.CoreOptions.Add(TEXT("citra_cpu_clock_percentage"), TEXT("100"));
+    Config.CoreOptions.Add(TEXT("citra_is_new_3ds"), TEXT("New 3DS"));
+    Config.CoreOptions.Add(TEXT("citra_input_type"), TEXT("Retropad"));
+    Config.CoreOptions.Add(TEXT("citra_enable_mouse_touchscreen"), TEXT("enabled"));
+    Config.CoreOptions.Add(TEXT("citra_enable_touch_touchscreen"), TEXT("enabled"));
+    Config.CoreOptions.Add(TEXT("citra_language_value"), TEXT("Japanese"));
+    Config.CoreOptions.Add(TEXT("citra_region_value"), TEXT("Auto"));
+    Config.CoreOptions.Add(TEXT("citra_use_libretro_save_path"), TEXT("enabled"));
+    Config.CoreOptions.Add(TEXT("citra_use_virtual_sd"), TEXT("enabled"));
+    return Config;
+}
+
 FString ALibretroPawn::FindRomByFileName(const FString& Directory, const FString& FileName) const
 {
     TArray<FString> Matches;
@@ -241,6 +281,11 @@ ALibretroPawn::EAutoRomTarget ALibretroPawn::ParseAutoRomTarget() const
     if (AutoRom.Equals(TEXT("MM3"), ESearchCase::IgnoreCase) || AutoRom.Equals(TEXT("MetalMax3"), ESearchCase::IgnoreCase))
     {
         return EAutoRomTarget::MM3;
+    }
+
+    if (AutoRom.Equals(TEXT("MM4"), ESearchCase::IgnoreCase) || AutoRom.Equals(TEXT("MetalMax4"), ESearchCase::IgnoreCase))
+    {
+        return EAutoRomTarget::MM4;
     }
 
     if (AutoRom.Equals(TEXT("NES"), ESearchCase::IgnoreCase) || AutoRom.Equals(TEXT("FC"), ESearchCase::IgnoreCase))
@@ -284,6 +329,10 @@ void ALibretroPawn::PressL() { SetButton(ELibretroButton::L, true); }
 void ALibretroPawn::ReleaseL() { SetButton(ELibretroButton::L, false); }
 void ALibretroPawn::PressR() { SetButton(ELibretroButton::R, true); }
 void ALibretroPawn::ReleaseR() { SetButton(ELibretroButton::R, false); }
+void ALibretroPawn::PressZL() { SetButton(ELibretroButton::L2, true); }
+void ALibretroPawn::ReleaseZL() { SetButton(ELibretroButton::L2, false); }
+void ALibretroPawn::PressZR() { SetButton(ELibretroButton::R2, true); }
+void ALibretroPawn::ReleaseZR() { SetButton(ELibretroButton::R2, false); }
 void ALibretroPawn::PressSelect() { SetButton(ELibretroButton::Select, true); }
 void ALibretroPawn::ReleaseSelect() { SetButton(ELibretroButton::Select, false); }
 void ALibretroPawn::PressStart() { SetButton(ELibretroButton::Start, true); }

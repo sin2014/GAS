@@ -30,6 +30,9 @@ public:
     UFUNCTION(BlueprintCallable)
     void StartMetalMax3();
 
+    UFUNCTION(BlueprintCallable)
+    void StartMetalMax4();
+
     FLibretroNESRunner* GetRunner() const { return Runner.Get(); }
 
 private:
@@ -38,12 +41,14 @@ private:
         None,
         NES,
         MM2R,
-        MM3
+        MM3,
+        MM4
     };
 
     void StartRom(const FLibretroLaunchConfig& Config);
     FLibretroLaunchConfig MakeNesConfig() const;
     FLibretroLaunchConfig MakeNdsConfig(const FString& RomFileName, const FString& DisplayName) const;
+    FLibretroLaunchConfig Make3dsConfig() const;
     FString FindRomByFileName(const FString& Directory, const FString& FileName) const;
     EAutoRomTarget ParseAutoRomTarget() const;
     FString GetScreenshotStem() const;
@@ -69,6 +74,10 @@ private:
     void ReleaseL();
     void PressR();
     void ReleaseR();
+    void PressZL();
+    void ReleaseZL();
+    void PressZR();
+    void ReleaseZR();
     void PressSelect();
     void ReleaseSelect();
     void PressStart();

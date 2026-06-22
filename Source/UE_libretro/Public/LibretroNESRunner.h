@@ -12,11 +12,13 @@ extern "C"
 
 class UTexture2D;
 class USoundWaveProcedural;
+class FLibretroHwRenderContext;
 
 enum class ELibretroSystemType : uint8
 {
     NES,
-    NDS
+    NDS,
+    ThreeDS
 };
 
 enum class ELibretroButton : uint8
@@ -111,15 +113,19 @@ private:
     bool LoadCore();
     void UnloadCore();
     bool LoadGame(const FString& InRomPath);
+    void CleanupCoreOnRunnerThread();
     void SaveSRAM();
     void SetError(const FString& Error);
     void SetStatus(const FString& Status);
     bool ExportSymbol(const ANSICHAR* Name, void*& OutPtr);
     void InitializeTexture(unsigned Width, unsigned Height);
     void CopyVideoFrame(const void* Data, unsigned Width, unsigned Height, size_t Pitch);
+    void CopyHardwareVideoFrame(unsigned Width, unsigned Height);
+    void SubmitVideoFrame(TArray<uint8>&& Converted, unsigned Width, unsigned Height, const TCHAR* SourceName);
     void QueueAudio(const int16* Data, size_t Frames);
     int16 QueryInput(unsigned Port, unsigned Device, unsigned Index, unsigned Id) const;
     bool HandleEnvironment(unsigned Cmd, void* Data);
+    bool ConfigureHardwareRendering(retro_hw_render_callback* Callback);
     const char* FindCoreOptionValue(const char* Key) const;
 
     static bool RetroEnvironment(unsigned Cmd, void* Data);
@@ -129,6 +135,8 @@ private:
     static void RetroInputPoll();
     static int16 RetroInputState(unsigned Port, unsigned Device, unsigned Index, unsigned Id);
     static void RetroLog(enum retro_log_level Level, const char* Fmt, ...);
+    static uintptr_t RetroGetCurrentFramebuffer();
+    static retro_proc_address_t RetroGetProcAddress(const char* Sym);
 
 private:
     FApi Api;
@@ -153,9 +161,11 @@ private:
 
     retro_pixel_format PixelFormat = RETRO_PIXEL_FORMAT_XRGB8888;
     retro_system_av_info AvInfo = {};
+    retro_frame_time_callback FrameTimeCallback = {};
 
     UTexture2D* VideoTexture = nullptr;
     USoundWaveProcedural* SoundWave = nullptr;
+    TUniquePtr<FLibretroHwRenderContext> HwRenderContext;
 
     mutable FCriticalSection StateMutex;
     FString LastError;
@@ -174,6 +184,8 @@ private:
     bool bNewFrame = false;
     uint64 VideoFrameCounter = 0;
     bool bLoggedFirstFrame = false;
+    double ActualRunFps = 0.0;
+    double AverageRetroRunMs = 0.0;
 
     FThreadSafeBool bStopRequested = false;
     FThreadSafeBool bRunning = false;

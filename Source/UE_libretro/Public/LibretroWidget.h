@@ -35,6 +35,9 @@ private:
     UFUNCTION()
     void HandleStartMM3Clicked();
 
+    UFUNCTION()
+    void HandleStartMM4Clicked();
+
 private:
     TWeakObjectPtr<ALibretroPawn> OwningPawn;
     TObjectPtr<UImage> VideoImage;
@@ -42,5 +45,6 @@ private:
     TObjectPtr<UButton> StartNesButton;
     TObjectPtr<UButton> StartMM2RButton;
     TObjectPtr<UButton> StartMM3Button;
+    TObjectPtr<UButton> StartMM4Button;
     TObjectPtr<UTexture2D> CurrentVideoTexture;
 };
