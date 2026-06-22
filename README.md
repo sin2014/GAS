@@ -70,13 +70,13 @@ ThirdParty\Libretro\Include\libretro.h
 | `Backspace` | Select |
 | `Space` | 触摸下屏中心点 |
 
-触摸目前先做成基础入口：`Space` 会在合成双屏画面的下屏中心按下触摸点。后续如果要做鼠标点击/拖拽下屏，可以在 `FLibretroNESRunner::SetPointerState` 和 UI 鼠标事件上继续扩展。
+触摸目前先做成基础入口：`Space` 会在合成双屏画面的下屏中心按下触摸点。后续如果要做鼠标点击/拖拽下屏，可以在 `FLibretroRunner::SetPointerState` 和 UI 鼠标事件上继续扩展。
 
 ## 关键源码
 
 ```text
-Source\UE_libretro\Public\LibretroNESRunner.h
-Source\UE_libretro\Private\LibretroNESRunner.cpp
+Source\UE_libretro\Public\LibretroRunner.h
+Source\UE_libretro\Private\LibretroRunner.cpp
 Source\UE_libretro\Public\LibretroPawn.h
 Source\UE_libretro\Private\LibretroPawn.cpp
 Source\UE_libretro\Public\LibretroWidget.h
@@ -85,7 +85,7 @@ Source\UE_libretro\Private\LibretroWidget.cpp
 
 说明：
 
-- `FLibretroNESRunner` 是实际 libretro frontend，负责动态加载 core、绑定 `retro_*` 符号、提供 environment/video/audio/input 回调。
+- `FLibretroRunner` 是实际 libretro frontend，负责动态加载 core、绑定 `retro_*` 符号、提供 environment/video/audio/input 回调。
 - 3DS/Azahar 通过 `RETRO_ENVIRONMENT_SET_HW_RENDER` 接入 Windows OpenGL 3.3+ 硬件渲染，再把硬件 framebuffer 读回到 UE `UTexture2D` 显示。
 - `FLibretroLaunchConfig` 描述一次启动需要的 core、ROM、系统类型和 core options。
 - `ALibretroPawn` 负责创建 runner、UMG、音频组件、按钮入口和键盘映射。

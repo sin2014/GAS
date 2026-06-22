@@ -29,12 +29,12 @@ public class UE_libretro : ModuleRules
         if (Target.Platform == UnrealTargetPlatform.Win64)
         {
             string CoreDir = Path.Combine(ProjectRoot, "ThirdParty", "Libretro", "Cores", "Win64");
-            string NesCorePath = Path.Combine(CoreDir, "fceumm_libretro.dll");
-            string NdsCorePath = Path.Combine(CoreDir, "desmume_libretro.dll");
-            string ThreeDsAzaharCorePath = Path.Combine(CoreDir, "azahar_libretro.dll");
-            RuntimeDependencies.Add(NesCorePath);
-            RuntimeDependencies.Add(NdsCorePath);
-            RuntimeDependencies.Add(ThreeDsAzaharCorePath);
+            string FceummCorePath = Path.Combine(CoreDir, "fceumm_libretro.dll");
+            string DesmumeCorePath = Path.Combine(CoreDir, "desmume_libretro.dll");
+            string AzaharCorePath = Path.Combine(CoreDir, "azahar_libretro.dll");
+            RuntimeDependencies.Add(FceummCorePath);
+            RuntimeDependencies.Add(DesmumeCorePath);
+            RuntimeDependencies.Add(AzaharCorePath);
             PublicSystemLibraries.Add("opengl32.lib");
             PublicDelayLoadDLLs.Add("fceumm_libretro.dll");
             PublicDelayLoadDLLs.Add("desmume_libretro.dll");

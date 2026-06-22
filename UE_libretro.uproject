@@ -2,7 +2,7 @@
   "FileVersion": 3,
   "EngineAssociation": "5.8",
   "Category": "Games",
-  "Description": "Minimal UE5.8 libretro NES runtime demo for running Metal Max 1 ROM with FCEUmm.",
+  "Description": "UE5.8 libretro frontend for running FC/NES, NDS, and 3DS ROMs.",
   "Modules": [
     {
       "Name": "UE_libretro",

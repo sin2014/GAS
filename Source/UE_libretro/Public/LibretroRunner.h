@@ -12,7 +12,7 @@ extern "C"
 
 class UTexture2D;
 class USoundWaveProcedural;
-class FLibretroHwRenderContext;
+class FLibretroOpenGLRenderContext;
 
 enum class ELibretroSystemType : uint8
 {
@@ -51,11 +51,11 @@ struct FLibretroLaunchConfig
     TMap<FString, FString> CoreOptions;
 };
 
-class FLibretroNESRunner final : public FRunnable
+class FLibretroRunner final : public FRunnable
 {
 public:
-    FLibretroNESRunner();
-    virtual ~FLibretroNESRunner() override;
+    FLibretroRunner();
+    virtual ~FLibretroRunner() override;
 
     bool Start(const FLibretroLaunchConfig& Config);
     bool Start(const FString& InRomPath);
@@ -79,7 +79,7 @@ public:
     bool ConsumeFrameForTextureUpdate();
 
 private:
-    struct FApi
+    struct FLibretroCoreApi
     {
         void (*retro_set_environment)(retro_environment_t) = nullptr;
         void (*retro_set_video_refresh)(retro_video_refresh_t) = nullptr;
@@ -118,10 +118,11 @@ private:
     void SetError(const FString& Error);
     void SetStatus(const FString& Status);
     bool ExportSymbol(const ANSICHAR* Name, void*& OutPtr);
-    void InitializeTexture(unsigned Width, unsigned Height);
-    void CopyVideoFrame(const void* Data, unsigned Width, unsigned Height, size_t Pitch);
-    void CopyHardwareVideoFrame(unsigned Width, unsigned Height);
-    void SubmitVideoFrame(TArray<uint8>&& Converted, unsigned Width, unsigned Height, const TCHAR* SourceName);
+    void InitializeVideoTexture(unsigned Width, unsigned Height);
+    void InitializeAudioStream();
+    void QueueSoftwareVideoFrame(const void* Data, unsigned Width, unsigned Height, size_t Pitch);
+    void QueueHardwareVideoFrame(unsigned Width, unsigned Height);
+    void SubmitConvertedVideoFrame(TArray<uint8>&& Converted, unsigned Width, unsigned Height, const TCHAR* SourceName);
     void QueueAudio(const int16* Data, size_t Frames);
     int16 QueryInput(unsigned Port, unsigned Device, unsigned Index, unsigned Id) const;
     bool HandleEnvironment(unsigned Cmd, void* Data);
@@ -139,7 +140,7 @@ private:
     static retro_proc_address_t RetroGetProcAddress(const char* Sym);
 
 private:
-    FApi Api;
+    FLibretroCoreApi CoreApi;
     void* CoreHandle = nullptr;
     FRunnableThread* Thread = nullptr;
 
@@ -165,7 +166,7 @@ private:
 
     UTexture2D* VideoTexture = nullptr;
     USoundWaveProcedural* SoundWave = nullptr;
-    TUniquePtr<FLibretroHwRenderContext> HwRenderContext;
+    TUniquePtr<FLibretroOpenGLRenderContext> OpenGLRenderContext;
 
     mutable FCriticalSection StateMutex;
     FString LastError;

@@ -14,7 +14,7 @@
 #include "Components/SizeBox.h"
 #include "Components/TextBlock.h"
 #include "Engine/Texture2D.h"
-#include "LibretroNESRunner.h"
+#include "LibretroRunner.h"
 #include "LibretroPawn.h"
 #include "Styling/CoreStyle.h"
 
@@ -186,7 +186,7 @@ void ULibretroWidget::HandleStartMM4Clicked()
 void ULibretroWidget::RefreshFromRunner()
 {
     ALibretroPawn* Pawn = OwningPawn.Get();
-    FLibretroNESRunner* Runner = Pawn ? Pawn->GetRunner() : nullptr;
+    FLibretroRunner* Runner = Pawn ? Pawn->GetRunner() : nullptr;
     if (!Runner)
     {
         return;

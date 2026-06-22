@@ -1,4 +1,4 @@
-#include "LibretroNESRunner.h"
+#include "LibretroRunner.h"
 
 #include "Async/Async.h"
 #include "Engine/Texture2D.h"
@@ -105,7 +105,7 @@ typedef void (APIENTRY* PFNGLGENVERTEXARRAYSPROC)(GLsizei, GLuint*);
 typedef void (APIENTRY* PFNGLDELETEVERTEXARRAYSPROC)(GLsizei, const GLuint*);
 typedef void (APIENTRY* PFNGLBINDVERTEXARRAYPROC)(GLuint);
 
-class FLibretroHwRenderContext
+class FLibretroOpenGLRenderContext
 {
 public:
     bool Initialize(const retro_hw_render_callback& Callback, unsigned InitialWidth, unsigned InitialHeight)
@@ -365,7 +365,7 @@ private:
 
         WNDCLASS WindowClass = {};
         WindowClass.style = CS_OWNDC;
-        WindowClass.lpfnWndProc = &FLibretroHwRenderContext::WindowProc;
+        WindowClass.lpfnWndProc = &FLibretroOpenGLRenderContext::WindowProc;
         WindowClass.hInstance = Instance;
         WindowClass.lpszClassName = GetWindowClassName();
         WindowClassAtom = RegisterClass(&WindowClass);
@@ -519,9 +519,9 @@ private:
 };
 #endif
 
-static FLibretroNESRunner* GActiveLibretroRunner = nullptr;
+static FLibretroRunner* GActiveLibretroRunner = nullptr;
 
-FLibretroNESRunner::FLibretroNESRunner()
+FLibretroRunner::FLibretroRunner()
 {
     const FString ProjectDir = FPaths::ProjectDir();
     CorePath = FPaths::ConvertRelativePathToFull(ProjectDir / TEXT("ThirdParty/Libretro/Cores/Win64/fceumm_libretro.dll"));
@@ -540,7 +540,7 @@ FLibretroNESRunner::FLibretroNESRunner()
     LibretroPathUtf8 = new FTCHARToUTF8(*LibretroPath);
 }
 
-FLibretroNESRunner::~FLibretroNESRunner()
+FLibretroRunner::~FLibretroRunner()
 {
     StopAndUnload();
     delete SystemDirUtf8;
@@ -550,7 +550,7 @@ FLibretroNESRunner::~FLibretroNESRunner()
     delete LibretroPathUtf8;
 }
 
-bool FLibretroNESRunner::Start(const FString& InRomPath)
+bool FLibretroRunner::Start(const FString& InRomPath)
 {
     FLibretroLaunchConfig Config;
     Config.RomPath = InRomPath;
@@ -560,7 +560,7 @@ bool FLibretroNESRunner::Start(const FString& InRomPath)
     return Start(Config);
 }
 
-bool FLibretroNESRunner::Start(const FLibretroLaunchConfig& Config)
+bool FLibretroRunner::Start(const FLibretroLaunchConfig& Config)
 {
     if (Thread || bRunning)
     {
@@ -591,7 +591,7 @@ bool FLibretroNESRunner::Start(const FLibretroLaunchConfig& Config)
     return true;
 }
 
-bool FLibretroNESRunner::PrepareLaunch(const FLibretroLaunchConfig& Config)
+bool FLibretroRunner::PrepareLaunch(const FLibretroLaunchConfig& Config)
 {
     LaunchConfig = Config;
     RomPath = ResolvePath(Config.RomPath);
@@ -647,12 +647,12 @@ bool FLibretroNESRunner::PrepareLaunch(const FLibretroLaunchConfig& Config)
         bNewFrame = false;
     }
 
-    HwRenderContext.Reset();
+    OpenGLRenderContext.Reset();
 
     return true;
 }
 
-FString FLibretroNESRunner::ResolvePath(const FString& Path) const
+FString FLibretroRunner::ResolvePath(const FString& Path) const
 {
     if (FPaths::IsRelative(Path))
     {
@@ -662,7 +662,7 @@ FString FLibretroNESRunner::ResolvePath(const FString& Path) const
     return FPaths::ConvertRelativePathToFull(Path);
 }
 
-void FLibretroNESRunner::StopAndUnload()
+void FLibretroRunner::StopAndUnload()
 {
     bStopRequested = true;
 
@@ -685,17 +685,17 @@ void FLibretroNESRunner::StopAndUnload()
     }
 }
 
-void FLibretroNESRunner::Reset()
+void FLibretroRunner::Reset()
 {
     bResetRequested = true;
 }
 
-void FLibretroNESRunner::Stop()
+void FLibretroRunner::Stop()
 {
     bStopRequested = true;
 }
 
-uint32 FLibretroNESRunner::Run()
+uint32 FLibretroRunner::Run()
 {
     GActiveLibretroRunner = this;
 
@@ -706,18 +706,18 @@ uint32 FLibretroNESRunner::Run()
         return 1;
     }
 
-    Api.retro_set_environment(&FLibretroNESRunner::RetroEnvironment);
-    Api.retro_set_video_refresh(&FLibretroNESRunner::RetroVideoRefresh);
-    Api.retro_set_audio_sample(&FLibretroNESRunner::RetroAudioSample);
-    Api.retro_set_audio_sample_batch(&FLibretroNESRunner::RetroAudioSampleBatch);
-    Api.retro_set_input_poll(&FLibretroNESRunner::RetroInputPoll);
-    Api.retro_set_input_state(&FLibretroNESRunner::RetroInputState);
+    CoreApi.retro_set_environment(&FLibretroRunner::RetroEnvironment);
+    CoreApi.retro_set_video_refresh(&FLibretroRunner::RetroVideoRefresh);
+    CoreApi.retro_set_audio_sample(&FLibretroRunner::RetroAudioSample);
+    CoreApi.retro_set_audio_sample_batch(&FLibretroRunner::RetroAudioSampleBatch);
+    CoreApi.retro_set_input_poll(&FLibretroRunner::RetroInputPoll);
+    CoreApi.retro_set_input_state(&FLibretroRunner::RetroInputState);
 
-    Api.retro_init();
+    CoreApi.retro_init();
     bCoreInitialized = true;
 
     retro_system_info SystemInfo = {};
-    Api.retro_get_system_info(&SystemInfo);
+    CoreApi.retro_get_system_info(&SystemInfo);
     UE_LOG(LogLibretroRunner, Log, TEXT("Loaded core: %s %s"),
         UTF8_TO_TCHAR(SystemInfo.library_name ? SystemInfo.library_name : ""),
         UTF8_TO_TCHAR(SystemInfo.library_version ? SystemInfo.library_version : ""));
@@ -729,7 +729,7 @@ uint32 FLibretroNESRunner::Run()
         return 1;
     }
 
-    Api.retro_get_system_av_info(&AvInfo);
+    CoreApi.retro_get_system_av_info(&AvInfo);
     TargetFps = AvInfo.timing.fps > 1.0 ? AvInfo.timing.fps : 60.0;
     TargetSampleRate = AvInfo.timing.sample_rate > 1.0 ? AvInfo.timing.sample_rate : 48000.0;
     UE_LOG(LogLibretroRunner, Log, TEXT("Loaded ROM: %s"), *RomPath);
@@ -746,7 +746,8 @@ uint32 FLibretroNESRunner::Run()
     const unsigned DisplayHeight = AvInfo.geometry.base_height > 0 ? AvInfo.geometry.base_height : AvInfo.geometry.max_height;
     AsyncTask(ENamedThreads::GameThread, [this, DisplayWidth, DisplayHeight]()
     {
-        InitializeTexture(DisplayWidth > 0 ? DisplayWidth : 256, DisplayHeight > 0 ? DisplayHeight : 240);
+        InitializeVideoTexture(DisplayWidth > 0 ? DisplayWidth : 256, DisplayHeight > 0 ? DisplayHeight : 240);
+        InitializeAudioStream();
     });
 
     bRunning = true;
@@ -763,9 +764,9 @@ uint32 FLibretroNESRunner::Run()
     {
         if (bResetRequested)
         {
-            if (Api.retro_reset)
+            if (CoreApi.retro_reset)
             {
-                Api.retro_reset();
+                CoreApi.retro_reset();
             }
             bResetRequested = false;
         }
@@ -778,13 +779,13 @@ uint32 FLibretroNESRunner::Run()
             LastFrameTime = BeforeFrameCallbackTime;
         }
 
-        if (HwRenderContext)
+        if (OpenGLRenderContext)
         {
-            HwRenderContext->MakeCurrent();
+            OpenGLRenderContext->MakeCurrent();
         }
 
         const double RunStartTime = FPlatformTime::Seconds();
-        Api.retro_run();
+        CoreApi.retro_run();
         const double RunEndTime = FPlatformTime::Seconds();
 
         RunMsAccumulator += (RunEndTime - RunStartTime) * 1000.0;
@@ -804,7 +805,7 @@ uint32 FLibretroNESRunner::Run()
                 ActualRunFps,
                 TargetFps,
                 AverageRetroRunMs,
-                HwRenderContext && HwRenderContext->IsValid() ? TEXT("yes") : TEXT("no"));
+                OpenGLRenderContext && OpenGLRenderContext->IsValid() ? TEXT("yes") : TEXT("no"));
             StatsStartTime = RunEndTime;
             FramesSinceStats = 0;
             RunMsAccumulator = 0.0;
@@ -828,7 +829,7 @@ uint32 FLibretroNESRunner::Run()
     return 0;
 }
 
-bool FLibretroNESRunner::LoadCore()
+bool FLibretroRunner::LoadCore()
 {
     CoreHandle = FPlatformProcess::GetDllHandle(*CorePath);
     if (!CoreHandle)
@@ -838,7 +839,7 @@ bool FLibretroNESRunner::LoadCore()
     }
 
 #define LOAD_RETRO_SYMBOL(Name) \
-    if (!ExportSymbol(#Name, reinterpret_cast<void*&>(Api.Name))) \
+    if (!ExportSymbol(#Name, reinterpret_cast<void*&>(CoreApi.Name))) \
     { \
         return false; \
     }
@@ -871,51 +872,51 @@ bool FLibretroNESRunner::LoadCore()
 
 #undef LOAD_RETRO_SYMBOL
 
-    if (Api.retro_api_version() != RETRO_API_VERSION)
+    if (CoreApi.retro_api_version() != RETRO_API_VERSION)
     {
-        SetError(FString::Printf(TEXT("libretro API 版本不匹配。core=%u frontend=%u"), Api.retro_api_version(), RETRO_API_VERSION));
+        SetError(FString::Printf(TEXT("libretro API 版本不匹配。core=%u frontend=%u"), CoreApi.retro_api_version(), RETRO_API_VERSION));
         return false;
     }
 
     return true;
 }
 
-void FLibretroNESRunner::UnloadCore()
+void FLibretroRunner::UnloadCore()
 {
     if (CoreHandle)
     {
         FPlatformProcess::FreeDllHandle(CoreHandle);
         CoreHandle = nullptr;
     }
-    Api = FApi();
+    CoreApi = FLibretroCoreApi();
 }
 
-void FLibretroNESRunner::CleanupCoreOnRunnerThread()
+void FLibretroRunner::CleanupCoreOnRunnerThread()
 {
-    if (HwRenderContext)
+    if (OpenGLRenderContext)
     {
-        HwRenderContext->MakeCurrent();
+        OpenGLRenderContext->MakeCurrent();
     }
 
     SaveSRAM();
 
-    if (bGameLoaded && Api.retro_unload_game)
+    if (bGameLoaded && CoreApi.retro_unload_game)
     {
-        Api.retro_unload_game();
+        CoreApi.retro_unload_game();
         bGameLoaded = false;
     }
 
-    if (bCoreInitialized && Api.retro_deinit)
+    if (bCoreInitialized && CoreApi.retro_deinit)
     {
-        Api.retro_deinit();
+        CoreApi.retro_deinit();
         bCoreInitialized = false;
     }
 
-    HwRenderContext.Reset();
+    OpenGLRenderContext.Reset();
     UnloadCore();
 }
 
-bool FLibretroNESRunner::LoadGame(const FString& InRomPath)
+bool FLibretroRunner::LoadGame(const FString& InRomPath)
 {
     FTCHARToUTF8 RomPathUtf8(*InRomPath);
     retro_game_info Game = {};
@@ -924,30 +925,30 @@ bool FLibretroNESRunner::LoadGame(const FString& InRomPath)
     Game.size = 0;
     Game.meta = nullptr;
 
-    if (!Api.retro_load_game(&Game))
+    if (!CoreApi.retro_load_game(&Game))
     {
         SetError(FString::Printf(TEXT("core 无法加载 ROM：%s"), *InRomPath));
         return false;
     }
 
     bGameLoaded = true;
-    if (Api.retro_set_controller_port_device)
+    if (CoreApi.retro_set_controller_port_device)
     {
-        Api.retro_set_controller_port_device(0, RETRO_DEVICE_JOYPAD);
+        CoreApi.retro_set_controller_port_device(0, RETRO_DEVICE_JOYPAD);
     }
 
     return true;
 }
 
-void FLibretroNESRunner::SaveSRAM()
+void FLibretroRunner::SaveSRAM()
 {
-    if (!bGameLoaded || !Api.retro_get_memory_data || !Api.retro_get_memory_size)
+    if (!bGameLoaded || !CoreApi.retro_get_memory_data || !CoreApi.retro_get_memory_size)
     {
         return;
     }
 
-    void* SaveData = Api.retro_get_memory_data(RETRO_MEMORY_SAVE_RAM);
-    const size_t SaveSize = Api.retro_get_memory_size(RETRO_MEMORY_SAVE_RAM);
+    void* SaveData = CoreApi.retro_get_memory_data(RETRO_MEMORY_SAVE_RAM);
+    const size_t SaveSize = CoreApi.retro_get_memory_size(RETRO_MEMORY_SAVE_RAM);
     if (!SaveData || SaveSize == 0)
     {
         return;
@@ -957,7 +958,7 @@ void FLibretroNESRunner::SaveSRAM()
     FFileHelper::SaveArrayToFile(TArrayView64<const uint8>(static_cast<const uint8*>(SaveData), static_cast<int64>(SaveSize)), *SavePath);
 }
 
-bool FLibretroNESRunner::ExportSymbol(const ANSICHAR* Name, void*& OutPtr)
+bool FLibretroRunner::ExportSymbol(const ANSICHAR* Name, void*& OutPtr)
 {
     OutPtr = FPlatformProcess::GetDllExport(CoreHandle, ANSI_TO_TCHAR(Name));
     if (!OutPtr)
@@ -968,7 +969,7 @@ bool FLibretroNESRunner::ExportSymbol(const ANSICHAR* Name, void*& OutPtr)
     return true;
 }
 
-void FLibretroNESRunner::InitializeTexture(unsigned Width, unsigned Height)
+void FLibretroRunner::InitializeVideoTexture(unsigned Width, unsigned Height)
 {
     TextureWidth = Width;
     TextureHeight = Height;
@@ -984,7 +985,10 @@ void FLibretroNESRunner::InitializeTexture(unsigned Width, unsigned Height)
     VideoTexture->NeverStream = true;
     VideoTexture->UpdateResource();
     VideoTexture->AddToRoot();
+}
 
+void FLibretroRunner::InitializeAudioStream()
+{
     if (!SoundWave)
     {
         SoundWave = NewObject<USoundWaveProcedural>();
@@ -998,7 +1002,7 @@ void FLibretroNESRunner::InitializeTexture(unsigned Width, unsigned Height)
     SoundWave->SetSampleRate(static_cast<int32>(TargetSampleRate));
 }
 
-bool FLibretroNESRunner::ConsumeFrameForTextureUpdate()
+bool FLibretroRunner::ConsumeFrameForTextureUpdate()
 {
     if (!VideoTexture)
     {
@@ -1028,7 +1032,7 @@ bool FLibretroNESRunner::ConsumeFrameForTextureUpdate()
 
     if (LocalWidth != TextureWidth || LocalHeight != TextureHeight)
     {
-        InitializeTexture(LocalWidth, LocalHeight);
+        InitializeVideoTexture(LocalWidth, LocalHeight);
         if (!VideoTexture)
         {
             return false;
@@ -1055,7 +1059,7 @@ bool FLibretroNESRunner::ConsumeFrameForTextureUpdate()
     return true;
 }
 
-void FLibretroNESRunner::SubmitVideoFrame(TArray<uint8>&& Converted, unsigned Width, unsigned Height, const TCHAR* SourceName)
+void FLibretroRunner::SubmitConvertedVideoFrame(TArray<uint8>&& Converted, unsigned Width, unsigned Height, const TCHAR* SourceName)
 {
     if (Converted.Num() == 0 || Width == 0 || Height == 0)
     {
@@ -1094,10 +1098,10 @@ void FLibretroNESRunner::SubmitVideoFrame(TArray<uint8>&& Converted, unsigned Wi
     }
 }
 
-void FLibretroNESRunner::CopyHardwareVideoFrame(unsigned Width, unsigned Height)
+void FLibretroRunner::QueueHardwareVideoFrame(unsigned Width, unsigned Height)
 {
 #if PLATFORM_WINDOWS
-    if (!HwRenderContext || !HwRenderContext->IsValid())
+    if (!OpenGLRenderContext || !OpenGLRenderContext->IsValid())
     {
         return;
     }
@@ -1109,14 +1113,14 @@ void FLibretroNESRunner::CopyHardwareVideoFrame(unsigned Width, unsigned Height)
     }
 
     TArray<uint8> Converted;
-    if (HwRenderContext->ReadFrame(Converted, Width, Height))
+    if (OpenGLRenderContext->ReadFrame(Converted, Width, Height))
     {
         if (!bLoggedFirstFrame)
         {
             bLoggedFirstFrame = true;
             UE_LOG(LogLibretroRunner, Log, TEXT("First hardware video frame read: %ux%u"), Width, Height);
         }
-        SubmitVideoFrame(MoveTemp(Converted), Width, Height, TEXT("opengl"));
+        SubmitConvertedVideoFrame(MoveTemp(Converted), Width, Height, TEXT("opengl"));
     }
 #else
     UE_UNUSED(Width);
@@ -1124,7 +1128,7 @@ void FLibretroNESRunner::CopyHardwareVideoFrame(unsigned Width, unsigned Height)
 #endif
 }
 
-void FLibretroNESRunner::CopyVideoFrame(const void* Data, unsigned Width, unsigned Height, size_t Pitch)
+void FLibretroRunner::QueueSoftwareVideoFrame(const void* Data, unsigned Width, unsigned Height, size_t Pitch)
 {
     if (!Data || Width == 0 || Height == 0)
     {
@@ -1197,10 +1201,10 @@ void FLibretroNESRunner::CopyVideoFrame(const void* Data, unsigned Width, unsign
         }
     }
 
-    SubmitVideoFrame(MoveTemp(Converted), Width, Height, TEXT("software"));
+    SubmitConvertedVideoFrame(MoveTemp(Converted), Width, Height, TEXT("software"));
 }
 
-void FLibretroNESRunner::QueueAudio(const int16* Data, size_t Frames)
+void FLibretroRunner::QueueAudio(const int16* Data, size_t Frames)
 {
     if (!Data || Frames == 0 || !SoundWave)
     {
@@ -1210,7 +1214,7 @@ void FLibretroNESRunner::QueueAudio(const int16* Data, size_t Frames)
     SoundWave->QueueAudio(reinterpret_cast<const uint8*>(Data), static_cast<int32>(Frames * 2 * sizeof(int16)));
 }
 
-void FLibretroNESRunner::SetButtonState(ELibretroButton Button, bool bPressed)
+void FLibretroRunner::SetButtonState(ELibretroButton Button, bool bPressed)
 {
     const uint8 Index = static_cast<uint8>(Button);
     if (Index >= static_cast<uint8>(ELibretroButton::Count))
@@ -1222,7 +1226,7 @@ void FLibretroNESRunner::SetButtonState(ELibretroButton Button, bool bPressed)
     ButtonStates[Index] = bPressed;
 }
 
-void FLibretroNESRunner::SetPointerState(float NormalizedX, float NormalizedY, bool bPressed)
+void FLibretroRunner::SetPointerState(float NormalizedX, float NormalizedY, bool bPressed)
 {
     FScopeLock Lock(&StateMutex);
     PointerX = FMath::Clamp(NormalizedX, 0.0f, 1.0f);
@@ -1230,7 +1234,7 @@ void FLibretroNESRunner::SetPointerState(float NormalizedX, float NormalizedY, b
     bPointerPressed = bPressed;
 }
 
-int16 FLibretroNESRunner::QueryInput(unsigned Port, unsigned Device, unsigned Index, unsigned Id) const
+int16 FLibretroRunner::QueryInput(unsigned Port, unsigned Device, unsigned Index, unsigned Id) const
 {
     if (Port != 0)
     {
@@ -1314,7 +1318,7 @@ int16 FLibretroNESRunner::QueryInput(unsigned Port, unsigned Device, unsigned In
     return 0;
 }
 
-bool FLibretroNESRunner::HandleEnvironment(unsigned Cmd, void* Data)
+bool FLibretroRunner::HandleEnvironment(unsigned Cmd, void* Data)
 {
     switch (Cmd)
     {
@@ -1448,7 +1452,7 @@ bool FLibretroNESRunner::HandleEnvironment(unsigned Cmd, void* Data)
         retro_log_callback* Log = static_cast<retro_log_callback*>(Data);
         if (Log)
         {
-            Log->log = &FLibretroNESRunner::RetroLog;
+            Log->log = &FLibretroRunner::RetroLog;
             return true;
         }
         return false;
@@ -1476,7 +1480,7 @@ bool FLibretroNESRunner::HandleEnvironment(unsigned Cmd, void* Data)
     }
 }
 
-bool FLibretroNESRunner::ConfigureHardwareRendering(retro_hw_render_callback* Callback)
+bool FLibretroRunner::ConfigureHardwareRendering(retro_hw_render_callback* Callback)
 {
     if (!Callback)
     {
@@ -1494,18 +1498,18 @@ bool FLibretroNESRunner::ConfigureHardwareRendering(retro_hw_render_callback* Ca
         return false;
     }
 
-    Callback->get_current_framebuffer = &FLibretroNESRunner::RetroGetCurrentFramebuffer;
-    Callback->get_proc_address = &FLibretroNESRunner::RetroGetProcAddress;
+    Callback->get_current_framebuffer = &FLibretroRunner::RetroGetCurrentFramebuffer;
+    Callback->get_proc_address = &FLibretroRunner::RetroGetProcAddress;
     Callback->cache_context = true;
 
     const unsigned InitialWidth = AvInfo.geometry.max_width > 0 ? AvInfo.geometry.max_width : 400;
     const unsigned InitialHeight = AvInfo.geometry.max_height > 0 ? AvInfo.geometry.max_height : 480;
 
 #if PLATFORM_WINDOWS
-    HwRenderContext = MakeUnique<FLibretroHwRenderContext>();
-    if (!HwRenderContext->Initialize(*Callback, InitialWidth, InitialHeight))
+    OpenGLRenderContext = MakeUnique<FLibretroOpenGLRenderContext>();
+    if (!OpenGLRenderContext->Initialize(*Callback, InitialWidth, InitialHeight))
     {
-        HwRenderContext.Reset();
+        OpenGLRenderContext.Reset();
         return false;
     }
     return true;
@@ -1515,7 +1519,7 @@ bool FLibretroNESRunner::ConfigureHardwareRendering(retro_hw_render_callback* Ca
 #endif
 }
 
-const char* FLibretroNESRunner::FindCoreOptionValue(const char* Key) const
+const char* FLibretroRunner::FindCoreOptionValue(const char* Key) const
 {
     const FString KeyString = UTF8_TO_TCHAR(Key);
     if (const TArray<ANSICHAR>* Value = CoreOptionValueUtf8.Find(KeyString))
@@ -1525,7 +1529,7 @@ const char* FLibretroNESRunner::FindCoreOptionValue(const char* Key) const
     return nullptr;
 }
 
-void FLibretroNESRunner::SetError(const FString& Error)
+void FLibretroRunner::SetError(const FString& Error)
 {
     UE_LOG(LogLibretroRunner, Error, TEXT("%s"), *Error);
     FScopeLock Lock(&StateMutex);
@@ -1533,42 +1537,42 @@ void FLibretroNESRunner::SetError(const FString& Error)
     StatusText = Error;
 }
 
-void FLibretroNESRunner::SetStatus(const FString& Status)
+void FLibretroRunner::SetStatus(const FString& Status)
 {
     FScopeLock Lock(&StateMutex);
     StatusText = Status;
 }
 
-FString FLibretroNESRunner::GetLastError() const
+FString FLibretroRunner::GetLastError() const
 {
     FScopeLock Lock(&StateMutex);
     return LastError;
 }
 
-FString FLibretroNESRunner::GetStatusText() const
+FString FLibretroRunner::GetStatusText() const
 {
     FScopeLock Lock(&StateMutex);
     return StatusText;
 }
 
-FString FLibretroNESRunner::GetLoadedRomPath() const
+FString FLibretroRunner::GetLoadedRomPath() const
 {
     FScopeLock Lock(&StateMutex);
     return RomPath;
 }
 
-FString FLibretroNESRunner::GetLoadedCorePath() const
+FString FLibretroRunner::GetLoadedCorePath() const
 {
     FScopeLock Lock(&StateMutex);
     return CorePath;
 }
 
-bool FLibretroNESRunner::RetroEnvironment(unsigned Cmd, void* Data)
+bool FLibretroRunner::RetroEnvironment(unsigned Cmd, void* Data)
 {
     return GActiveLibretroRunner ? GActiveLibretroRunner->HandleEnvironment(Cmd, Data) : false;
 }
 
-void FLibretroNESRunner::RetroVideoRefresh(const void* Data, unsigned Width, unsigned Height, size_t Pitch)
+void FLibretroRunner::RetroVideoRefresh(const void* Data, unsigned Width, unsigned Height, size_t Pitch)
 {
     if (!GActiveLibretroRunner)
     {
@@ -1577,15 +1581,15 @@ void FLibretroNESRunner::RetroVideoRefresh(const void* Data, unsigned Width, uns
 
     if (Data == RETRO_HW_FRAME_BUFFER_VALID)
     {
-        GActiveLibretroRunner->CopyHardwareVideoFrame(Width, Height);
+        GActiveLibretroRunner->QueueHardwareVideoFrame(Width, Height);
     }
     else if (Data)
     {
-        GActiveLibretroRunner->CopyVideoFrame(Data, Width, Height, Pitch);
+        GActiveLibretroRunner->QueueSoftwareVideoFrame(Data, Width, Height, Pitch);
     }
 }
 
-void FLibretroNESRunner::RetroAudioSample(int16 Left, int16 Right)
+void FLibretroRunner::RetroAudioSample(int16 Left, int16 Right)
 {
     int16 Samples[2] = { Left, Right };
     if (GActiveLibretroRunner)
@@ -1594,7 +1598,7 @@ void FLibretroNESRunner::RetroAudioSample(int16 Left, int16 Right)
     }
 }
 
-size_t FLibretroNESRunner::RetroAudioSampleBatch(const int16* Data, size_t Frames)
+size_t FLibretroRunner::RetroAudioSampleBatch(const int16* Data, size_t Frames)
 {
     if (GActiveLibretroRunner)
     {
@@ -1603,31 +1607,31 @@ size_t FLibretroNESRunner::RetroAudioSampleBatch(const int16* Data, size_t Frame
     return Frames;
 }
 
-void FLibretroNESRunner::RetroInputPoll()
+void FLibretroRunner::RetroInputPoll()
 {
 }
 
-int16 FLibretroNESRunner::RetroInputState(unsigned Port, unsigned Device, unsigned Index, unsigned Id)
+int16 FLibretroRunner::RetroInputState(unsigned Port, unsigned Device, unsigned Index, unsigned Id)
 {
     return GActiveLibretroRunner ? GActiveLibretroRunner->QueryInput(Port, Device, Index, Id) : 0;
 }
 
-uintptr_t FLibretroNESRunner::RetroGetCurrentFramebuffer()
+uintptr_t FLibretroRunner::RetroGetCurrentFramebuffer()
 {
 #if PLATFORM_WINDOWS
-    return GActiveLibretroRunner && GActiveLibretroRunner->HwRenderContext
-        ? GActiveLibretroRunner->HwRenderContext->GetCurrentFramebuffer()
+    return GActiveLibretroRunner && GActiveLibretroRunner->OpenGLRenderContext
+        ? GActiveLibretroRunner->OpenGLRenderContext->GetCurrentFramebuffer()
         : 0;
 #else
     return 0;
 #endif
 }
 
-retro_proc_address_t FLibretroNESRunner::RetroGetProcAddress(const char* Sym)
+retro_proc_address_t FLibretroRunner::RetroGetProcAddress(const char* Sym)
 {
 #if PLATFORM_WINDOWS
-    return GActiveLibretroRunner && GActiveLibretroRunner->HwRenderContext
-        ? GActiveLibretroRunner->HwRenderContext->GetProcAddress(Sym)
+    return GActiveLibretroRunner && GActiveLibretroRunner->OpenGLRenderContext
+        ? GActiveLibretroRunner->OpenGLRenderContext->GetProcAddress(Sym)
         : nullptr;
 #else
     UE_UNUSED(Sym);
@@ -1635,7 +1639,7 @@ retro_proc_address_t FLibretroNESRunner::RetroGetProcAddress(const char* Sym)
 #endif
 }
 
-void FLibretroNESRunner::RetroLog(enum retro_log_level Level, const char* Fmt, ...)
+void FLibretroRunner::RetroLog(enum retro_log_level Level, const char* Fmt, ...)
 {
     ANSICHAR Buffer[2048];
     va_list Args;

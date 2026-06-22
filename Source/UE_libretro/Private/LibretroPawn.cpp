@@ -21,7 +21,7 @@ void ALibretroPawn::BeginPlay()
 {
     Super::BeginPlay();
 
-    Runner = MakeUnique<FLibretroNESRunner>();
+    Runner = MakeUnique<FLibretroRunner>();
 
     if (APlayerController* PC = Cast<APlayerController>(GetController()))
     {
@@ -183,7 +183,7 @@ void ALibretroPawn::StartRom(const FLibretroLaunchConfig& Config)
 {
     if (!Runner)
     {
-        Runner = MakeUnique<FLibretroNESRunner>();
+        Runner = MakeUnique<FLibretroRunner>();
     }
 
     if (AudioComponent)

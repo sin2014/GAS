@@ -2,7 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
-#include "LibretroNESRunner.h"
+#include "LibretroRunner.h"
 #include "LibretroPawn.generated.h"
 
 class ULibretroWidget;
@@ -33,7 +33,7 @@ public:
     UFUNCTION(BlueprintCallable)
     void StartMetalMax4();
 
-    FLibretroNESRunner* GetRunner() const { return Runner.Get(); }
+    FLibretroRunner* GetRunner() const { return Runner.Get(); }
 
 private:
     enum class EAutoRomTarget : uint8
@@ -86,7 +86,7 @@ private:
     void ReleaseTouch();
 
 private:
-    TUniquePtr<FLibretroNESRunner> Runner;
+    TUniquePtr<FLibretroRunner> Runner;
     TObjectPtr<ULibretroWidget> Widget;
     TObjectPtr<UAudioComponent> AudioComponent;
     bool bAutoScreenshot = false;
