@@ -5,8 +5,11 @@
 #include "LibretroWidget.generated.h"
 
 class ALibretroPawn;
+struct FLibretroLaunchConfig;
 class UButton;
 class UImage;
+class UScaleBox;
+class USizeBox;
 class UTextBlock;
 class UTexture2D;
 
@@ -27,6 +30,9 @@ public:
 
     /** 从 Runner 拉取最新纹理和状态文本，供 Tick 中调用。 */
     void RefreshFromRunner();
+
+    /** 应用当前 ROM 的显示区域尺寸和是否保持画面比例设置。 */
+    void ApplyVideoDisplaySettings(const FLibretroLaunchConfig& Config);
 
 protected:
     /** 用 C++ 构建完整 UMG 控件树，不依赖 .uasset 界面蓝图。 */
@@ -62,6 +68,12 @@ private:
     /** 显示 libretro 视频纹理的 UMG Image。 */
     TObjectPtr<UImage> VideoImage;
 
+    /** 定义模拟器可见显示区域大小的 SizeBox。 */
+    TObjectPtr<USizeBox> VideoSizeBox;
+
+    /** 控制模拟器纹理缩放方式、是否保持自身比例的 ScaleBox。 */
+    TObjectPtr<UScaleBox> VideoScaleBox;
+
     /** 显示当前运行状态、错误或操作提示的文本。 */
     TObjectPtr<UTextBlock> StatusText;
 
@@ -79,4 +91,8 @@ private:
 
     /** 当前已经绑定到 VideoImage 的纹理，用于避免重复绑定。 */
     TObjectPtr<UTexture2D> CurrentVideoTexture;
+
+    /** 缓存显示设置，RebuildWidget 重新创建 UMG 控件树时复用。 */
+    FVector2D CurrentVideoDisplaySize = FVector2D(860.0f, 720.0f);
+    bool bCurrentPreserveVideoAspectRatio = true;
 };

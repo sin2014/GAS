@@ -7,9 +7,30 @@
 #include "InputCoreTypes.h"
 #include "LibretroWidget.h"
 #include "Misc/CommandLine.h"
+#include "Misc/ConfigCacheIni.h"
 #include "Misc/Parse.h"
 #include "Sound/SoundWaveProcedural.h"
 #include "UnrealClient.h"
+
+namespace
+{
+    void LoadVideoDisplaySettings(FLibretroLaunchConfig& Config, const TCHAR* SectionName)
+    {
+        float Width = Config.VideoDisplaySize.X;
+        float Height = Config.VideoDisplaySize.Y;
+        bool bPreserveAspectRatio = Config.bPreserveVideoAspectRatio;
+
+        if (GConfig && SectionName)
+        {
+            GConfig->GetFloat(SectionName, TEXT("Width"), Width, GGameIni);
+            GConfig->GetFloat(SectionName, TEXT("Height"), Height, GGameIni);
+            GConfig->GetBool(SectionName, TEXT("PreserveAspectRatio"), bPreserveAspectRatio, GGameIni);
+        }
+
+        Config.VideoDisplaySize = FVector2D(FMath::Max(Width, 1.0f), FMath::Max(Height, 1.0f));
+        Config.bPreserveVideoAspectRatio = bPreserveAspectRatio;
+    }
+}
 
 ALibretroPawn::ALibretroPawn()
 {
@@ -215,6 +236,10 @@ void ALibretroPawn::StartRom(const FLibretroLaunchConfig& Config)
     ActiveScreenshotStem = ActiveDisplayName.Replace(TEXT(" "), TEXT("_")).Replace(TEXT(":"), TEXT("_"));
     bScreenshotRequested = false;
     ScreenshotDelay = 0.0f;
+    if (Widget)
+    {
+        Widget->ApplyVideoDisplaySettings(Config);
+    }
     Runner->Start(Config);
 }
 
@@ -225,6 +250,8 @@ FLibretroLaunchConfig ALibretroPawn::MakeNesConfig() const
     Config.SystemType = ELibretroSystemType::NES;
     Config.CorePath = FPaths::ProjectDir() / TEXT("ThirdParty/Libretro/Cores/Win64/fceumm_libretro.dll");
     Config.RomPath = FindRomByFileName(TEXT("E:/Z_Game/VirtuaNESex-FC模拟器/游戏"), TEXT("重装机兵1.nes"));
+    Config.VideoDisplaySize = FVector2D(768.0f, 720.0f);
+    LoadVideoDisplaySettings(Config, TEXT("/Script/UE_libretro.NesDisplay"));
     return Config;
 }
 
@@ -235,6 +262,7 @@ FLibretroLaunchConfig ALibretroPawn::MakeNdsConfig(const FString& RomFileName, c
     Config.SystemType = ELibretroSystemType::NDS;
     Config.CorePath = FPaths::ProjectDir() / TEXT("ThirdParty/Libretro/Cores/Win64/desmume_libretro.dll");
     Config.RomPath = FindRomByFileName(TEXT("E:/Z_Game/MM3&2R"), RomFileName);
+    Config.VideoDisplaySize = FVector2D(480.0f, 720.0f);
     // DeSmuME 的选项 key 是 core 自己定义的字符串，必须按 core 识别的名称传入。
     Config.CoreOptions.Add(TEXT("desmume_screens_layout"), TEXT("top/bottom"));
     Config.CoreOptions.Add(TEXT("desmume_internal_resolution"), TEXT("256x192"));
@@ -246,6 +274,18 @@ FLibretroLaunchConfig ALibretroPawn::MakeNdsConfig(const FString& RomFileName, c
     Config.CoreOptions.Add(TEXT("desmume_pointer_type"), TEXT("touch"));
     Config.CoreOptions.Add(TEXT("desmume_pointer_mouse"), TEXT("enabled"));
     Config.CoreOptions.Add(TEXT("desmume_firmware_language"), TEXT("English"));
+    if (RomFileName.Equals(TEXT("MetalMax2R_Ver0.94.nds"), ESearchCase::IgnoreCase))
+    {
+        LoadVideoDisplaySettings(Config, TEXT("/Script/UE_libretro.MetalMax2RDisplay"));
+    }
+    else if (RomFileName.Equals(TEXT("Metal_Max_3_chs_v1.0-Union_of_MM3.nds"), ESearchCase::IgnoreCase))
+    {
+        LoadVideoDisplaySettings(Config, TEXT("/Script/UE_libretro.MetalMax3Display"));
+    }
+    else
+    {
+        LoadVideoDisplaySettings(Config, TEXT("/Script/UE_libretro.NdsDisplay"));
+    }
     return Config;
 }
 
@@ -255,6 +295,7 @@ FLibretroLaunchConfig ALibretroPawn::Make3dsConfig() const
     Config.DisplayName = TEXT("重装机兵4 月光歌姬");
     Config.SystemType = ELibretroSystemType::ThreeDS;
     Config.CorePath = FPaths::ProjectDir() / TEXT("ThirdParty/Libretro/Cores/Win64/azahar_libretro.dll");
+    Config.VideoDisplaySize = FVector2D(600.0f, 720.0f);
     Config.RomPath = FindRomByFileName(TEXT("E:/Z_Game/MM4"), TEXT("重装机兵4月光歌姬515.cci"));
     // Azahar 兼容/沿用 Citra 的 core 选项 key，这些 key 不能按项目命名随意改名。
     Config.CoreOptions.Add(TEXT("citra_graphics_api"), TEXT("OpenGL"));
@@ -275,6 +316,7 @@ FLibretroLaunchConfig ALibretroPawn::Make3dsConfig() const
     Config.CoreOptions.Add(TEXT("citra_region_value"), TEXT("Auto"));
     Config.CoreOptions.Add(TEXT("citra_use_libretro_save_path"), TEXT("enabled"));
     Config.CoreOptions.Add(TEXT("citra_use_virtual_sd"), TEXT("enabled"));
+    LoadVideoDisplaySettings(Config, TEXT("/Script/UE_libretro.MetalMax4Display"));
     return Config;
 }
 

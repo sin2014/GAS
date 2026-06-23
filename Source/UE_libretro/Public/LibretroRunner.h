@@ -114,6 +114,12 @@ struct FLibretroLaunchConfig
 
     /** 提供给 RETRO_ENVIRONMENT_GET_VARIABLE 的 core 选项值。 */
     TMap<FString, FString> CoreOptions;
+
+    /** 本次 ROM 在 UMG 中使用的显示区域尺寸；模拟器纹理会缩放进这个区域。 */
+    FVector2D VideoDisplaySize = FVector2D(860.0f, 720.0f);
+
+    /** 缩放到 VideoDisplaySize 时是否保持模拟器纹理自身比例。 */
+    bool bPreserveVideoAspectRatio = true;
 };
 
 /**

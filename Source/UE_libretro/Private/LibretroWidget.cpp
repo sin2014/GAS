@@ -22,10 +22,6 @@ DEFINE_LOG_CATEGORY_STATIC(LogLibretroWidget, Log, All);
 
 namespace
 {
-    // 固定显示区域用于容纳 FC/NES 单屏、NDS 双屏和 3DS Top-Bottom 合成画面。
-    constexpr float VideoBoxWidth = 860.0f;
-    constexpr float VideoBoxHeight = 720.0f;
-
     FText DefaultStatusText()
     {
         return FText::FromString(TEXT("选择一个 ROM 启动。WASD 方向/Circle Pad，J=A/确认，K=B/取消，U=X，I=Y，Q=L，E=R，Z=ZL，C=ZR，Enter=Start，Backspace=Select，Space=触摸下屏中心。↓即时存档，↑即时读档，←降速，→提速。"));
@@ -35,6 +31,30 @@ namespace
 void ULibretroWidget::SetOwningPawn(ALibretroPawn* InPawn)
 {
     OwningPawn = InPawn;
+}
+
+void ULibretroWidget::ApplyVideoDisplaySettings(const FLibretroLaunchConfig& Config)
+{
+    CurrentVideoDisplaySize = FVector2D(
+        FMath::Max(Config.VideoDisplaySize.X, 1.0f),
+        FMath::Max(Config.VideoDisplaySize.Y, 1.0f));
+    bCurrentPreserveVideoAspectRatio = Config.bPreserveVideoAspectRatio;
+
+    if (VideoSizeBox)
+    {
+        VideoSizeBox->SetWidthOverride(CurrentVideoDisplaySize.X);
+        VideoSizeBox->SetHeightOverride(CurrentVideoDisplaySize.Y);
+    }
+
+    if (VideoScaleBox)
+    {
+        VideoScaleBox->SetStretch(bCurrentPreserveVideoAspectRatio ? EStretch::ScaleToFit : EStretch::Fill);
+    }
+
+    UE_LOG(LogLibretroWidget, Log, TEXT("已应用视频显示设置：%.1fx%.1f，保持比例：%s"),
+        CurrentVideoDisplaySize.X,
+        CurrentVideoDisplaySize.Y,
+        bCurrentPreserveVideoAspectRatio ? TEXT("true") : TEXT("false"));
 }
 
 TSharedRef<SWidget> ULibretroWidget::RebuildWidget()
@@ -52,22 +72,22 @@ TSharedRef<SWidget> ULibretroWidget::RebuildWidget()
     Background->SetColorAndOpacity(FLinearColor(0.015f, 0.018f, 0.025f, 1.0f));
     Panel->AddChildToOverlay(Background);
 
-    USizeBox* VideoSize = WidgetTree->ConstructWidget<USizeBox>(USizeBox::StaticClass(), TEXT("VideoSize"));
-    VideoSize->SetWidthOverride(VideoBoxWidth);
-    VideoSize->SetHeightOverride(VideoBoxHeight);
-    UOverlaySlot* VideoSizeSlot = Panel->AddChildToOverlay(VideoSize);
+    VideoSizeBox = WidgetTree->ConstructWidget<USizeBox>(USizeBox::StaticClass(), TEXT("VideoSize"));
+    VideoSizeBox->SetWidthOverride(CurrentVideoDisplaySize.X);
+    VideoSizeBox->SetHeightOverride(CurrentVideoDisplaySize.Y);
+    UOverlaySlot* VideoSizeSlot = Panel->AddChildToOverlay(VideoSizeBox);
     VideoSizeSlot->SetHorizontalAlignment(HAlign_Center);
     VideoSizeSlot->SetVerticalAlignment(VAlign_Center);
     VideoSizeSlot->SetPadding(FMargin(0.0f, 42.0f, 0.0f, 0.0f));
 
-    UScaleBox* VideoScale = WidgetTree->ConstructWidget<UScaleBox>(UScaleBox::StaticClass(), TEXT("VideoScale"));
-    VideoScale->SetStretch(EStretch::ScaleToFit);
-    VideoSize->AddChild(VideoScale);
+    VideoScaleBox = WidgetTree->ConstructWidget<UScaleBox>(UScaleBox::StaticClass(), TEXT("VideoScale"));
+    VideoScaleBox->SetStretch(bCurrentPreserveVideoAspectRatio ? EStretch::ScaleToFit : EStretch::Fill);
+    VideoSizeBox->AddChild(VideoScaleBox);
 
     // Runner 每次尺寸变化可能创建新 UTexture2D；RefreshFromRunner 会重新绑定这里的 Image。
     VideoImage = WidgetTree->ConstructWidget<UImage>(UImage::StaticClass(), TEXT("VideoImage"));
     VideoImage->SetColorAndOpacity(FLinearColor::Black);
-    VideoScale->AddChild(VideoImage);
+    VideoScaleBox->AddChild(VideoImage);
 
     UTextBlock* Title = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("Title"));
     Title->SetText(FText::FromString(TEXT("UE5.8 libretro ROM 运行器")));
