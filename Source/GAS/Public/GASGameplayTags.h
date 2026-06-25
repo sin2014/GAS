@@ -55,6 +55,8 @@ public:
 	FGameplayTag Damage_Lightning;
 	FGameplayTag Damage_Physical;
 	
+	FGameplayTag Abilities_Attack;
+	
 	FGameplayTag Effects_HitReact;
 
 private:

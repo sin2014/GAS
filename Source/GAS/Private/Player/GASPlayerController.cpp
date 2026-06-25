@@ -118,8 +118,11 @@ void AGASPlayerController::AbilityInputTagReleased(FGameplayTag InputTag)
 				{
 					Spline->AddSplinePoint(PointLoc, ESplineCoordinateSpace::World);
 				}
-				CahedDestination = NavigationPath->PathPoints[NavigationPath->PathPoints.Num() - 1];
-				bAutoRunning = true;
+				if (NavigationPath->PathPoints.Num() > 0)
+				{
+					CahedDestination = NavigationPath->PathPoints[NavigationPath->PathPoints.Num() - 1];
+					bAutoRunning = true;
+				}
 			}
 		}
 		FollowTime = 0.f;
