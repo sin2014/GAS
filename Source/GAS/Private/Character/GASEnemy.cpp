@@ -63,6 +63,16 @@ int32 AGASEnemy::GetPlayerLevel()
 	return Level;
 }
 
+void AGASEnemy::SetCombatTarget_Implementation(AActor* InCombatTarget)
+{
+	CombatTarget = InCombatTarget;
+}
+
+AActor* AGASEnemy::GetCombatTarget_Implementation() const
+{
+	return CombatTarget;
+}
+
 void AGASEnemy::BeginPlay()
 {
 	Super::BeginPlay();
@@ -70,7 +80,7 @@ void AGASEnemy::BeginPlay()
 	InitAbilityActorInfo();
 	if (HasAuthority())
 	{
-		UGASAbilitySystemLibrary::GiveStartupAbilities(this, AbilitySystemComponent);
+		UGASAbilitySystemLibrary::GiveStartupAbilities(this, AbilitySystemComponent, CharacterClass);
 	}
 	
 	if (UGASUserWidget* GASUserWidget = Cast<UGASUserWidget>(HealthBar->GetUserWidgetObject()))
@@ -107,7 +117,10 @@ void AGASEnemy::HitReactTagChanged(const FGameplayTag CallbackTag, int32 NewCoun
 {
 	bHitReacting = (NewCount > 0);
 	GetCharacterMovement()->MaxWalkSpeed = bHitReacting ? 0.f : BaseWalkSpeed;
-	GASAIController->GetBlackboardComponent()->SetValueAsBool(FName("HitReacting"), bHitReacting);
+	if (GASAIController && GASAIController->GetBlackboardComponent())
+	{
+		GASAIController->GetBlackboardComponent()->SetValueAsBool(FName("HitReacting"), bHitReacting);
+	}
 }
 
 void AGASEnemy::InitAbilityActorInfo()

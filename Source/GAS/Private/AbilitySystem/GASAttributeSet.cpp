@@ -176,6 +176,11 @@ void UGASAttributeSet::ShowFloatingText(const FEffectProperties& Props, float Da
 		if (AGASPlayerController* PC = Cast<AGASPlayerController>(Props.SourceCharacter->GetController()))
 		{
 			PC->ShowDamageNumber(Damage, Props.TargetCharacter, bBlockedHit, bCriticalHit);
+			return;
+		}
+		if (AGASPlayerController* PC = Cast<AGASPlayerController>(Props.TargetCharacter->GetController()))
+		{
+			PC->ShowDamageNumber(Damage, Props.TargetCharacter, bBlockedHit, bCriticalHit);
 		}
 	}
 }

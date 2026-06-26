@@ -55,6 +55,7 @@ void AGASCharacterBase::MuticastHandleDeath_Implementation()
 	
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	Dissolve();
+	bDead = true;
 }
 
 void AGASCharacterBase::BeginPlay()
@@ -63,10 +64,20 @@ void AGASCharacterBase::BeginPlay()
 	
 }
 
-FVector AGASCharacterBase::GetCombatSocketLocation()
+FVector AGASCharacterBase::GetCombatSocketLocation_Implementation()
 {
 	check(Weapon);
 	return Weapon->GetSocketLocation(WeaponTipSocketName);
+}
+
+AActor* AGASCharacterBase::GetAvatar_Implementation()
+{
+	return this;
+}
+
+bool AGASCharacterBase::IsDead_Implementation() const
+{
+	return bDead;
 }
 
 void AGASCharacterBase::InitAbilityActorInfo()
