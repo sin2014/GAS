@@ -2,6 +2,7 @@
 
 #include "Character/GASCharacterBase.h"
 #include "AbilitySystemComponent.h"
+#include "GASGameplayTags.h"
 #include "AbilitySystem/GASAbilitySystemComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "GAS/GAS.h"
@@ -64,10 +65,36 @@ void AGASCharacterBase::BeginPlay()
 	
 }
 
-FVector AGASCharacterBase::GetCombatSocketLocation_Implementation()
+FVector AGASCharacterBase::GetCombatSocketLocation_Implementation(const FGameplayTag& MontageTag)
 {
-	check(Weapon);
-	return Weapon->GetSocketLocation(WeaponTipSocketName);
+	const FGASGameplayTags& GameplayTags = FGASGameplayTags::Get();
+	if (MontageTag.MatchesTagExact(GameplayTags.Montage_Attack_Weapon) && IsValid(Weapon))
+	{
+		return Weapon->GetSocketLocation(WeaponTipSocketName);
+	}
+	if (MontageTag.MatchesTagExact(GameplayTags.Montage_Attack_LeftHand) || MontageTag.MatchesTagExact(GameplayTags.Montage_Attack_BothHand))
+	{
+		return GetMesh()->GetSocketLocation(LeftHandSocketName);
+	}	
+	if (MontageTag.MatchesTagExact(GameplayTags.Montage_Attack_RightHand))
+	{
+		return GetMesh()->GetSocketLocation(RightHandSocketName);
+	}
+	if (MontageTag.MatchesTagExact(GameplayTags.Montage_Attack_LeftFoot) || MontageTag.MatchesTagExact(GameplayTags.Montage_Attack_BothFoot))
+	{
+		return GetMesh()->GetSocketLocation(LeftFootSocketName);
+	}
+	if (MontageTag.MatchesTagExact(GameplayTags.Montage_Attack_RightFoot))
+	{
+		return GetMesh()->GetSocketLocation(RightFootSocketName);
+	}
+	
+	return FVector();
+}
+
+TArray<FTaggedMontage> AGASCharacterBase::GetAttackMontages_Implementation()
+{
+	return AttackMontages;
 }
 
 AActor* AGASCharacterBase::GetAvatar_Implementation()

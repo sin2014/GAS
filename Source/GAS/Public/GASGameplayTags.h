@@ -57,6 +57,14 @@ public:
 	
 	FGameplayTag Abilities_Attack;
 	
+	FGameplayTag Montage_Attack_Weapon;
+	FGameplayTag Montage_Attack_LeftHand;
+	FGameplayTag Montage_Attack_RightHand;
+	FGameplayTag Montage_Attack_BothHand;
+	FGameplayTag Montage_Attack_LeftFoot;
+	FGameplayTag Montage_Attack_RightFoot;
+	FGameplayTag Montage_Attack_BothFoot;
+	
 	FGameplayTag Effects_HitReact;
 
 private:

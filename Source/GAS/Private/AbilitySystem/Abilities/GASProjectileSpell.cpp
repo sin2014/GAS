@@ -25,7 +25,7 @@ void UGASProjectileSpell::SpawnProjectile(const FVector& ProjectileTargetLocatio
 	if (CombatInterface)
 	{
 		//const FVector& SocketLocation = CombatInterface->GetCombatSocketLocation();  //GetCombatSocketLocation()改成蓝图函数，所以改用ICombatInterface::Execute_GetCombatSocketLocation()
-		const FVector& SocketLocation = ICombatInterface::Execute_GetCombatSocketLocation(GetAvatarActorFromActorInfo());
+		const FVector& SocketLocation = ICombatInterface::Execute_GetCombatSocketLocation(GetAvatarActorFromActorInfo(), FGASGameplayTags::Get().Montage_Attack_Weapon);
 		FRotator Rotation = (ProjectileTargetLocation - SocketLocation).Rotation();
 		
 		FTransform SpawnTransform;
