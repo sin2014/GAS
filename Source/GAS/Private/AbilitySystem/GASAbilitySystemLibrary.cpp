@@ -167,3 +167,11 @@ void UGASAbilitySystemLibrary::GetLivePlayerWithinRadius(const UObject* WorldCon
 		}
 	}
 }
+
+bool UGASAbilitySystemLibrary::IsNotFriend(AActor* ActorA, AActor* ActorB)
+{
+	const bool bBothArePlayers = ActorA->ActorHasTag(FName("Player")) && ActorB->ActorHasTag(FName("Player"));
+	const bool bBothAreEnemies = ActorA->ActorHasTag(FName("Enemy")) && ActorB->ActorHasTag(FName("Enemy"));
+	
+	return !(bBothArePlayers || bBothAreEnemies);
+}

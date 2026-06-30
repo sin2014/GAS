@@ -50,6 +50,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "GASAbilitySystemLibrary|GameplayMechanics")
 	static void GetLivePlayerWithinRadius(const UObject* WorldContextObject, TArray<AActor*>& OutOverlappingActors, const TArray<AActor*>& ActorsToIgnore, float Radius, const FVector& SphereCenter);
 	
+	UFUNCTION(BlueprintPure, Category = "GASAbilitySystemLibrary|GameplayMechanics")
+	static bool IsNotFriend(AActor* ActorA, AActor* ActorB);
+	
 	UFUNCTION(BlueprintPure, Category = "GASAbilitySystemLibrary|Value")
 	static float ApplyValueVariance(float Value, float VariancePercent);
 };
