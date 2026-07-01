@@ -20,6 +20,9 @@ struct FTaggedMontage
 	UAnimMontage* Montage = nullptr;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	FGameplayTag SockstTag;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	FGameplayTag MontageTag;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
@@ -63,6 +66,9 @@ public:
 	
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	TArray<FTaggedMontage> GetAttackMontages();
+	
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	FTaggedMontage GetTaggedMontageByTag(const FGameplayTag& MontageTag);
 	
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	UNiagaraSystem* GetBloodEffect();

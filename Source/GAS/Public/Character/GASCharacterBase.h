@@ -33,6 +33,7 @@ public:
 	virtual bool IsDead_Implementation() const override;
 	virtual void Die() override;
 	virtual TArray<FTaggedMontage> GetAttackMontages_Implementation() override;
+	FTaggedMontage GetTaggedMontageByTag_Implementation(const FGameplayTag& MontageTag) override;
 	virtual UNiagaraSystem* GetBloodEffect_Implementation() override;
 	
 	UFUNCTION(NetMulticast, Reliable)
