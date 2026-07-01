@@ -33,6 +33,7 @@ public:
 	virtual bool IsDead_Implementation() const override;
 	virtual void Die() override;
 	virtual TArray<FTaggedMontage> GetAttackMontages_Implementation() override;
+	virtual UNiagaraSystem* GetBloodEffect_Implementation() override;
 	
 	UFUNCTION(NetMulticast, Reliable)
 	virtual void MuticastHandleDeath();
@@ -99,6 +100,9 @@ protected:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dissolve")
 	TObjectPtr<UMaterialInstance> WeaponDissolveMaterialInstance;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "ComBat")
+	UNiagaraSystem* BloodEffect;
 	
 private:
 	UPROPERTY(EditAnywhere, Category = "Abilities")

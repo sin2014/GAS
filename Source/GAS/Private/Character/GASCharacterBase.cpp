@@ -97,6 +97,11 @@ TArray<FTaggedMontage> AGASCharacterBase::GetAttackMontages_Implementation()
 	return AttackMontages;
 }
 
+UNiagaraSystem* AGASCharacterBase::GetBloodEffect_Implementation()
+{
+	return BloodEffect;
+}
+
 AActor* AGASCharacterBase::GetAvatar_Implementation()
 {
 	return this;
