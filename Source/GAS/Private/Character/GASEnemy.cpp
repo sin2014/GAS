@@ -63,6 +63,13 @@ int32 AGASEnemy::GetPlayerLevel()
 	return Level;
 }
 
+void AGASEnemy::Die()
+{
+	SetLifeSpan(LifeSpan);
+	if (GASAIController) GASAIController->GetBlackboardComponent()->SetValueAsBool(FName("Dead"), true);
+	Super::Die();
+}
+
 void AGASEnemy::SetCombatTarget_Implementation(AActor* InCombatTarget)
 {
 	CombatTarget = InCombatTarget;
