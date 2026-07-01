@@ -17,3 +17,13 @@ void UGASDamageGameplayAbility::CauseDamage(AActor* TargetActor)
 	UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(DamageSpecHandle, FGASGameplayTags::Get().Damage_Multiplier, ScaledDamageMultiplier);
 	GetAbilitySystemComponentFromActorInfo()->ApplyGameplayEffectSpecToTarget(*DamageSpecHandle.Data.Get(), UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(TargetActor));
 }
+
+FTaggedMontage UGASDamageGameplayAbility::GetRandomTaggedMontageFromArray(const TArray<FTaggedMontage>& TaggedMontages) const
+{
+	if (TaggedMontages.Num() > 0)
+	{
+		const int32 Selection = FMath::RandRange(0, TaggedMontages.Num() - 1);
+		return TaggedMontages[Selection];
+	}
+	return FTaggedMontage();
+}

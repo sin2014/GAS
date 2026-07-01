@@ -7,6 +7,7 @@
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "NiagaraFunctionLibrary.h"
+#include "AbilitySystem/GASAbilitySystemLibrary.h"
 #include "Components/AudioComponent.h"
 #include "GAS/GAS.h"
 
@@ -54,6 +55,10 @@ void AGASProjectile::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, A
                                      UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	if (DamageEffectSpecHandle.Data.IsValid() && DamageEffectSpecHandle.Data.Get()->GetContext().GetEffectCauser() == OtherActor)
+	{
+		return;
+	}
+	if (!UGASAbilitySystemLibrary::IsNotFriend(DamageEffectSpecHandle.Data.Get()->GetContext().GetEffectCauser(), OtherActor))
 	{
 		return;
 	}

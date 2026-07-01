@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Interaction/CombatInterface.h"
 #include "AbilitySystem/Abilities/GASGameplayAbility.h"
 #include "GASDamageGameplayAbility.generated.h"
 
@@ -27,4 +28,7 @@ protected:
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Damage")
 	FScalableFloat DamageMultiplier;
+	
+	UFUNCTION(BlueprintPure)
+	FTaggedMontage GetRandomTaggedMontageFromArray(const TArray<FTaggedMontage>& TaggedMontages) const;
 };
