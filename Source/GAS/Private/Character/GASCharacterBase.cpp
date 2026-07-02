@@ -6,6 +6,7 @@
 #include "AbilitySystem/GASAbilitySystemComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "GAS/GAS.h"
+#include "Kismet/GameplayStatics.h"
 
 AGASCharacterBase::AGASCharacterBase()
 {
@@ -45,6 +46,8 @@ void AGASCharacterBase::Die()
 
 void AGASCharacterBase::MuticastHandleDeath_Implementation()
 {
+	UGameplayStatics::PlaySoundAtLocation(this, DeathSound, GetActorLocation(), GetActorRotation());
+	
 	Weapon->SetSimulatePhysics(true);
 	Weapon->SetEnableGravity(true);
 	Weapon->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
