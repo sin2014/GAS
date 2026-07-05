@@ -1,0 +1,19 @@
+{
+  "FileVersion": 3,
+  "Version": 1,
+  "VersionName": "1.0.0",
+  "FriendlyName": "StormHeroes Asset Importer",
+  "Description": "Editor commandlets for organizing Heroes of the Storm assets imported into UE.",
+  "Category": "Importers",
+  "CreatedBy": "Codex",
+  "CanContainContent": false,
+  "IsBetaVersion": true,
+  "Installed": false,
+  "Modules": [
+    {
+      "Name": "StormHeroesAssetImporter",
+      "Type": "Editor",
+      "LoadingPhase": "Default"
+    }
+  ]
+}

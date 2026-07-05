@@ -8,6 +8,12 @@
 - 示例源文件：`C:\Users\ZYZ\Downloads\大元素使_拉克丝.glb`
 - 示例目标目录：`/Game/Assets/Characters/Test/ElementalistLux`
 
+## 硬性禁用：不要使用 UE Python
+
+本项目的 UE 导入、资产修复、材质修复、资产重命名、引用清理、蓝图调整流程中，禁止使用任何 UE Python 插件、UE Python 控制台、`-ExecutePythonScript`、Python commandlet、Editor Utility Python、蓝图里的 `ExecutePythonScript` 节点或其他依赖 UE PythonScriptPlugin 的脚本程序。
+
+原因是已经在本项目 UE 5.8 环境中验证：UE Python 要么没有实际效果，要么会在启用或执行过程中导致编辑器崩溃。因此后续遇到 UE 资产批处理需求时，应使用项目 C++ 插件、Editor commandlet、Unreal MCP 暴露的非 Python 工具、手工编辑器操作，或离线 Blender/外部脚本处理源资产。Blender 预处理阶段可以继续使用 Blender 自己的 Python；本禁令只针对 UE 内部 Python / PythonScriptPlugin。
+
 ## 最终结论
 
 这类网站导出的 `.glb` 角色，不建议直接拖进 UE 5.8 内容浏览器，也不建议优先走 UE 5.8 默认 Interchange 导入链路。
