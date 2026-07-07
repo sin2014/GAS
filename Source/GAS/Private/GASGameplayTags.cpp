@@ -79,6 +79,7 @@ void FGASGameplayTags::IntializeNativeGameplayTags()
 	GameplayTags.CombatSocket_RightHand = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("CombatSocket.RightHand"), FString("Right Hand Socket"));
 	GameplayTags.CombatSocket_LeftFoot = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("CombatSocket.LeftFoot"), FString("Left Foot Socket"));
 	GameplayTags.CombatSocket_RightFoot = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("CombatSocket.RightFoot"), FString("Right Foot Socket"));
+	GameplayTags.CombatSocket_Tail = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("CombatSocket.Tail"), FString("Tail Socket"));
 	
 	/**
 	* Montage Tags

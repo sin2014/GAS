@@ -16,7 +16,7 @@ void UGASProjectileSpell::ActivateAbility(const FGameplayAbilitySpecHandle Handl
 	
 }
 
-void UGASProjectileSpell::SpawnProjectile(const FVector& ProjectileTargetLocation)
+void UGASProjectileSpell::SpawnProjectile(const FVector& ProjectileTargetLocation, const FGameplayTag& SocketTag)
 {
 	const bool bIsServer = GetAvatarActorFromActorInfo()->HasAuthority();
 	if (!bIsServer) return;
@@ -25,7 +25,7 @@ void UGASProjectileSpell::SpawnProjectile(const FVector& ProjectileTargetLocatio
 	if (CombatInterface)
 	{
 		//const FVector& SocketLocation = CombatInterface->GetCombatSocketLocation();  //GetCombatSocketLocation()改成蓝图函数，所以改用ICombatInterface::Execute_GetCombatSocketLocation()
-		const FVector& SocketLocation = ICombatInterface::Execute_GetCombatSocketLocation(GetAvatarActorFromActorInfo(), FGASGameplayTags::Get().CombatSocket_Weapon);
+		const FVector& SocketLocation = ICombatInterface::Execute_GetCombatSocketLocation(GetAvatarActorFromActorInfo(), SocketTag);
 		FRotator Rotation = (ProjectileTargetLocation - SocketLocation).Rotation();
 		
 		FTransform SpawnTransform;

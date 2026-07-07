@@ -91,6 +91,10 @@ FVector AGASCharacterBase::GetCombatSocketLocation_Implementation(const FGamepla
 	{
 		return GetMesh()->GetSocketLocation(RightFootSocketName);
 	}
+	if (MontageTag.MatchesTagExact(GameplayTags.CombatSocket_Tail))
+	{
+		return GetMesh()->GetSocketLocation(TailSocketName);
+	}
 	
 	return FVector();
 }
