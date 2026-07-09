@@ -121,6 +121,16 @@ UNiagaraSystem* AGASCharacterBase::GetBloodEffect_Implementation()
 	return BloodEffect;
 }
 
+int32 AGASCharacterBase::GetMinionCount_Implementation()
+{
+	return MinionCount;
+}
+
+int32 AGASCharacterBase::IncrementMinionCount_Implementation(int32 Amount)
+{
+	return MinionCount += Amount;
+}
+
 AActor* AGASCharacterBase::GetAvatar_Implementation()
 {
 	return this;
