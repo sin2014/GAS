@@ -29,7 +29,7 @@ public:
 	FAttributeInfoSignature AttributeInfoDelegate;
 	
 protected:
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, meta = (ScriptNoExport))
 	TObjectPtr<UAttributeInfo> AttributeInfo;
 	
 private:

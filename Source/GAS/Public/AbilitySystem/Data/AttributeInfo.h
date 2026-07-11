@@ -36,6 +36,6 @@ class GAS_API UAttributeInfo : public UDataAsset
 public:
 	FGASAttributeInfo FindAttributeInfoForTag(const FGameplayTag& AttributeTag, bool bLogNotFound = false) const;
 	
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (ScriptNoExport))
 	TArray<FGASAttributeInfo> AttributeInfomation;
 };
