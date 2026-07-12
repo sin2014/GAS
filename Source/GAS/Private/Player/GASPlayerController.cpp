@@ -13,12 +13,14 @@
 #include "Interaction/EnemyInterface.h"
 #include "GameFramework/Character.h"
 #include "UI/Widget/DamageTextComponent.h"
+#include "Components/FoliageOcclusionFadeComponent.h"
 
 AGASPlayerController::AGASPlayerController()
 {
 	bReplicates = true;    //标记为可复制实体
 	
 	Spline = CreateDefaultSubobject<USplineComponent>(TEXT("Spline"));
+	FoliageOcclusionFadeComponent = CreateDefaultSubobject<UFoliageOcclusionFadeComponent>(TEXT("FoliageOcclusionFade"));
 }
 
 void AGASPlayerController::PlayerTick(float DeltaTime)

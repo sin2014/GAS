@@ -15,6 +15,7 @@ class USplineComponent;
 struct FInputActionValue;
 class IEnemyInterface;
 class UDamageTextComponent;
+class UFoliageOcclusionFadeComponent;
 
 /**
  * 
@@ -36,6 +37,9 @@ protected:
 	virtual void SetupInputComponent() override;
 	
 private:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera Occlusion", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UFoliageOcclusionFadeComponent> FoliageOcclusionFadeComponent;
+
 	UPROPERTY(EditAnywhere, Category = "Input")
 	TObjectPtr<UInputMappingContext> GasContext;
 	
