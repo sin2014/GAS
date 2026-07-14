@@ -1,6 +1,7 @@
 // ZYZ
 
 #include "AbilitySystem/Data/AttributeInfo.h"
+#include "GAS/GASLogChannels.h"
 
 FGASAttributeInfo UAttributeInfo::FindAttributeInfoForTag(const FGameplayTag& AttributeTag, bool bLogNotFound) const
 {
@@ -14,7 +15,7 @@ FGASAttributeInfo UAttributeInfo::FindAttributeInfoForTag(const FGameplayTag& At
 	
 	if (bLogNotFound)
 	{
-		UE_LOG(LogTemp, Error, TEXT("Can't find info for AttributeTag [%s] on AttributeInfo [%s]."), *AttributeTag.ToString(), *GetNameSafe(this));
+		UE_LOG(LogGAS, Error, TEXT("Can't find info for AttributeTag [%s] on AttributeInfo [%s]."), *AttributeTag.ToString(), *GetNameSafe(this));
 	}
 	
 	return FGASAttributeInfo();

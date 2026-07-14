@@ -3,6 +3,7 @@
 #include "AbilitySystem/GASAbilitySystemComponent.h"
 #include "GASGameplayTags.h"
 #include "AbilitySystem/Abilities/GASGameplayAbility.h"
+#include "GAS/GASLogChannels.h"
 
 void UGASAbilitySystemComponent::AbilityActorInfoSet()
 {
@@ -20,6 +21,47 @@ void UGASAbilitySystemComponent::AddCharacterAbilities(const TArray<TSubclassOf<
 			GiveAbility(AbilitySpec);
 		}
 	}
+	bStartupAbilitiesGiven = true;
+	AbilitiesGivenDelegate.Broadcast(this);
+}
+
+void UGASAbilitySystemComponent::ForEachAbility(const FForEachAbility& Delegate)
+{
+	FScopedAbilityListLock ActiveScopeLock(*this);
+	for (const FGameplayAbilitySpec& AbilitySpec : GetActivatableAbilities())
+	{
+		if (!Delegate.ExecuteIfBound(AbilitySpec))
+		{
+			UE_LOG(LogGAS, Error, TEXT("Failed to execute delegate in %hs"), __FUNCTION__)
+		}
+	}
+}
+
+FGameplayTag UGASAbilitySystemComponent::GetAbilityTagFromSpec(const FGameplayAbilitySpec& AbilitySpec)
+{
+	if (AbilitySpec.Ability)
+	{
+		for (const FGameplayTag& Tag : AbilitySpec.Ability.Get()->GetAssetTags())
+		{
+			if (Tag.MatchesTag(FGameplayTag::RequestGameplayTag(FName("Abilities"))))
+			{
+				return Tag;
+			}
+		}
+	}
+	return FGameplayTag();
+}
+
+FGameplayTag UGASAbilitySystemComponent::GetInputTagFromSpec(const FGameplayAbilitySpec& AbilitySpec)
+{
+	for (const FGameplayTag& Tag : AbilitySpec.DynamicAbilityTags)
+	{
+		if (Tag.MatchesTag(FGameplayTag::RequestGameplayTag(FName("InputTag"))))
+		{
+			return Tag;
+		}
+	}
+	return FGameplayTag();
 }
 
 void UGASAbilitySystemComponent::AbilityInputTagPressed(const FGameplayTag& InputTag)
@@ -54,6 +96,17 @@ void UGASAbilitySystemComponent::AbilityInputTagHeld(const FGameplayTag& InputTa
 				TryActivateAbility(AbilitySpec.Handle);
 			}
 		}
+	}
+}
+
+void UGASAbilitySystemComponent::OnRep_ActivateAbilities()
+{
+	Super::OnRep_ActivateAbilities();
+	
+	if (!bStartupAbilitiesGiven)
+	{
+		bStartupAbilitiesGiven = true;
+		AbilitiesGivenDelegate.Broadcast(this);
 	}
 }
 

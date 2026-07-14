@@ -1,9 +1,9 @@
 // ZYZ
 
 #include "UI/WidgetController/OverlayWidgetController.h"
-
 #include "AbilitySystem/GASAbilitySystemComponent.h"
 #include "AbilitySystem/GASAttributeSet.h"
+#include "AbilitySystem/Data/AbilityInfo.h"
 
 //广播初始值
 void UOverlayWidgetController::BroadcastInitialValues()
@@ -44,20 +44,45 @@ void UOverlayWidgetController::BindCallbacksToDependencies()
 			OnMaxManaChanged.Broadcast(Data.NewValue);
 		}
 	);
-
 	
-	Cast<UGASAbilitySystemComponent>(AbilitySystemComponent) ->EffectAssetTags.AddLambda(
-		[this](const FGameplayTagContainer& AssetTags)
+	if (UGASAbilitySystemComponent* GASASC = Cast<UGASAbilitySystemComponent>(AbilitySystemComponent))
+	{
+		if (GASASC->bStartupAbilitiesGiven)
 		{
-			for (const FGameplayTag& Tag : AssetTags)
-			{
-				FGameplayTag MessageTag = FGameplayTag::RequestGameplayTag(FName("Message"));
-				if (Tag.MatchesTag(MessageTag))
-				{
-					const FUIWidgetRow* Row = GetDataTableRowByTag<FUIWidgetRow>(MessageWidgetDataTable, Tag);
-					MessageWidgetRowDelegate.Broadcast(*Row);
-				}
-			}
+			OnInitializeStartupAbilities(GASASC);
 		}
-	);
+		else
+		{
+			GASASC->AbilitiesGivenDelegate.AddUObject(this, &UOverlayWidgetController::OnInitializeStartupAbilities);
+		}
+        
+        GASASC->EffectAssetTags.AddLambda(
+        	[this](const FGameplayTagContainer& AssetTags)
+        	{
+        		for (const FGameplayTag& Tag : AssetTags)
+        		{
+        			FGameplayTag MessageTag = FGameplayTag::RequestGameplayTag(FName("Message"));
+        			if (Tag.MatchesTag(MessageTag))
+        			{
+        				const FUIWidgetRow* Row = GetDataTableRowByTag<FUIWidgetRow>(MessageWidgetDataTable, Tag);
+        				MessageWidgetRowDelegate.Broadcast(*Row);
+        			}
+        		}
+        	}
+        );
+	}
+}
+
+void UOverlayWidgetController::OnInitializeStartupAbilities(UGASAbilitySystemComponent* GASASC)
+{
+	if (!GASASC->bStartupAbilitiesGiven) return;
+	
+	FForEachAbility BroadcastDelegate;
+	BroadcastDelegate.BindLambda([this, GASASC](const FGameplayAbilitySpec& AbilitySpec)
+	{
+		FGASAbilityInfo Info = AbilityInfo->FindAbilityInfoForTag(GASASC->GetAbilityTagFromSpec(AbilitySpec));
+		Info.InputTag = GASASC->GetInputTagFromSpec(AbilitySpec);
+		AbilityInfoDelegate.Broadcast(Info);
+	});
+	GASASC->ForEachAbility(BroadcastDelegate);
 }
