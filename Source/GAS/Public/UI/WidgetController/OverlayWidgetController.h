@@ -7,6 +7,7 @@
 #include "UI/WidgetController/GASWidgetController.h"
 #include "OverlayWidgetController.generated.h"
 
+class UDataTable;
 class UGASAbilitySystemComponent;
 class UGASUserWidget;
 class UAbilityInfo;
@@ -32,6 +33,7 @@ struct FUIWidgetRow : public FTableRowBase
 };
 
 //单值监听广播委托
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlayerStateChangedSignature, int32, NewValue);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAttributeChangedSignature, float, NewValue);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMessageWidgetRowSignature, FUIWidgetRow, Row);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FAbilityInfoSignature, const FGASAbilityInfo&, Info);
@@ -66,6 +68,12 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "GAS|Messages")
 	FAbilityInfoSignature AbilityInfoDelegate;
 	
+	UPROPERTY(BlueprintAssignable, Category = "GAS|Level")
+	FOnPlayerStateChangedSignature OnPlayerLevelChangedDelegate;
+	
+	UPROPERTY(BlueprintAssignable, Category = "GAS|Level")
+	FOnAttributeChangedSignature OnXPPercentChangedDelegate;
+	
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Widget Data")
 	TObjectPtr<UDataTable> MessageWidgetDataTable;
@@ -77,6 +85,9 @@ protected:
 	T* GetDataTableRowByTag(UDataTable* DataTable, const FGameplayTag& Tag);
 	
 	void OnInitializeStartupAbilities(UGASAbilitySystemComponent* GASASC);
+	
+	void OnLevelChanged(int32 NewLevel) const;
+	void OnXPChanged(int32 NewXP) const;
 };
 
 template <typename T>

@@ -131,6 +131,11 @@ int32 AGASCharacterBase::IncrementMinionCount_Implementation(int32 Amount)
 	return MinionCount += Amount;
 }
 
+ECharacterClass AGASCharacterBase::GetCharacterClass_Implementation()
+{
+	return CharacterClass;
+}
+
 AActor* AGASCharacterBase::GetAvatar_Implementation()
 {
 	return this;
@@ -167,6 +172,7 @@ void AGASCharacterBase::AddCharacterAbilities()
 	UGASAbilitySystemComponent* GASASC = CastChecked<UGASAbilitySystemComponent>(GetAbilitySystemComponent());
 	if (!HasAuthority()) return;
 	GASASC->AddCharacterAbilities(StartupAbilities);
+	GASASC->AddCharacterPassiveAbilities(StartupPassiveAbilities);
 }
 
 void AGASCharacterBase::Dissolve()

@@ -58,7 +58,7 @@ void AGASEnemy::UnHighlightActor()
 	Weapon->SetRenderCustomDepth(false);
 }
 
-int32 AGASEnemy::GetPlayerLevel()
+int32 AGASEnemy::GetPlayerLevel_Implementation()
 {
 	return Level;
 }

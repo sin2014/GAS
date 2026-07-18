@@ -55,4 +55,6 @@ public:
 	
 	UFUNCTION(BlueprintPure, Category = "GASAbilitySystemLibrary|Value")
 	static float ApplyValueVariance(float Value, float VariancePercent);
+	
+	static int32 GetXPRewardForClassAndLevel(const UObject* WorldContextObject, ECharacterClass CharacterClass, int32 CharacterLevel);
 };

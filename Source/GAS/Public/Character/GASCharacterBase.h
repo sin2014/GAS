@@ -6,6 +6,7 @@
 #include "AbilitySystemInterface.h"
 #include "GameFramework/Character.h"
 #include "Interaction/CombatInterface.h"
+#include "AbilitySystem/Data/CharacterClassInfo.h"
 #include "GASCharacterBase.generated.h"
 
 class UAbilitySystemComponent;
@@ -37,6 +38,7 @@ public:
 	virtual UNiagaraSystem* GetBloodEffect_Implementation() override;
 	virtual int32 GetMinionCount_Implementation() override;
 	virtual int32 IncrementMinionCount_Implementation(int32 Amount) override;
+	virtual ECharacterClass GetCharacterClass_Implementation() override;
 	
 	UFUNCTION(NetMulticast, Reliable)
 	virtual void MuticastHandleDeath();
@@ -116,9 +118,15 @@ protected:
 	/* Minions */
 	int32 MinionCount = 0;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Class Defaults", meta = (AllowPrivateAccess = true))
+	ECharacterClass CharacterClass = ECharacterClass::Warrior;
+	
 private:
 	UPROPERTY(EditAnywhere, Category = "Abilities")
 	TArray<TSubclassOf<UGameplayAbility>> StartupAbilities;
+	
+	UPROPERTY(EditAnywhere, Category = "Abilities")
+	TArray<TSubclassOf<UGameplayAbility>> StartupPassiveAbilities;
 	
 	UPROPERTY(EditAnywhere, Category = "ComBat")
 	TObjectPtr<UAnimMontage> HitReactMontage;
