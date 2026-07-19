@@ -3,6 +3,8 @@
 #include "AbilitySystem/GASAbilitySystemComponent.h"
 #include "GASGameplayTags.h"
 #include "AbilitySystem/Abilities/GASGameplayAbility.h"
+#include "Interaction/PlayerInterface.h"
+#include "GameFramework/PlayerInput.h"
 #include "GAS/GASLogChannels.h"
 
 void UGASAbilitySystemComponent::AbilityActorInfoSet()
@@ -105,6 +107,31 @@ void UGASAbilitySystemComponent::AbilityInputTagHeld(const FGameplayTag& InputTa
 				TryActivateAbility(AbilitySpec.Handle);
 			}
 		}
+	}
+}
+
+void UGASAbilitySystemComponent::UpgradeAttribute(const FGameplayTag& AttributeTag)
+{
+	if (GetAvatarActor()->Implements<UPlayerInterface>())
+	{
+		if (IPlayerInterface::Execute_GetAttributePoints(GetAvatarActor()) > 0)
+		{
+			ServerUpgradeAttribute(AttributeTag);
+		}
+	}
+}
+
+void UGASAbilitySystemComponent::ServerUpgradeAttribute_Implementation(const FGameplayTag& AttributeTag)
+{
+	FGameplayEventData PayLoad;
+	PayLoad.EventTag = AttributeTag;
+	PayLoad.EventMagnitude = 1.f;
+	
+	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetAvatarActor(), AttributeTag, PayLoad);
+	
+	if (GetAvatarActor()->Implements<UPlayerInterface>())
+	{
+		IPlayerInterface::Execute_AddToAttributePoints(GetAvatarActor(), -1);
 	}
 }
 

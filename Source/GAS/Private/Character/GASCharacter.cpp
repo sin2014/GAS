@@ -81,7 +81,7 @@ int32 AGASCharacter::GetSpellPointsReward_Implementation(int32 Level) const
 {
 	AGASPlayerState* GASPlayerState = GetPlayerState<AGASPlayerState>();
 	check(GASPlayerState);
-	return GASPlayerState->LevelUpInfo->LevelUpInformation[Level].SkillPointAward;
+	return GASPlayerState->LevelUpInfo->LevelUpInformation[Level].SpellPointsAward;
 }
 
 void AGASCharacter::AddToXP_Implementation(int32 InXP)
@@ -100,12 +100,30 @@ void AGASCharacter::AddToLevel_Implementation(int32 InLevel)
 
 void AGASCharacter::AddToAttributePoints_Implementation(int32 InAttributePoints)
 {
-	IPlayerInterface::AddToAttributePoints_Implementation(InAttributePoints);
+	AGASPlayerState* GASPlayerState = GetPlayerState<AGASPlayerState>();
+	check(GASPlayerState);
+	GASPlayerState -> AddAttributePoints(InAttributePoints);
 }
 
 void AGASCharacter::AddToSpellPoints_Implementation(int32 InSpellPoints)
 {
-	IPlayerInterface::AddToSpellPoints_Implementation(InSpellPoints);
+	AGASPlayerState* GASPlayerState = GetPlayerState<AGASPlayerState>();
+	check(GASPlayerState);
+	GASPlayerState -> AddSpellPoints(InSpellPoints);
+}
+
+int32 AGASCharacter::GetAttributePoints_Implementation() const
+{
+	AGASPlayerState* GASPlayerState = GetPlayerState<AGASPlayerState>();
+	check(GASPlayerState);
+	return GASPlayerState -> GetAttributePoints();
+}
+
+int32 AGASCharacter::GetSpellPoints_Implementation() const
+{
+	AGASPlayerState* GASPlayerState = GetPlayerState<AGASPlayerState>();
+	check(GASPlayerState);
+	return GASPlayerState -> GetSpellPoints();
 }
 
 void AGASCharacter::LevelUp_Implementation(int32 InLevel)

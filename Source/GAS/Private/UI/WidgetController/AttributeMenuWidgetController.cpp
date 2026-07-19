@@ -3,7 +3,10 @@
 #include "UI/WidgetController/AttributeMenuWidgetController.h"
 #include "AbilitySystem/GASAttributeSet.h"
 #include "AbilitySystem/Data/AttributeInfo.h"
+#include "Player/GASPlayerState.h"
 #include "GASGameplayTags.h"
+#include "AbilitySystem/GASAbilitySystemComponent.h"
+
 
 void UAttributeMenuWidgetController::BindCallbacksToDependencies()
 {
@@ -18,6 +21,13 @@ void UAttributeMenuWidgetController::BindCallbacksToDependencies()
 		}
 	);
 	}
+	AGASPlayerState* GASPlayerState = CastChecked<AGASPlayerState>(PlayerState);
+	GASPlayerState->OnAttributePointsChangedDelegate.AddLambda(
+		[this](int32 Points)
+		{
+			AttributePointsChangedDelegate.Broadcast(Points);
+		}	
+	);
 }
 
 void UAttributeMenuWidgetController::BroadcastInitialValues()
@@ -33,6 +43,15 @@ void UAttributeMenuWidgetController::BroadcastInitialValues()
 	// FGASAttributeInfo StrengthInfo = AttributeInfo->FindAttributeInfoForTag(FGASGameplayTags::Get().Attributes_Primary_Strength);
 	// StrengthInfo.AttributeValue = AS->GetStrength();
 	// AttributeInfoDelegate.Broadcast(StrengthInfo);
+	
+	AGASPlayerState* GASPlayerState = CastChecked<AGASPlayerState>(PlayerState);
+	AttributePointsChangedDelegate.Broadcast(GASPlayerState->GetAttributePoints());
+}
+
+void UAttributeMenuWidgetController::UpgradeAttribute(const FGameplayTag& AttributeTag)
+{
+	UGASAbilitySystemComponent* GASASC = CastChecked<UGASAbilitySystemComponent>(AbilitySystemComponent);
+	GASASC->UpgradeAttribute(AttributeTag);
 }
 
 void UAttributeMenuWidgetController::BroadcastAttributeInfo(const FGameplayTag& AttributeTag, const FGameplayAttribute& Attribute) const
