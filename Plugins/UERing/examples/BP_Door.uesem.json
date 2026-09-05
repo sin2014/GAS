@@ -1,0 +1,228 @@
+{
+  "schema": "com.ue-ring.usem.asset",
+  "schemaVersion": "2.9.0",
+  "semanticRevision": 44,
+  "exporter": "Blueprint",
+  "profile": "logic",
+  "inputFingerprint": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+  "asset": {
+    "packageName": "/Game/Blueprints/BP_Door",
+    "objectPath": "/Game/Blueprints/BP_Door.BP_Door",
+    "assetClass": "Blueprint",
+    "nativeClass": "/Script/Engine.Blueprint",
+    "sourceFile": "Content/Blueprints/BP_Door.uasset",
+    "sourceHash": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "dependencies": {
+    "hard": [
+      "/Script/MyGame.DoorBase"
+    ],
+    "referencers": [
+      "/Game/Maps/L_Main"
+    ]
+  },
+  "semantics": {
+    "kind": "Blueprint",
+    "parentClass": "/Script/MyGame.DoorBase",
+    "interfaces": [
+      "/Script/MyGame.Interactable"
+    ],
+    "variables": [
+      {
+        "name": "bIsLocked",
+        "type": { "category": "bool" },
+        "defaultValue": false,
+        "flags": [
+          "InstanceEditable",
+          "BlueprintReadWrite"
+        ]
+      }
+    ],
+    "graphs": [
+      {
+        "name": "EventGraph",
+        "graphKind": "Ubergraph",
+        "graphPath": "/Game/Blueprints/BP_Door.BP_Door:EventGraph",
+        "nodes": [
+          {
+            "id": "event-begin-overlap",
+            "class": "K2Node_Event",
+            "title": "Event ActorBeginOverlap",
+            "pins": [
+              {
+                "id": "event-begin-overlap/event-then",
+                "name": "Then",
+                "direction": "output",
+                "type": { "category": "exec" }
+              }
+            ]
+          },
+          {
+            "id": "call-open-door",
+            "class": "K2Node_CallFunction",
+            "title": "OpenDoor",
+            "memberReference": {
+              "owner": "/Script/MyGame.DoorBase",
+              "name": "OpenDoor"
+            },
+            "pins": [
+              {
+                "id": "call-open-door/open-exec",
+                "name": "Exec",
+                "direction": "input",
+                "type": { "category": "exec" }
+              }
+            ]
+          }
+        ],
+        "links": [
+          {
+            "fromPin": "event-begin-overlap/event-then",
+            "toPin": "call-open-door/open-exec"
+          }
+        ]
+      }
+    ]
+  },
+  "reconstruction": {
+    "irVersion": "2.0.0",
+    "contract": "com.ue-ring.reconstruction",
+    "assetKind": "Blueprint",
+    "profile": "logic",
+    "source": {
+      "schemaVersion": "2.9.0",
+      "semanticRevision": 44,
+      "inputFingerprint": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+      "sourceHash": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "assetPointer": "/asset"
+    },
+    "targets": [
+      {
+        "id": "target:native-cpp",
+        "target": "nativeClassCpp",
+        "backend": "ueCpp",
+        "backendVersion": 1,
+        "status": "ready",
+        "fidelity": "exact",
+        "writePolicy": "replaceGenerated",
+        "blockerRefs": []
+      }
+    ],
+    "symbols": [
+      {
+        "id": "symbol:parent-class",
+        "kind": "class",
+        "unrealPath": "/Script/MyGame.DoorBase",
+        "cppName": "ADoorBase",
+        "module": "MyGame",
+        "header": "DoorBase.h",
+        "resolution": "exact",
+        "sourcePointer": "/semantics/parentClass"
+      }
+    ],
+    "operations": [
+      {
+        "id": "op:0001",
+        "opcode": "cpp.class.declare",
+        "opcodeVersion": 1,
+        "phase": "declare",
+        "targetId": "target:native-cpp",
+        "dependsOn": [],
+        "operands": {
+          "assetPath": "/Game/Blueprints/BP_Door",
+          "parentClass": "/Script/MyGame.DoorBase"
+        },
+        "results": {
+          "generatedClass": "ABP_Door"
+        },
+        "sourcePointers": [
+          "/asset",
+          "/semantics/parentClass"
+        ],
+        "preconditions": [],
+        "postconditions": [
+          "generated class derives from ADoorBase"
+        ],
+        "criticality": "structure",
+        "status": "executable",
+        "fidelity": {
+          "status": "exact",
+          "rule": "resolved-parent-class",
+          "confidence": 1.0
+        },
+        "failurePolicy": "abort",
+        "idempotencyKey": "BP_Door:class"
+      },
+      {
+        "id": "op:0002",
+        "opcode": "cpp.property.declare",
+        "opcodeVersion": 1,
+        "phase": "declare",
+        "targetId": "target:native-cpp",
+        "dependsOn": [
+          "op:0001"
+        ],
+        "operands": {
+          "name": "bIsLocked",
+          "type": {
+            "category": "bool"
+          }
+        },
+        "results": {
+          "member": "ABP_Door::bIsLocked"
+        },
+        "sourcePointers": [
+          "/semantics/variables/0"
+        ],
+        "preconditions": [
+          "op:0001 completed"
+        ],
+        "postconditions": [
+          "property is reflected"
+        ],
+        "criticality": "structure",
+        "status": "executable",
+        "fidelity": {
+          "status": "exact",
+          "rule": "structured-property-type",
+          "confidence": 1.0
+        },
+        "failurePolicy": "abort",
+        "idempotencyKey": "BP_Door:property:bIsLocked"
+      }
+    ],
+    "losses": [],
+    "verification": [
+      {
+        "id": "verify:compile",
+        "kind": "ubtCompile",
+        "targetId": "target:native-cpp",
+        "required": true
+      }
+    ],
+    "coverage": {
+      "readiness": "ready",
+      "totalOperationCount": 2,
+      "exactOperationCount": 2,
+      "inferredOperationCount": 0,
+      "unsupportedOperationCount": 0,
+      "exactRatio": 1.0
+    },
+    "execution": {
+      "fullyExecutable": true,
+      "operationCount": 2,
+      "executableOperationCount": 2,
+      "blockedOperationCount": 0
+    }
+  },
+  "cppLinks": [
+    {
+      "assetNode": "call-open-door",
+      "symbolKind": "UFunction",
+      "symbol": "/Script/MyGame.DoorBase.OpenDoor",
+      "header": "Source/MyGame/DoorBase.h",
+      "source": "Source/MyGame/DoorBase.cpp"
+    }
+  ]
+}
+

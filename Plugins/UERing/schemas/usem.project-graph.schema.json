@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ue-ring.local/schemas/usem.project-graph.schema.json",
+  "title": "UE Ring Unified Project Semantic Graph",
+  "type": "object",
+  "required": [
+    "schema",
+    "schemaVersion",
+    "usemSchemaVersion",
+    "generatedAtUtc",
+    "nodes",
+    "edges",
+    "statistics"
+  ],
+  "properties": {
+    "schema": { "const": "com.ue-ring.usem.project-graph" },
+    "schemaVersion": { "const": "1.1.0" },
+    "usemSchemaVersion": { "const": "2.9.0" },
+    "generatedAtUtc": { "type": "string" },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "kind", "label"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "kind": { "type": "string", "minLength": 1 },
+          "label": { "type": "string" },
+          "packageName": { "type": "string" },
+          "subtype": { "type": "string" }
+        }
+      }
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["from", "to", "relation", "confidence", "evidenceSource", "contributorPackage"],
+        "properties": {
+          "from": { "type": "string", "minLength": 1 },
+          "to": { "type": "string", "minLength": 1 },
+          "relation": { "type": "string", "minLength": 1 },
+          "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+          "evidenceSource": { "type": "string", "minLength": 1 },
+          "contributorPackage": { "type": "string", "pattern": "^/" },
+          "evidencePointer": { "type": "string", "pattern": "^/" },
+          "qualifier": { "type": "string" },
+          "sourceNodeId": { "type": "string" },
+          "sourceTitle": { "type": "string" },
+          "sourcePinId": { "type": "string" },
+          "targetPinId": { "type": "string" }
+        }
+      }
+    },
+    "statistics": {
+      "type": "object",
+      "required": ["nodeCount", "edgeCount", "nodesByKind", "edgesByRelation"],
+      "properties": {
+        "nodeCount": { "type": "integer", "minimum": 0 },
+        "edgeCount": { "type": "integer", "minimum": 0 },
+        "nodesByKind": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 0 } },
+        "edgesByRelation": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 0 } }
+      }
+    }
+  }
+}

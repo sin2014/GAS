@@ -1,0 +1,162 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ue-ring.local/schema/usem.index.schema.json",
+  "title": "USEM Asset Index File",
+  "type": "object",
+  "required": [
+    "schema",
+    "schemaVersion",
+    "generator",
+    "engine",
+    "project",
+    "generatedAtUtc",
+    "coverage",
+    "statistics",
+    "assets"
+  ],
+  "properties": {
+    "schema": {
+      "const": "com.ue-ring.usem.index"
+    },
+    "schemaVersion": {
+      "const": "2.9.0"
+    },
+    "generator": {
+      "type": "object",
+      "required": ["name", "version"],
+      "properties": {
+        "name": { "type": "string" },
+        "version": { "type": "string" }
+      }
+    },
+    "engine": {
+      "type": "object",
+      "required": ["version"],
+      "properties": {
+        "version": { "type": "string" }
+      }
+    },
+    "project": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string" },
+        "uproject": { "type": "string" }
+      }
+    },
+    "generatedAtUtc": {
+      "type": "string"
+    },
+    "coverage": {
+      "type": "object",
+      "required": ["indexedAssetCount", "excludedAssetCount"],
+      "properties": {
+        "indexedAssetCount": { "type": "integer", "minimum": 0 },
+        "excludedAssetCount": { "type": "integer", "minimum": 0 },
+        "exclusions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["reason", "count"],
+            "properties": {
+              "reason": { "type": "string", "minLength": 1 },
+              "count": { "type": "integer", "minimum": 1 }
+            }
+          }
+        }
+      }
+    },
+    "statistics": {
+      "type": "object",
+      "required": ["semanticFileBytes", "omissionCount", "semanticSectionBytes", "byAssetClass"],
+      "properties": {
+        "semanticFileBytes": { "type": "integer", "minimum": 0 },
+        "omissionCount": { "type": "integer", "minimum": 0 },
+        "semanticSectionBytes": {
+          "type": "object",
+          "additionalProperties": { "type": "integer", "minimum": 0 }
+        },
+        "byAssetClass": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["assetClass", "assetCount", "semanticBytes"],
+            "properties": {
+              "assetClass": { "type": "string" },
+              "assetCount": { "type": "integer", "minimum": 0 },
+              "semanticBytes": { "type": "integer", "minimum": 0 }
+            }
+          }
+        }
+      }
+    },
+    "assets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "packageName",
+          "objectPath",
+          "assetClass",
+          "sourceFile",
+          "semanticFile",
+          "sourceHash",
+          "semanticHash",
+          "exportedAtUtc",
+          "status",
+          "semanticKind",
+          "exporter",
+          "domains",
+          "recoverability",
+          "reconstructionConfidence",
+          "dependencyCount",
+          "referencerCount",
+          "semanticBytes",
+          "omissionCount",
+          "semanticSectionBytes",
+          "ownerModule",
+          "primaryAssetId",
+          "assetTags"
+        ],
+        "properties": {
+          "packageName": { "type": "string" },
+          "objectPath": { "type": "string" },
+          "assetClass": { "type": "string" },
+          "sourceFile": { "type": "string" },
+          "semanticFile": { "type": ["string", "null"] },
+          "sourceHash": { "type": "string" },
+          "semanticHash": { "type": "string" },
+          "exportedAtUtc": { "type": "string" },
+          "status": {
+            "type": "string",
+            "enum": ["ok", "missing", "stale", "failed", "unsupported", "deleted"]
+          },
+          "semanticKind": { "type": "string" },
+          "exporter": { "type": "string" },
+          "domains": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "enum": ["gas", "lyraExperience", "gameFeature", "stateTree", "dataRegistry", "enhancedInput"]
+            }
+          },
+          "recoverability": { "enum": ["", "high", "partial", "low"] },
+          "reconstructionConfidence": { "type": "number", "minimum": 0, "maximum": 1 },
+          "dependencyCount": { "type": "integer", "minimum": 0 },
+          "referencerCount": { "type": "integer", "minimum": 0 },
+          "semanticBytes": { "type": "integer", "minimum": 0 },
+          "omissionCount": { "type": "integer", "minimum": 0 },
+          "semanticSectionBytes": {
+            "type": "object",
+            "additionalProperties": { "type": "integer", "minimum": 0 }
+          },
+          "ownerModule": { "type": "string" },
+          "primaryAssetId": { "type": "string" },
+          "assetTags": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    }
+  },
+  "additionalProperties": true
+}
+

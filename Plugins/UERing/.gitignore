@@ -1,0 +1,12 @@
+Binaries/
+Intermediate/
+Saved/
+DerivedDataCache/
+.vs/
+*.sln
+*.suo
+*.opensdf
+*.VC.db
+__pycache__/
+.pytest_cache/
+.codex-work/

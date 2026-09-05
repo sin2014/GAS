@@ -1,0 +1,55 @@
+{
+  "FileVersion": 3,
+  "Version": 40,
+  "VersionName": "0.20.1",
+  "FriendlyName": "UE Ring Semantic Exporter",
+  "Description": "Exports Unreal Engine assets to structured USEM semantic sidecar files for offline AI analysis.",
+  "Category": "Editor",
+  "CreatedBy": "UE_Ring",
+  "CreatedByURL": "",
+  "DocsURL": "",
+  "MarketplaceURL": "",
+  "SupportURL": "",
+  "CanContainContent": false,
+  "IsBetaVersion": true,
+  "Installed": false,
+  "Plugins": [
+    {
+      "Name": "PlatformCrypto",
+      "Enabled": true
+    },
+    {
+      "Name": "Paper2D",
+      "Enabled": true
+    },
+    {
+      "Name": "ModelContextProtocol",
+      "Enabled": true
+    },
+    {
+      "Name": "SQLiteCore",
+      "Enabled": true
+    },
+    {
+      "Name": "EnhancedInput",
+      "Enabled": true
+    },
+    {
+      "Name": "ControlRig",
+      "Enabled": true
+    }
+  ],
+  "Modules": [
+    {
+      "Name": "UERingCore",
+      "Type": "Runtime",
+      "LoadingPhase": "Default"
+    },
+    {
+      "Name": "UERingEditor",
+      "Type": "Editor",
+      "LoadingPhase": "Default"
+    }
+  ]
+}
+

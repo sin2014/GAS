@@ -1,0 +1,6 @@
+Binaries/
+Intermediate/
+*.sln
+*.vcxproj*
+.vs/
+DerivedDataCache/

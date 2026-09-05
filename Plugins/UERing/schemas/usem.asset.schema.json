@@ -1,0 +1,317 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ue-ring.local/schema/usem.asset.schema.json",
+  "title": "USEM Asset Semantic File",
+  "type": "object",
+  "required": [
+    "schema",
+    "schemaVersion",
+    "semanticRevision",
+    "exporter",
+    "profile",
+    "inputFingerprint",
+    "asset",
+    "semantics",
+    "reconstruction"
+  ],
+  "properties": {
+    "schema": {
+      "const": "com.ue-ring.usem.asset"
+    },
+    "schemaVersion": { "const": "2.9.0" },
+    "semanticRevision": { "const": 44 },
+    "exporter": {
+      "type": "string",
+      "minLength": 1
+    },
+    "asset": {
+      "type": "object",
+      "required": ["packageName", "objectPath", "assetClass", "sourceFile", "sourceHash"],
+      "properties": {
+        "packageName": { "type": "string" },
+        "objectPath": { "type": "string" },
+        "assetClass": { "type": "string" },
+        "nativeClass": { "type": "string" },
+        "packageGuid": { "type": "string" },
+        "sourceFile": { "type": "string" },
+        "sourceHash": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+      }
+    },
+    "dependencies": {
+      "type": "object",
+      "properties": {
+        "hard": { "type": "array", "items": { "type": "string" } },
+        "soft": { "type": "array", "items": { "type": "string" } },
+        "management": { "type": "array", "items": { "type": "string" } },
+        "referencers": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "semantics": {
+      "type": "object",
+      "required": ["kind"],
+      "properties": {
+        "kind": { "type": "string" },
+        "domain": {
+          "type": "object",
+          "required": ["representation", "classLineage", "projections"],
+          "properties": {
+            "representation": { "const": "domain-projection-v1" },
+            "classLineage": {
+              "type": "array",
+              "minItems": 1,
+              "items": { "type": "string", "minLength": 1 }
+            },
+            "projections": {
+              "type": "object",
+              "minProperties": 1,
+              "propertyNames": {
+                "enum": ["gas", "lyraExperience", "gameFeature", "stateTree", "dataRegistry", "enhancedInput"]
+              },
+              "additionalProperties": {
+                "type": "object",
+                "required": ["role"],
+                "properties": {
+                  "role": { "type": "string", "minLength": 1 },
+                  "assetProperties": { "type": "array" },
+                  "classDefaultOverrides": { "type": "array" }
+                }
+              }
+            },
+            "ownedObjects": { "type": "array" },
+            "references": { "type": "array" }
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "profile": { "enum": ["logic", "reconstruction", "forensics"] },
+    "inputFingerprint": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "reconstruction": {
+      "type": "object",
+      "required": [
+        "irVersion",
+        "contract",
+        "assetKind",
+        "profile",
+        "source",
+        "targets",
+        "symbols",
+        "operations",
+        "losses",
+        "verification",
+        "coverage",
+        "execution"
+      ],
+      "properties": {
+        "irVersion": { "const": "2.0.0" },
+        "contract": { "const": "com.ue-ring.reconstruction" },
+        "assetKind": { "type": "string", "minLength": 1 },
+        "profile": { "enum": ["logic", "reconstruction", "forensics"] },
+        "source": {
+          "type": "object",
+          "required": ["schemaVersion", "semanticRevision", "inputFingerprint", "sourceHash", "assetPointer"],
+          "properties": {
+            "schemaVersion": { "const": "2.9.0" },
+            "semanticRevision": { "const": 44 },
+            "inputFingerprint": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+            "sourceHash": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+            "assetPointer": { "$ref": "#/$defs/jsonPointer" },
+            "semanticsPointer": { "$ref": "#/$defs/jsonPointer" }
+          },
+          "additionalProperties": false
+        },
+        "targets": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "required": ["id", "target", "backend", "backendVersion", "status", "fidelity", "writePolicy", "blockerRefs"],
+            "properties": {
+              "id": { "$ref": "#/$defs/identifier" },
+              "target": { "enum": ["nativeClassCpp", "editorAssetBuilderCpp"] },
+              "backend": { "enum": ["ueCpp", "unrealEditorCpp"] },
+              "backendVersion": { "type": "integer", "const": 1 },
+              "status": { "enum": ["ready", "partial", "blocked"] },
+              "fidelity": { "enum": ["exact", "semanticEquivalent", "unsupported"] },
+              "writePolicy": { "const": "replaceGenerated" },
+              "blockerRefs": { "$ref": "#/$defs/idArray" }
+            },
+            "additionalProperties": false
+          }
+        },
+        "symbols": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "kind", "unrealPath", "resolution", "sourcePointer"],
+            "properties": {
+              "id": { "$ref": "#/$defs/identifier" },
+              "kind": { "type": "string", "minLength": 1 },
+              "unrealPath": { "type": "string" },
+              "cppName": { "type": "string" },
+              "module": { "type": "string" },
+              "header": { "type": "string" },
+              "resolution": { "enum": ["exact", "inferred", "unresolved"] },
+              "sourcePointer": { "$ref": "#/$defs/jsonPointer" }
+            },
+            "additionalProperties": false
+          }
+        },
+        "operations": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["id", "opcode", "opcodeVersion", "phase", "targetId", "dependsOn", "operands", "results", "sourcePointers", "preconditions", "postconditions", "criticality", "status", "fidelity", "failurePolicy", "idempotencyKey"],
+            "properties": {
+              "id": { "$ref": "#/$defs/identifier" },
+              "opcode": { "enum": ["cpp.class.declare", "cpp.property.declare", "cpp.graph.assertEmpty", "cpp.graph.translate", "cpp.asset.unsupported", "cpp.component.translate", "cpp.interface.translate", "cpp.defaults.translate", "cpp.timeline.translate", "cpp.omission.blocked", "editor.materialInstance.create", "editor.materialInstance.applyOverrides", "editor.dataAsset.create", "editor.dataAsset.createOwnedObjects", "editor.dataAsset.applyOwnedObjectProperties", "editor.dataAsset.applyProperties", "editor.stateTree.compile", "editor.asset.save"] },
+              "opcodeVersion": { "type": "integer", "const": 1 },
+              "phase": { "enum": ["declare", "configure", "translate", "verify"] },
+              "targetId": { "$ref": "#/$defs/identifier" },
+              "dependsOn": { "$ref": "#/$defs/idArray" },
+              "operands": { "type": "object" },
+              "results": { "type": ["object", "array"] },
+              "sourcePointers": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": { "$ref": "#/$defs/jsonPointer" }
+              },
+              "preconditions": { "type": "array", "items": { "type": ["string", "object"] } },
+              "postconditions": { "type": "array", "items": { "type": ["string", "object"] } },
+              "criticality": { "enum": ["structure", "defaults", "behavior", "presentation"] },
+              "status": { "enum": ["executable", "blocked"] },
+              "fidelity": {
+                "type": "object",
+                "required": ["status", "rule", "confidence"],
+                "properties": {
+                  "status": { "enum": ["exact", "inferred", "unsupported"] },
+                  "rule": { "type": "string", "minLength": 1 },
+                  "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+                  "reasonCode": { "type": "string", "minLength": 1 }
+                },
+                "additionalProperties": false
+              },
+              "failurePolicy": { "const": "abort" },
+              "idempotencyKey": { "type": "string", "minLength": 1 }
+            },
+            "additionalProperties": false
+          }
+        },
+        "losses": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "reasonCode", "impact", "sourcePointers", "recoverableFromSourceAsset"],
+            "properties": {
+              "id": { "$ref": "#/$defs/identifier" },
+              "reasonCode": { "type": "string", "minLength": 1 },
+              "impact": { "enum": ["blocksReconstruction", "degradesFidelity", "informational"] },
+              "sourcePointers": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": { "$ref": "#/$defs/jsonPointer" }
+              },
+              "recoverableFromSourceAsset": { "type": "boolean" }
+            },
+            "additionalProperties": false
+          }
+        },
+        "verification": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "kind", "targetId", "required"],
+            "properties": {
+              "id": { "$ref": "#/$defs/identifier" },
+              "kind": { "enum": ["ubtCompile", "reflectionCompare", "semanticReexportDiff"] },
+              "targetId": { "$ref": "#/$defs/identifier" },
+              "required": { "type": "boolean" }
+            },
+            "additionalProperties": false
+          }
+        },
+        "coverage": {
+          "type": "object",
+          "required": ["readiness", "totalOperationCount", "exactOperationCount", "inferredOperationCount", "unsupportedOperationCount", "exactRatio"],
+          "properties": {
+            "readiness": { "enum": ["ready", "partial", "blocked"] },
+            "totalOperationCount": { "type": "integer", "minimum": 0 },
+            "exactOperationCount": { "type": "integer", "minimum": 0 },
+            "inferredOperationCount": { "type": "integer", "minimum": 0 },
+            "unsupportedOperationCount": { "type": "integer", "minimum": 0 },
+            "exactRatio": { "type": "number", "minimum": 0, "maximum": 1 }
+          },
+          "additionalProperties": false
+        },
+        "execution": {
+          "type": "object",
+          "required": ["operationCount", "executableOperationCount", "blockedOperationCount", "fullyExecutable"],
+          "properties": {
+            "operationCount": { "type": "integer", "minimum": 0 },
+            "executableOperationCount": { "type": "integer", "minimum": 0 },
+            "blockedOperationCount": { "type": "integer", "minimum": 0 },
+            "fullyExecutable": { "type": "boolean" }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "cppLinks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["assetNode", "symbol"],
+        "properties": {
+          "assetNode": { "type": "string" },
+          "symbol": { "type": "string" },
+          "header": { "type": "string", "minLength": 1 },
+          "source": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "diagnostics": {
+      "type": "array",
+      "minItems": 1
+    },
+    "omissions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["path", "code", "reason", "recoverabilityImpact"],
+        "properties": {
+          "path": { "type": "string", "pattern": "^/" },
+          "code": { "type": "string", "minLength": 1 },
+          "reason": { "type": "string", "minLength": 1 },
+          "recoverabilityImpact": { "type": "string", "minLength": 1 },
+          "originalCount": { "type": "integer", "minimum": 0 },
+          "sourceDigest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+        }
+      }
+    }
+  },
+  "additionalProperties": true,
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[^\\s]+$"
+    },
+    "jsonPointer": {
+      "type": "string",
+      "pattern": "^(?:/(?:[^~/]|~[01])*)*$"
+    },
+    "idArray": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/identifier" }
+    }
+  }
+}
+

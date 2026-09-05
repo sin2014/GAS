@@ -1,0 +1,55 @@
+{
+  "schema": "com.ue-ring.usem.index",
+  "schemaVersion": "2.9.0",
+  "generator": {
+    "name": "UE Ring Semantic Exporter",
+    "version": "0.20.1"
+  },
+  "engine": {
+    "version": "5.8.0"
+  },
+  "project": {
+    "name": "SampleProject",
+    "uproject": "SampleProject.uproject"
+  },
+  "generatedAtUtc": "2026-07-30T00:00:00Z",
+  "coverage": {
+    "indexedAssetCount": 1,
+    "excludedAssetCount": 0
+  },
+  "statistics": {
+    "semanticFileBytes": 6189,
+    "omissionCount": 0,
+    "semanticSectionBytes": {},
+    "byAssetClass": [
+      { "assetClass": "Blueprint", "assetCount": 1, "semanticBytes": 6189 }
+    ]
+  },
+  "assets": [
+    {
+      "packageName": "/Game/Blueprints/BP_Door",
+      "objectPath": "/Game/Blueprints/BP_Door.BP_Door",
+      "assetClass": "Blueprint",
+      "sourceFile": "Content/Blueprints/BP_Door.uasset",
+      "semanticFile": "examples/BP_Door.uesem.json",
+      "sourceHash": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "semanticHash": "sha256:d0c3bfda70a4d53765b1d6eeb57d883cc8caf087559219e0c3ee7b4b5552d24f",
+      "exportedAtUtc": "2026-07-30T00:00:00Z",
+      "status": "ok",
+      "semanticKind": "Blueprint",
+      "exporter": "Blueprint",
+      "domains": [],
+      "recoverability": "high",
+      "reconstructionConfidence": 1.0,
+      "dependencyCount": 2,
+      "referencerCount": 1,
+      "semanticBytes": 6189,
+      "omissionCount": 0,
+      "semanticSectionBytes": {},
+      "ownerModule": "SampleProject",
+      "primaryAssetId": "",
+      "assetTags": ["BlueprintType", "ParentClass"]
+    }
+  ]
+}
+

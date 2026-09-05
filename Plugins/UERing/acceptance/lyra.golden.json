@@ -1,0 +1,285 @@
+{
+  "schema": "com.ue-ring.acceptance.project",
+  "schemaVersion": "1.0.0",
+  "project": "LyraStarterGame",
+  "minimums": {
+    "assets": 3800,
+    "graphNodes": 45000,
+    "graphEdges": 110000
+  },
+  "maximums": {
+    "semanticFileBytes": 110000000
+  },
+  "minimumDomains": {
+    "gas": 100,
+    "lyraExperience": 20,
+    "gameFeature": 5,
+    "stateTree": 1,
+    "dataRegistry": 1,
+    "enhancedInput": 30
+  },
+  "minimumSqliteUserVersion": 6,
+  "forbiddenPackagePrefixes": [
+    "/Game/UERingTests/"
+  ],
+  "requiredEdges": [
+    {
+      "from": "asset:/Game/System/Experiences/B_LyraDefaultExperience",
+      "relation": "usesDefaultPawnData",
+      "to": "asset:/Game/Characters/Heroes/SimplePawnData/SimplePawnData"
+    },
+    {
+      "from": "asset:/ShooterCore/Game/HeroData_ShooterGame",
+      "relation": "usesAbilitySet",
+      "to": "asset:/ShooterCore/Game/AbilitySet_ShooterHero"
+    },
+    {
+      "from": "asset:/ShooterCore/Game/HeroData_ShooterGame",
+      "relation": "usesInputConfig",
+      "to": "asset:/Game/Input/InputData_Hero"
+    },
+    {
+      "from": "asset:/ShooterCore/Game/AbilitySet_ShooterHero",
+      "relation": "grantsAbility",
+      "to": "asset:/ShooterCore/Game/Dash/GA_Hero_Dash",
+      "qualifier": "InputTag.Ability.Dash"
+    },
+    {
+      "from": "asset:/ShooterCore/Game/AbilitySet_ShooterHero",
+      "relation": "grantsAbility",
+      "to": "symbol:class:/script/lyragame.lyragameplayability_reset"
+    },
+    {
+      "from": "asset:/TopDownArena/Game/AbilitySet_Arena",
+      "relation": "grantsAttributeSet",
+      "to": "symbol:class:/script/topdownarenaruntime.topdownarenaattributeset"
+    },
+    {
+      "from": "object:/ShooterCore/ShooterCore#GameFeatureAction_AddInputContextMapping_0",
+      "relation": "addsInputMapping",
+      "to": "asset:/ShooterCore/Input/Mappings/IMC_ShooterGame"
+    },
+    {
+      "from": "object:/ShooterCore/ShooterCore#GameFeatureAction_DataRegistry_0",
+      "relation": "addsDataRegistry",
+      "to": "asset:/ShooterCore/Accolades/AccoladeDataRegistry"
+    },
+    {
+      "from": "object:/ShooterCore/ShooterCore#GameFeatureAction_AddComponents_0",
+      "relation": "addsComponent",
+      "to": "symbol:class:/script/lyragame.lyraequipmentmanagercomponent"
+    }
+  ],
+  "assetContracts": [
+    {
+      "packageName": "/ShooterCore/Game/Respawn/GA_AutoRespawn",
+      "requiredPointers": [
+        {
+          "pointer": "/semantics/domain/projections/gas/representation",
+          "equals": "gas-ability-v2"
+        },
+        {
+          "pointer": "/semantics/domain/projections/gas/defaults/executionPolicy/ActivationPolicy/name",
+          "equals": "OnSpawn"
+        },
+        {
+          "pointer": "/semantics/domain/projections/gas/defaults/executionPolicy/NetSecurityPolicy/name",
+          "equals": "ServerOnly"
+        }
+      ],
+      "forbiddenPointers": [
+        "/semantics/domain/projections/gas/assetProperties",
+        "/semantics/domain/projections/gas/classDefaultOverrides",
+        "/semantics/domain/projections/gas/defaults/behavior/Montage to Play"
+      ]
+    },
+    {
+      "packageName": "/Game/GameplayEffects/GE_HeroDash_Cooldown",
+      "requiredPointers": [
+        {
+          "pointer": "/semantics/domain/projections/gas/defaults/effectBehavior/DurationPolicy/name",
+          "equals": "HasDuration"
+        },
+        {
+          "pointer": "/semantics/domain/ownedObjects",
+          "minimumLength": 1
+        }
+      ]
+    },
+    {
+      "packageName": "/Game/GameplayEffects/Damage/GameplayEffectParent_Damage_Basic",
+      "requiredPointers": [
+        {
+          "pointer": "/semantics/domain/projections/gas/defaults/effectBehavior/Executions",
+          "minimumLength": 1
+        },
+        {
+          "pointer": "/semantics/domain/projections/gas/defaults/effectBehavior/GameplayCues",
+          "minimumLength": 1
+        }
+      ]
+    },
+    {
+      "packageName": "/Game/System/Experiences/B_LyraDefaultExperience",
+      "requiredPointers": [
+        {
+          "pointer": "/semantics/domain/projections/lyraExperience/representation",
+          "equals": "lyraExperience-experience-v2"
+        },
+        {
+          "pointer": "/semantics/domain/ownedObjects",
+          "minimumLength": 1
+        }
+      ]
+    },
+    {
+      "packageName": "/ShooterCore/Game/HeroData_ShooterGame",
+      "requiredPointers": [
+        {
+          "pointer": "/semantics/domain/projections/lyraExperience/role",
+          "equals": "pawnData"
+        },
+        {
+          "pointer": "/semantics/domain/projections/lyraExperience/asset/abilities/AbilitySets",
+          "minimumLength": 1
+        }
+      ]
+    },
+    {
+      "packageName": "/ShooterCore/ShooterCore",
+      "requiredPointers": [
+        {
+          "pointer": "/semantics/domain/projections/gameFeature/representation",
+          "equals": "gameFeature-featureData-v2"
+        },
+        {
+          "pointer": "/semantics/domain/ownedObjects",
+          "minimumLength": 4
+        },
+        {
+          "pointer": "/semantics/domain/ownedObjects/0/configuration/components/ComponentList",
+          "minimumLength": 1
+        }
+      ]
+    },
+    {
+      "packageName": "/Game/Characters/Heroes/Mannequin/Materials/M_Mannequin",
+      "requiredPointers": [
+        { "pointer": "/semantics/representation", "equals": "material-expression-graph-v1" },
+        { "pointer": "/semantics/settings/BlendMode", "equals": "BLEND_Masked" },
+        { "pointer": "/semantics/settings/ShadingModel", "equals": "MSM_ClearCoat" },
+        { "pointer": "/semantics/settings/NumCustomizedUVs", "equals": 2 },
+        { "pointer": "/semantics/nodeCount", "equals": 244 },
+        { "pointer": "/semantics/connectionCount", "equals": 285 },
+        { "pointer": "/semantics/danglingConnectionCount", "equals": 0 }
+      ],
+      "forbiddenPointers": [
+        "/semantics/rootProperties",
+        "/semantics/objects",
+        "/semantics/edges"
+      ]
+    },
+    {
+      "packageName": "/Game/UI/Hud/Art/M_UI_Base_HealthBar",
+      "requiredPointers": [
+        { "pointer": "/semantics/nodeCount", "equals": 320 },
+        { "pointer": "/semantics/connectionCount", "equals": 348 },
+        { "pointer": "/semantics/danglingConnectionCount", "equals": 0 }
+      ]
+    },
+    {
+      "packageName": "/LyraExampleContent/Materials/MF/WorldAlignedTextureMip",
+      "requiredPointers": [
+        { "pointer": "/semantics/representation", "equals": "material-function-graph-v1" },
+        { "pointer": "/semantics/nodeCount", "equals": 40 },
+        { "pointer": "/semantics/interface/inputs", "minimumLength": 7 },
+        { "pointer": "/semantics/interface/outputs", "minimumLength": 3 },
+        { "pointer": "/semantics/danglingConnectionCount", "equals": 0 }
+      ]
+    },
+    {
+      "packageName": "/Game/Characters/Heroes/Mannequin/Materials/Instances/Manny/MI_Manny_01",
+      "requiredPointers": [
+        { "pointer": "/semantics/representation", "equals": "material-instance-v1" },
+        { "pointer": "/semantics/parent/objectPath", "equals": "/Game/Characters/Heroes/Mannequin/Materials/M_Mannequin.M_Mannequin" },
+        { "pointer": "/semantics/overrides/ScalarParameterValues", "minimumLength": 51 },
+        { "pointer": "/semantics/overrides/ScalarParameterValues/1/ParameterInfo/Name", "equals": "D_occlusion" },
+        { "pointer": "/semantics/overrides/ScalarParameterValues/1/ParameterValue", "equals": 1.25 },
+        { "pointer": "/semantics/overrides/TextureParameterValues/0/ParameterInfo/Name", "equals": "Base_Tex" },
+        { "pointer": "/semantics/overrides/StaticParametersRuntime/StaticSwitchParameters/0/ParameterInfo/Name", "equals": "UseLogo" },
+        { "pointer": "/semantics/overrides/StaticParametersRuntime/StaticSwitchParameters/0/Value", "equals": false },
+        { "pointer": "/semantics/overrides/PhysMaterial/objectPath", "equals": "/Game/PhysicsMaterials/PM_Character.PM_Character" }
+      ],
+      "forbiddenPointers": [
+        "/semantics/nodes",
+        "/semantics/connections"
+      ]
+    },
+    {
+      "packageName": "/LyraExampleContent/Materials/MI_MS_Basic_Metal",
+      "requiredPointers": [
+        { "pointer": "/semantics/parent/objectPath", "equals": "/LyraExampleContent/MSPresets/M_MS_Surface_Material/MI_SurfaceGridBase.MI_SurfaceGridBase" },
+        { "pointer": "/semantics/overrides/TextureParameterValues", "minimumLength": 2 },
+        { "pointer": "/semantics/overrides/PhysMaterial/objectPath", "equals": "/Game/PhysicsMaterials/PM_Concrete.PM_Concrete" }
+      ]
+    },
+    {
+      "packageName": "/LyraExampleContent/Materials/MPC_Checker",
+      "requiredPointers": [
+        { "pointer": "/semantics/representation", "equals": "material-parameter-collection-v1" },
+        { "pointer": "/semantics/parameters/ScalarParameters", "minimumLength": 13 }
+      ],
+      "forbiddenPointers": [
+        "/semantics/nodes",
+        "/semantics/connections"
+      ]
+    }
+  ],
+  "semanticContracts": [
+    {
+      "name": "MetaSound frontend graph",
+      "assetClasses": ["MetaSoundSource", "MetaSoundPatch"],
+      "minimumAssets": 89,
+      "exporter": "MetaSound",
+      "kind": "MetaSound",
+      "representation": "metasound-frontend-graph-v1",
+      "forbiddenSemanticFields": ["fallbackReflectionOnly", "properties"],
+      "verifyPageEdgeEndpoints": true,
+      "minimumTotals": {
+        "pages": 89,
+        "nodes": 2500,
+        "edges": 3000,
+        "variables": 60,
+        "literals": 1700
+      }
+    },
+    {
+      "name": "Material expression graph",
+      "assetClasses": ["Material"],
+      "minimumAssets": 132,
+      "exporter": "MaterialLogic",
+      "kind": "MaterialLogic",
+      "representation": "material-expression-graph-v1",
+      "forbiddenSemanticFields": ["fallbackReflectionOnly", "rootProperties", "objects", "edges"],
+      "verifyMaterialConnectionEndpoints": true,
+      "minimumTotals": {
+        "nodes": 6000,
+        "edges": 7000
+      }
+    },
+    {
+      "name": "Material function graph",
+      "assetClasses": ["MaterialFunction"],
+      "minimumAssets": 64,
+      "exporter": "MaterialLogic",
+      "kind": "MaterialLogic",
+      "representation": "material-function-graph-v1",
+      "forbiddenSemanticFields": ["fallbackReflectionOnly", "rootProperties", "objects", "edges"],
+      "verifyMaterialConnectionEndpoints": true,
+      "minimumTotals": {
+        "nodes": 1900,
+        "edges": 2100
+      }
+    }
+  ]
+}

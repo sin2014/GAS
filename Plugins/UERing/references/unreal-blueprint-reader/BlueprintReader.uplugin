@@ -1,0 +1,18 @@
+{
+    "FileVersion": 3,
+    "Version": 1,
+    "VersionName": "0.1.0",
+    "FriendlyName": "Blueprint Reader",
+    "Description": "Exposes Blueprint graph structure (nodes, pins, connections) as JSON for AI tooling via Python scripting.",
+    "Category": "Editor",
+    "CreatedBy": "Leviathan Team",
+    "CanContainContent": false,
+    "IsBetaVersion": true,
+    "Modules": [
+        {
+            "Name": "BlueprintReader",
+            "Type": "Editor",
+            "LoadingPhase": "Default"
+        }
+    ]
+}

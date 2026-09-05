@@ -1,0 +1,56 @@
+# Unreal Engine generated output
+Binaries/
+DerivedDataCache/
+Intermediate/
+Saved/
+
+# Generated project files and local IDE state
+.vs/
+.vscode/
+.idea/
+*.sln
+*.slnx
+*.suo
+*.opensdf
+*.opendb
+*.sdf
+*.VC.db
+*.xcodeproj/
+*.xcworkspace/
+
+# Local analysis/export output
+.uesem/
+.outputs/
+.codex-work/
+
+# Build-script intermediates and local reports
+/Build/Scripts/obj/
+/Build/Scripts/uatobj/
+/Build/EditorPerfStats.csv
+/Build/Replays/
+/Build/ProfileGo/
+
+# Unreal Header Tool output (normally under Intermediate/, kept out if generated elsewhere)
+*.generated.h
+*.gen.cpp
+
+# Logs, temporary files, and local caches
+*.log
+*.tmp
+*.temp
+*.bak
+*.cache
+__pycache__/
+.pytest_cache/
+
+# UERing reference archives and extracted snapshots; curated reference notes/source remain tracked
+/Plugins/UERing/references/_downloads/
+/Plugins/UERing/references/_extracted/
+/Plugins/UERing/**/__pycache__/
+
+# Large local distribution/archive artifact
+/Lyra_zh.zip
+
+# OS metadata
+.DS_Store
+Thumbs.db
