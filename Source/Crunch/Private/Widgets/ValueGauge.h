@@ -15,6 +15,7 @@ UCLASS()
 class UValueGauge : public UUserWidget
 {
 	GENERATED_BODY()
+
 public:
 	virtual void NativePreConstruct() override;
 	void SetAndBoundToGameplayAttribute(class UAbilitySystemComponent* AbilitySystemComponent, const FGameplayAttribute& Attribute, const FGameplayAttribute& MaxAttribute);
@@ -35,13 +36,13 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Visual")
 	bool bValueTextVisible = true;
-
+	
 	UPROPERTY(EditAnywhere, Category = "Visual")
 	bool bProgressBarVisible = true;
 
-	UPROPERTY(VisibleAnywhere, meta = (BindWidget))
+	UPROPERTY(VisibleAnywhere, meta=(BindWidget))
 	class UProgressBar* ProgressBar;
 
-	UPROPERTY(VisibleAnywhere, meta = (BindWidget))
+	UPROPERTY(VisibleAnywhere, meta=(BindWidget))
 	class UTextBlock* ValueText;
 };

@@ -14,9 +14,9 @@ class ACGameSession : public AGameSession
 {
 	GENERATED_BODY()
 	
-public:
+public:	
 	virtual bool ProcessAutoLogin() override;
-
+	
 	virtual void RegisterPlayer(APlayerController* NewPlayer, const FUniqueNetIdRepl& UniqueId, bool bWasFromInvite) override;
 	virtual void UnregisterPlayer(FName FromSessionName, const FUniqueNetIdRepl& UniqueId) override;
 };

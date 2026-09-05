@@ -26,13 +26,12 @@ public:
 	void SetSplineStyle(const FLinearColor& InColor, float InThickness);
 
 private:
-	virtual int32 NativePaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const override;
-
+	virtual int32 NativePaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled ) const override;
 	UPROPERTY(EditAnywhere, Category = "Spline")
 	FVector2D TestStartPos;
 
 	UPROPERTY(EditAnywhere, Category = "Spline")
-	FVector2D TestEndPos = FVector2D{ 100.f, 100.f };
+	FVector2D TestEndPos = FVector2D{100.f, 100.f};
 
 	UPROPERTY(EditAnywhere, Category = "Spline")
 	FLinearColor Color = FLinearColor::White;
@@ -55,4 +54,5 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Spline")
 	FVector2D EndPortDirection;
+
 };

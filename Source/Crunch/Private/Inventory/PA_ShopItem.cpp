@@ -35,7 +35,7 @@ FItemCollection::FItemCollection()
 }
 
 FItemCollection::FItemCollection(const TArray<const UPA_ShopItem*>& InItems)
-	: Items{ InItems }
+	: Items{InItems}
 {
 }
 

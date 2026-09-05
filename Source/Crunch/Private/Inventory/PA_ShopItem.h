@@ -6,6 +6,7 @@
 #include "Engine/DataAsset.h"
 #include "PA_ShopItem.generated.h"
 
+
 class UPA_ShopItem;
 USTRUCT(BlueprintType)
 struct FItemCollection

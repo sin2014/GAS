@@ -28,4 +28,5 @@ private:
 
 	UPROPERTY(VisibleDefaultsOnly, Category = "Render Actor")
 	class USceneCaptureComponent2D* CaptureComponent;
+
 };

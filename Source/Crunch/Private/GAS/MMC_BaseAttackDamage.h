@@ -13,7 +13,7 @@ UCLASS()
 class UMMC_BaseAttackDamage : public UGameplayModMagnitudeCalculation
 {
 	GENERATED_BODY()
-
+	
 public:
 	UMMC_BaseAttackDamage();
 	virtual float CalculateBaseMagnitude_Implementation(const FGameplayEffectSpec& Spec) const override;

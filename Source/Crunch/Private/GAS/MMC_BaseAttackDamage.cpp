@@ -24,10 +24,11 @@ float UMMC_BaseAttackDamage::CalculateBaseMagnitude_Implementation(const FGamepl
 
 	float AttackDamage = 0.f;
 	GetCapturedAttributeMagnitude(DamageCaptureDef, Spec, EvalParams, AttackDamage);
+
 	float Armor = 0.f;
 	GetCapturedAttributeMagnitude(ArmorCaptureDef, Spec, EvalParams, Armor);
 
-	float Damage = AttackDamage* (1 - Armor / (Armor + 100));
-	
+	float Damage = AttackDamage * (1 - Armor / (Armor + 100));
+
 	return -Damage;
 }

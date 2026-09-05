@@ -13,7 +13,6 @@
 #include "Widgets/ValueGauge.h"
 #include "GAS/CAttributeSet.h"
 
-
 void UGameplayWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
@@ -128,5 +127,5 @@ void UGameplayWidget::SetFocusToGameAndUI()
 void UGameplayWidget::SetFocusToGameOnly()
 {
 	FInputModeGameOnly GameOnlyInputMode;
-	GetOwningPlayer()->SetInputMode(GameOnlyInputMode);
+	GetOwningPlayer() ->SetInputMode(GameOnlyInputMode);
 }

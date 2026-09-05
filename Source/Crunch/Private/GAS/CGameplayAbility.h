@@ -17,17 +17,18 @@ class UCGameplayAbility : public UGameplayAbility
 public:
 	UCGameplayAbility();
 	virtual bool CanActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayTagContainer* SourceTags = nullptr, const FGameplayTagContainer* TargetTags = nullptr, OUT FGameplayTagContainer* OptionalRelevantTags = nullptr) const override;
-
 protected:
 	AActor* GetAimTarget(float AimDistance, ETeamAttitude::Type TeamAttitude) const;
 	class UAnimInstance* GetOwnerAnimInstance() const;
 	TArray<FHitResult> GetHitResultFromSweepLocationTargetData(const FGameplayAbilityTargetDataHandle& TargetDataHandle, float SphereSweepRadius = 30.f, ETeamAttitude::Type TargetTeam = ETeamAttitude::Hostile, bool bDrawDebug = false, bool bIgnoreSelf = true) const;
 	UFUNCTION()
-	FORCEINLINE bool ShouldDrawDebug() const {	return bShouldDrawDebug; }
+	FORCEINLINE bool ShouldDrawDebug() const { return bShouldDrawDebug; }
 	void PushSelf(const FVector& PushVel);
 	void PushTarget(AActor* Target, const FVector& PushVel);
 	void PushTargets(const TArray<AActor*>& Targets, const FVector& PushVel);
 	void PushTargets(const FGameplayAbilityTargetDataHandle& TargetDataHandle, const FVector& PushVel);
+	void PushTargetsFromOwnerLocation(const TArray<AActor*>& Targets, float PushSpeed);
+	void PushTargetsFromOwnerLocation(const FGameplayAbilityTargetDataHandle& TargetDataHandle, float PushSpeed);
 	void PushTargetsFromLocation(const FGameplayAbilityTargetDataHandle& TargetDataHandle, const FVector& FromLocation, float PushSpeed);
 	void PushTargetsFromLocation(const TArray<AActor*>& Targets, const FVector& FromLocation, float PushSpeed);
 	void PlayMontageLocally(UAnimMontage* MontageToPlay);

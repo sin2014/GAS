@@ -3,7 +3,7 @@
 
 #include "AI/MinionBarrack.h"
 #include "AI/Minion.h"
-#include "GameFramework/PLayerStart.h"
+#include "GameFramework/PlayerStart.h"
 
 // Sets default values
 AMinionBarrack::AMinionBarrack()
@@ -20,7 +20,7 @@ void AMinionBarrack::BeginPlay()
 	if (HasAuthority())
 	{
 		GetWorldTimerManager().SetTimer(SpawnIntervalTimerHandle, this, &AMinionBarrack::SpawnNewGroup, GroupSpawnInterval, true);
-	}	
+	}
 }
 
 // Called every frame
@@ -36,7 +36,7 @@ const APlayerStart* AMinionBarrack::GetNextSpawnSpot()
 	{
 		return nullptr;
 	}
-
+	
 	++NextSpawnSpotIndex;
 
 	if (NextSpawnSpotIndex >= SpawnSpots.Num())
@@ -58,7 +58,7 @@ void AMinionBarrack::SpawnNewGroup()
 		{
 			SpawnTransfrom = NextSpawnSpot->GetActorTransform();
 		}
-
+		
 		AMinion* NextAvaliableMinon = GetNextAvaliableMinion();
 		if (!NextAvaliableMinon)
 			break;
@@ -79,7 +79,7 @@ void AMinionBarrack::SpawnNewMinions(int Amt)
 		if (const APlayerStart* NextSpawnSpot = GetNextSpawnSpot())
 		{
 			SpawnTransfrom = NextSpawnSpot->GetActorTransform();
-		}	
+		}
 
 		AMinion* NewMinion = GetWorld()->SpawnActorDeferred<AMinion>(MinionClass, SpawnTransfrom, this, nullptr, ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn);
 		NewMinion->SetGenericTeamId(BarrackTeamId);
@@ -91,12 +91,12 @@ void AMinionBarrack::SpawnNewMinions(int Amt)
 
 AMinion* AMinionBarrack::GetNextAvaliableMinion() const
 {
-	for (AMinion* Minion : MinionPool)
+	for(AMinion* Minion : MinionPool)
 	{
 		if (!Minion->IsActive())
 		{
 			return Minion;
-		}	
+		}
 	}
 
 	return nullptr;

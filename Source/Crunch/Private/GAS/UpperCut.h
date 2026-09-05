@@ -14,10 +14,11 @@ UCLASS()
 class UUpperCut : public UCGameplayAbility
 {
 	GENERATED_BODY()
-public:
+public:	
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 	UUpperCut();
 private:
+
 	UPROPERTY(EditDefaultsOnly, Category = "Combo")
 	TMap<FName, FGenericDamgeEffectDef> ComboDamageMap;
 
@@ -28,7 +29,7 @@ private:
 	float UpperCutLaunchSpeed = 1000.f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Launch")
-	float UpperComboHoldSpeed = 100.f;
+	float UpperComboHoldSpeed= 100.f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Animation")
 	UAnimMontage* UpperCutMontage;

@@ -54,7 +54,7 @@ void ATA_Blackhole::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 void ATA_Blackhole::StartTargeting(UGameplayAbility* Ability)
 {
 	Super::StartTargeting(Ability);
-
+	
 	UWorld* World = GetWorld();
 	if (World)
 	{
@@ -140,7 +140,7 @@ void ATA_Blackhole::RemoveTarget(AActor* OtherTarget)
 	{
 		UNiagaraComponent* VFXComp;
 		ActorsInRangeMap.RemoveAndCopyValue(OtherTarget, VFXComp);
-		if (IsValid(VFXComp))
+		if(IsValid(VFXComp))
 		{
 			VFXComp->DestroyComponent();
 		}

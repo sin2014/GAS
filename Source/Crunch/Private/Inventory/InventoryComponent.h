@@ -48,7 +48,7 @@ protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
-private:
+private:	
 	UPROPERTY(EditDefaultsOnly, Category = "Inventory")
 	int Capacity = 6;
 
@@ -64,8 +64,10 @@ private:
 	/*********************************************************/
 	UFUNCTION(Server, Reliable, WithValidation)
 	void Server_Purchase(const UPA_ShopItem* ItemToPurchase);
+
 	UFUNCTION(Server, Reliable, WithValidation)
 	void Server_ActivateItem(FInventoryItemHandle ItemHandle);
+
 	UFUNCTION(Server, Reliable, WithValidation)
 	void Server_SellItem(FInventoryItemHandle ItemHandle);
 	void GrantItem(const UPA_ShopItem* NewItem);

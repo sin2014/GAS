@@ -14,21 +14,20 @@ UCLASS()
 class UItemToolTip : public UUserWidget
 {
 	GENERATED_BODY()
-
+	
 public:
 	void SetItem(const UPA_ShopItem* Item);
 	void SetPrice(float newPrice);
-
 private:
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(meta=(BindWidget))
 	class UImage* IconImage;
 
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(meta=(BindWidget))
 	class UTextBlock* ItemTitleText;
 
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(meta=(BindWidget))
 	class UTextBlock* ItemDescriptionText;
 
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(meta=(BindWidget))
 	class UTextBlock* ItemPriceText;
 };

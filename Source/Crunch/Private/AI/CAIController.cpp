@@ -2,19 +2,19 @@
 
 
 #include "AI/CAIController.h"
-#include "Character/ccharacter.h"
+#include "Character/CCharacter.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
-#include "BehaviorTree/BlackboardComponent.h"
 #include "BehaviorTree/BehaviorTreeComponent.h"
-#include "GAs/CAbilitySystemStatics.h"
+#include "BehaviorTree/BlackboardComponent.h"
+#include "GAS/CAbilitySystemStatics.h"
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISenseConfig_Sight.h"
 
 ACAIController::ACAIController()
 {
 	AIPerceptionComponent = CreateDefaultSubobject<UAIPerceptionComponent>("AI Perception Component");
-	SightConfig = CreateDefaultSubobject<UAISenseConfig_Sight>("SightConfig");
+	SightConfig = CreateDefaultSubobject<UAISenseConfig_Sight>("Sight Config");
 
 	SightConfig->DetectionByAffiliation.bDetectEnemies = true;
 	SightConfig->DetectionByAffiliation.bDetectFriendlies = false;
@@ -42,14 +42,14 @@ void ACAIController::OnPossess(APawn* NewPawn)
 		SetGenericTeamId(PawnTeamInterface->GetGenericTeamId());
 		ClearAndDisableAllSenses();
 		EnableAllSenses();
-	}	
+	}
 
 	UAbilitySystemComponent* PawnASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(NewPawn);
 	if (PawnASC)
 	{
 		PawnASC->RegisterGameplayTagEvent(UCAbilitySystemStatics::GetDeadStatTag()).AddUObject(this, &ACAIController::PawnDeadTagUpdated);
 		PawnASC->RegisterGameplayTagEvent(UCAbilitySystemStatics::GetStunStatTag()).AddUObject(this, &ACAIController::PawnStunTagUpdated);
-	}	
+	}
 }
 
 void ACAIController::BeginPlay()
@@ -81,7 +81,7 @@ void ACAIController::TargetForgotten(AActor* ForgottenActor)
 	if (GetCurrentTarget() == ForgottenActor)
 	{
 		SetCurrentTarget(GetNextPerceivedActor());
-	}	
+	}
 }
 
 const UObject* ACAIController::GetCurrentTarget() const
@@ -152,6 +152,7 @@ void ACAIController::ForgetActorIfDead(AActor* ActorToForget)
 void ACAIController::ClearAndDisableAllSenses()
 {
 	AIPerceptionComponent->AgeStimuli(TNumericLimits<float>::Max());
+
 	for (auto SenseConfigIt = AIPerceptionComponent->GetSensesConfigIterator(); SenseConfigIt; ++SenseConfigIt)
 	{
 		AIPerceptionComponent->SetSenseEnabled((*SenseConfigIt)->GetSenseImplementation(), false);
@@ -160,7 +161,7 @@ void ACAIController::ClearAndDisableAllSenses()
 	if (GetBlackboardComponent())
 	{
 		GetBlackboardComponent()->ClearValue(TargetBlackboardKeyName);
-	}	
+	}
 }
 
 void ACAIController::EnableAllSenses()
@@ -184,7 +185,7 @@ void ACAIController::PawnDeadTagUpdated(const FGameplayTag Tag, int32 Count)
 		GetBrainComponent()->StartLogic();
 		EnableAllSenses();
 		bIsPawnDead = false;
-	}	
+	}
 }
 
 void ACAIController::PawnStunTagUpdated(const FGameplayTag Tag, int32 Count)
@@ -201,3 +202,6 @@ void ACAIController::PawnStunTagUpdated(const FGameplayTag Tag, int32 Count)
 		GetBrainComponent()->StartLogic();
 	}
 }
+
+
+

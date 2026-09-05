@@ -25,7 +25,7 @@ public:
 	);
 
 	virtual void SetGenericTeamId(const FGenericTeamId& NewTeamID) override;
-
+	
 	/** Retrieve team identifier in form of FGenericTeamId */
 	FORCEINLINE virtual FGenericTeamId GetGenericTeamId() const override { return TeamId; }
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
@@ -71,3 +71,4 @@ private:
 
 	bool ShouldReportActorAsTarget(const AActor* ActorToCheck) const;
 };
+

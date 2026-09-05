@@ -6,12 +6,12 @@
 #include "Network/CNetStatics.h"
 
 FPlayerSelection::FPlayerSelection()
-	:Slot{ GetInvalidSlot() }, PlayerUniqueId{ FUniqueNetIdRepl::Invalid() }, PlayerNickName{}, CharacterDefination{ nullptr }
+	:Slot{ GetInvalidSlot() }, PlayerUniqueId{ FUniqueNetIdRepl::Invalid() }, PlayerNickName{}, CharacterDefination{nullptr}
 {
 }
 
 FPlayerSelection::FPlayerSelection(uint8 InSlot, const APlayerState* InPlayerState)
-	:Slot{ InSlot }, CharacterDefination{ nullptr }
+	:Slot{ InSlot }, CharacterDefination{nullptr}
 {
 	if (InPlayerState)
 	{

@@ -20,32 +20,31 @@ public:
 	virtual void PawnClientRestart() override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual void GetActorEyesViewPoint(FVector& OutLocation, FRotator& OutRotation) const  override;
-
-private:	
+private:
 	UPROPERTY(VisibleDefaultsOnly, Category = "View")
 	class USpringArmComponent* CameraBoom;
-	
+
 	UPROPERTY(VisibleDefaultsOnly, Category = "View")
 	class UCameraComponent* ViewCam;
 
-	FVector	GetLookRightDir() const;
-	FVector	GetLookFwdDir()	const;
-	FVector	GetMoveFwdDir() const;
-	/********************************************/
-	/*                 Gameplay Ability         */
-	/********************************************/
+	FVector GetLookRightDir() const;
+	FVector GetLookFwdDir() const;
+	FVector GetMoveFwdDir() const;
+	/*************************************************************/
+	/*                       Gameplay Ability                    */
+	/*************************************************************/
 private:
 	virtual void OnAimStateChanged(bool bIsAimming) override;
 	UPROPERTY()
 	class UCHeroAttributeSet* HeroAttributeSet;
 
-	/********************************************/
-	/*                 Input                    */
-	/********************************************/
+	/*************************************************************/
+	/*                           Input                           */
+	/*************************************************************/
 private:
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	class UInputAction* JumpInputAction;
-
+	
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	class UInputAction* LookInputAction;
 
@@ -72,31 +71,32 @@ private:
 	bool bIsLearnAbilityLeaderDown = false;
 	void HandleAbilityInput(const FInputActionValue& InputActionValue, ECAbilityInputID InputID);
 	void SetInputEnabledFromPlayerController(bool bEnabled);
-	/********************************************/
-	/*                 Stun						*/
-	/********************************************/
+	/*************************************************************/
+	/*                           Stun                            */
+	/*************************************************************/
 	virtual void OnStun() override;
 	virtual void OnRecoverFromStun() override;
-	/********************************************/
-	/*                 Death and Respawn        */
-	/********************************************/
+	/*************************************************************/
+	/*                      Death and Respawn                    */
+	/*************************************************************/
 
 	virtual void OnDead() override;
 	virtual void OnRespawn() override;
-	/********************************************/
-	/*                 Camer View              */
-	/********************************************/
+	/*************************************************************/
+	/*                      Camer View                           */
+	/*************************************************************/
 private:
 	UPROPERTY(EditDefaultsOnly, Category = view)
 	FVector CameraAimLocalOffset;
 
 	UPROPERTY(EditDefaultsOnly, Category = view)
 	float CamerLerpSpeed = 20.f;
-
+	
 	FTimerHandle CamerLerpTimerHandle;
 
 	void LerpCameraToLocalOffsetLocation(const FVector& Goal);
 	void TickCameraLocalOffsetLerp(FVector Goal);
+
 
 	/*************************************************************/
 	/*                      Inventory                            */

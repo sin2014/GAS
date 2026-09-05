@@ -22,7 +22,7 @@ void USplineWidget::SetSplineStyle(const FLinearColor& InColor, float InThicknes
 
 int32 USplineWidget::NativePaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const
 {
-	LayerId = Super::NativePaint(Args, AllottedGeometry, MyCullingRect, OutDrawElements, LayerId, InWidgetStyle, bParentEnabled);
+	LayerId = Super::NativePaint(Args, AllottedGeometry, MyCullingRect,OutDrawElements, LayerId, InWidgetStyle, bParentEnabled);
 
 	FVector2D StartPos = TestStartPos;
 	FVector2D EndPos = TestEndPos;

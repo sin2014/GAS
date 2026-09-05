@@ -9,13 +9,13 @@
 // Sets default values
 ACharacterDisplay::ACharacterDisplay()
 {
-	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+ 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	SetRootComponent(CreateDefaultSubobject<USceneComponent>("Root Comp"));
 
 	MeshComponent = CreateDefaultSubobject<USkeletalMeshComponent>("Mesh Component");
 	MeshComponent->SetupAttachment(GetRootComponent());
-
+	
 	ViewCameraComponent = CreateDefaultSubobject<UCameraComponent>("View Camera Component");
 	ViewCameraComponent->SetupAttachment(GetRootComponent());
 }

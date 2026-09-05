@@ -29,7 +29,7 @@ private:
 
 	UPROPERTY(VisibleDefaultsOnly, Category = "Perception")
 	class UAIPerceptionComponent* AIPerceptionComponent;
-
+	
 	UPROPERTY(VisibleDefaultsOnly, Category = "Perception")
 	class UAISenseConfig_Sight* SightConfig;
 

@@ -13,7 +13,7 @@
 #include "CCharacter.generated.h"
 
 UCLASS()
-class ACCharacter : public ACharacter, public IAbilitySystemInterface, public IGenericTeamAgentInterface, public IRenderActorTargetInterface 
+class ACCharacter : public ACharacter, public IAbilitySystemInterface, public IGenericTeamAgentInterface, public IRenderActorTargetInterface
 {
 	GENERATED_BODY()
 
@@ -37,8 +37,8 @@ private:
 
 protected:
 	// Called when the game starts or when spawned
+
 	virtual void BeginPlay() override;
-	//only calledon the server
 	virtual void PossessedBy(AController* NewController) override;
 
 public:	
@@ -47,20 +47,18 @@ public:
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
-	/********************************************/
-	/*              Gameplay Ability            */
-	/********************************************/
-public:	
+	
+	/**********************************************************************/
+	/*                             Gameplay Ability                       */
+	/**********************************************************************/
+public:
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
 	UFUNCTION(Server, Reliable, WithValidation)
 	void Server_SendGameplayEventToSelf(const FGameplayTag& EventTag, const FGameplayEventData& EventData);
 	FORCEINLINE bool GetIsInFocusMode() const { return bIsInFocusMode; }
-
 protected:
 	void UpgradeAbilityWithInputID(ECAbilityInputID InputID);
-
 private:
 	void BindGASChangeDelegates();
 	void DeathTagUpdated(const FGameplayTag Tag, int32 NewCount);
@@ -71,8 +69,9 @@ private:
 	bool bIsInFocusMode = false;
 
 	void SetIsAimming(bool bIsAimming);
-	virtual void OnAimStateChanged(bool bIsAiming);
+	virtual void OnAimStateChanged(bool bIsAimming);
 	void MoveSpeedUpdated(const FOnAttributeChangeData& Data);
+	void MoveSpeedAccelerationUpdated(const FOnAttributeChangeData& Data);
 	void MaxHealthUpdated(const FOnAttributeChangeData& Data);
 	void MaxManaUpdated(const FOnAttributeChangeData& Data);
 
@@ -80,12 +79,12 @@ private:
 	class UCAbilitySystemComponent* CAbilitySystemComponent;
 	UPROPERTY()
 	class UCAttributeSet* CAttributeSet;
-	/********************************************/
-	/*                     UI                   */
-	/********************************************/
+	/**********************************************************************/
+	/*                              UI                                    */
+	/**********************************************************************/
 private:
 	UPROPERTY(VisibleDefaultsOnly, Category = "UI")
-	class UWidgetComponent*	OverHeadWidgetComponent;
+	class UWidgetComponent* OverHeadWidgetComponent;
 	void ConfigureOverHeadStatusWidget();
 
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
@@ -93,23 +92,23 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	float HeadStatGaugeVisiblityRangeSquared = 10000000.f;
-
+	
 	FTimerHandle HeadStatGaugeVisibilityUpdateTimerHandle;
 
 	void UpdateHeadGaugeVisibility();
 	void SetStatusGaugeEnabled(bool bIsEnabled);
-	/********************************************/
-	/*               Stun						*/
-	/********************************************/
+	/**********************************************************************/
+	/*                             Stun                                   */
+	/**********************************************************************/
 private:
 	UPROPERTY(EditDefaultsOnly, Category = "Stun")
 	UAnimMontage* StunMontage;
 
 	virtual void OnStun();
 	virtual void OnRecoverFromStun();
-	/********************************************/
-	/*               Death and Respawn          */
-	/********************************************/
+	/**********************************************************************/
+	/*                             Death and Respawn                      */
+	/**********************************************************************/
 public:
 	bool IsDead() const;
 	void RespawnImmediately();
@@ -133,13 +132,13 @@ private:
 	virtual void OnDead();
 	virtual void OnRespawn();
 
-	/********************************************/
-	/*				       Team                 */
-	/********************************************/
+	/**********************************************************************/
+	/*                               Team                                 */
+	/**********************************************************************/
 public:
 	/** Assigns Team Agent to given TeamID */
 	virtual void SetGenericTeamId(const FGenericTeamId& NewTeamID) override;
-
+	
 	/** Retrieve team identifier in form of FGenericTeamId */
 	virtual FGenericTeamId GetGenericTeamId() const override;
 private:
@@ -148,11 +147,11 @@ private:
 
 	UFUNCTION()
 	virtual void OnRep_TeamID();
-	/********************************************/
-	/*				       AI                   */
-	/********************************************/
+	/**********************************************************************/
+	/*                               AI                                 */
+	/**********************************************************************/
 private:
 	void SetAIPerceptionStimuliSourceEnabled(bool bIsEnabled);
 	UPROPERTY()
-	class UAIPerceptionStimuliSourceComponent* PerceptionStimulisourceComponent;
+	class UAIPerceptionStimuliSourceComponent* PerceptionStimuliSourceComponent;
 };

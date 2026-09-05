@@ -16,7 +16,7 @@
 #include "Inventory/InventoryComponent.h"
 
 ACPlayerCharacter::ACPlayerCharacter()
-{
+{	
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>("Camera Boom");
 	CameraBoom->SetupAttachment(GetRootComponent());
 	CameraBoom->bUsePawnControlRotation = true;
@@ -83,6 +83,16 @@ void ACPlayerCharacter::HandleLookInput(const FInputActionValue& InputActionValu
 	AddControllerYawInput(InputVal.X);
 }
 
+void ACPlayerCharacter::OnDead()
+{
+	SetInputEnabledFromPlayerController(false);
+}
+void ACPlayerCharacter::OnRespawn()
+{
+	SetInputEnabledFromPlayerController(true);
+}
+
+
 void ACPlayerCharacter::HandleMoveInput(const FInputActionValue& InputActionValue)
 {
 	if (GetIsInFocusMode())
@@ -90,8 +100,8 @@ void ACPlayerCharacter::HandleMoveInput(const FInputActionValue& InputActionValu
 
 	FVector2D InputVal = InputActionValue.Get<FVector2D>();
 	InputVal.Normalize();
-
-	AddMovementInput(GetMoveFwdDir() * InputVal.Y + GetLookRightDir() * InputVal.X);
+	
+	AddMovementInput(GetMoveFwdDir()*InputVal.Y + GetLookRightDir() * InputVal.X);
 }
 
 void ACPlayerCharacter::LearnAbiltiyLeaderDown(const FInputActionValue& InputActionValue)
@@ -107,7 +117,7 @@ void ACPlayerCharacter::LearnAbiltiyLeaderUp(const FInputActionValue& InputActio
 void ACPlayerCharacter::UseInventoryItem(const FInputActionValue& InputActionValue)
 {
 	int Value = FMath::RoundToInt(InputActionValue.Get<float>());
-	InventoryComponent->TryActivateItemInSlot(Value - 1);
+	InventoryComponent->TryActivateItemInSlot(Value-1);
 }
 
 void ACPlayerCharacter::HandleAbilityInput(const FInputActionValue& InputActionValue, ECAbilityInputID InputID)
@@ -132,7 +142,7 @@ void ACPlayerCharacter::HandleAbilityInput(const FInputActionValue& InputActionV
 	if (InputID == ECAbilityInputID::BasicAttack)
 	{
 		FGameplayTag BasicAttackTag = bPressed ? UCAbilitySystemStatics::GetBasicAttackInputPressedTag() : UCAbilitySystemStatics::GetBasicAttackInputReleasedTag();
-		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, BasicAttackTag, FGameplayEventData());
+		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this , BasicAttackTag, FGameplayEventData());
 		Server_SendGameplayEventToSelf(BasicAttackTag, FGameplayEventData());
 	}
 }
@@ -144,7 +154,7 @@ void ACPlayerCharacter::SetInputEnabledFromPlayerController(bool bEnabled)
 	{
 		return;
 	}
-		
+
 	if (bEnabled)
 	{
 		EnableInput(PlayerController);
@@ -152,7 +162,7 @@ void ACPlayerCharacter::SetInputEnabledFromPlayerController(bool bEnabled)
 	else
 	{
 		DisableInput(PlayerController);
-	}	
+	}
 }
 
 void ACPlayerCharacter::OnStun()
@@ -164,16 +174,6 @@ void ACPlayerCharacter::OnRecoverFromStun()
 {
 	if (IsDead()) return;
 
-	SetInputEnabledFromPlayerController(true);
-}
-
-void ACPlayerCharacter::OnDead()
-{
-	SetInputEnabledFromPlayerController(false);
-}
-
-void ACPlayerCharacter::OnRespawn()
-{
 	SetInputEnabledFromPlayerController(true);
 }
 
@@ -194,8 +194,8 @@ FVector ACPlayerCharacter::GetMoveFwdDir() const
 
 void ACPlayerCharacter::OnAimStateChanged(bool bIsAimming)
 {
-	//if (IsLocallyControlledByPlayer())
-		LerpCameraToLocalOffsetLocation(bIsAimming ? CameraAimLocalOffset : FVector{ 0.f });
+	//if(IsLocallyControlledByPlayer())
+	LerpCameraToLocalOffsetLocation(bIsAimming ? CameraAimLocalOffset : FVector{0.f});
 }
 
 void ACPlayerCharacter::LerpCameraToLocalOffsetLocation(const FVector& Goal)
@@ -219,4 +219,3 @@ void ACPlayerCharacter::TickCameraLocalOffsetLerp(FVector Goal)
 
 	CamerLerpTimerHandle = GetWorldTimerManager().SetTimerForNextTick(FTimerDelegate::CreateUObject(this, &ACPlayerCharacter::TickCameraLocalOffsetLerp, Goal));
 }
-		

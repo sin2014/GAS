@@ -12,7 +12,7 @@ void UPlayerTeamLayoutWidget::NativeConstruct()
 	Super::NativeConstruct();
 	TeamOneLayoutBox->ClearChildren();
 	TeamTwoLayoutBox->ClearChildren();
-
+	
 	if (!PlayerTeamSlotWidgetClass)
 		return;
 
@@ -20,7 +20,7 @@ void UPlayerTeamLayoutWidget::NativeConstruct()
 	{
 		UPlayerTeamSlotWidget* NewSlotWidget = CreateWidget<UPlayerTeamSlotWidget>(GetOwningPlayer(), PlayerTeamSlotWidgetClass);
 		TeamSlotWidgets.Add(NewSlotWidget);
-
+		
 		UHorizontalBoxSlot* NewSlot;
 		if (i < UCNetStatics::GetPlayerCountPerTeam())
 		{

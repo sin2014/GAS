@@ -21,7 +21,7 @@ void UUpperCut::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const F
 		K2_EndAbility();
 		return;
 	}
-		
+
 	if (HasAuthorityOrPredictionKey(ActorInfo, &ActivationInfo))
 	{
 		UAbilityTask_PlayMontageAndWait* PlayUpperCutMontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, NAME_None, UpperCutMontage);
@@ -38,6 +38,7 @@ void UUpperCut::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const F
 	NextComboName = NAME_None;
 }
 
+
 FGameplayTag UUpperCut::GetUpperCutLaunchTag()
 {
 	return FGameplayTag::RequestGameplayTag("ability.uppercut.launch");
@@ -52,7 +53,7 @@ const FGenericDamgeEffectDef* UUpperCut::GetDamageEffectDefForCurrentCombo() con
 		const FGenericDamgeEffectDef* EffectDef = ComboDamageMap.Find(CurrentComboName);
 		return EffectDef;
 	}
-		
+
 	return nullptr;
 }
 
@@ -68,7 +69,7 @@ void UUpperCut::StartLaunching(FGameplayEventData EventData)
 			FHitResult HitResult = UAbilitySystemBlueprintLibrary::GetHitResultFromTargetData(EventData.TargetData, i);
 			PushTarget(HitResult.GetActor(), FVector::UpVector * UpperCutLaunchSpeed);
 			ApplyGameplayEffectToHitResultActor(HitResult, LaunchDamageEffect, GetAbilityLevel(CurrentSpecHandle, CurrentActorInfo));
-		}	
+		}
 	}
 
 	UAbilityTask_WaitGameplayEvent* WaitComboChangeEvent = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, UGA_Combo::GetComboChangedEventTag(), nullptr, false, false);
@@ -78,7 +79,7 @@ void UUpperCut::StartLaunching(FGameplayEventData EventData)
 	UAbilityTask_WaitGameplayEvent* WaitComboCommitEvent = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, UCAbilitySystemStatics::GetBasicAttackInputPressedTag());
 	WaitComboCommitEvent->EventReceived.AddDynamic(this, &UUpperCut::HandleComboCommitEvent);
 	WaitComboCommitEvent->ReadyForActivation();
-
+	
 	UAbilityTask_WaitGameplayEvent* WaitComboDamageEvent = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, UGA_Combo::GetComboTargetEventTag());
 	WaitComboDamageEvent->EventReceived.AddDynamic(this, &UUpperCut::HandleComboDamageEvent);
 	WaitComboDamageEvent->ReadyForActivation();
@@ -113,6 +114,7 @@ void UUpperCut::HandleComboCommitEvent(FGameplayEventData EventData)
 	{
 		return;
 	}
+
 	OwnerAnimInst->Montage_SetNextSection(OwnerAnimInst->Montage_GetCurrentSection(UpperCutMontage), NextComboName, UpperCutMontage);
 }
 
@@ -128,7 +130,6 @@ void UUpperCut::HandleComboDamageEvent(FGameplayEventData EventData)
 		}
 
 		int HitResultCount = UAbilitySystemBlueprintLibrary::GetDataCountFromTargetData(EventData.TargetData);
-
 		for (int i = 0; i < HitResultCount; i++)
 		{
 			FHitResult HitResult = UAbilitySystemBlueprintLibrary::GetHitResultFromTargetData(EventData.TargetData, i);

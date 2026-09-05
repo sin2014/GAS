@@ -19,12 +19,11 @@ class UShopWidget : public UUserWidget
 	GENERATED_BODY()
 public:
 	virtual void NativeConstruct() override;
-
 private:
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(meta=(BindWidget))
 	UTileView* ShopItemList;
 
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(meta=(BindWidget))
 	class UItemTreeWidget* CombinationTree;
 
 	void LoadShopItems();

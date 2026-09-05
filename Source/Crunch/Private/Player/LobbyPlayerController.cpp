@@ -6,6 +6,7 @@
 #include "Framework/CGameInstance.h"
 #include "Framework/CGameState.h"
 
+
 void ALobbyPlayerController::Server_RequestSlotSelectionChange_Implementation(uint8 NewSlotID)
 {
 	if (!GetWorld())
@@ -16,7 +17,7 @@ void ALobbyPlayerController::Server_RequestSlotSelectionChange_Implementation(ui
 		return;
 
 	CGameState->RequestPlayerSelectionChange(GetPlayerState<APlayerState>(), NewSlotID);
-}
+} 
 
 bool ALobbyPlayerController::Server_RequestSlotSelectionChange_Validate(uint8 NewSlotID)
 {

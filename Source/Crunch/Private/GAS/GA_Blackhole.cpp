@@ -8,7 +8,7 @@
 #include "GAS/TA_Blackhole.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
-#include "GAS/CAbilitySystemStatics.h" 
+#include "GAS/CAbilitySystemStatics.h"
 
 void UGA_Blackhole::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
@@ -90,7 +90,7 @@ void UGA_Blackhole::PlaceBlackhole(const FGameplayAbilityTargetDataHandle& Targe
 	ATA_Blackhole* BlackholeTargetActor = Cast<ATA_Blackhole>(TargetActor);
 	if (BlackholeTargetActor)
 	{
-		BlackholeTargetActor->ConfigureBlackhole(TargetAreaRadius, BlackholePullSpeed, BlackholeDuration, GetOwnerTeamId());
+		BlackholeTargetActor->ConfigureBlackhole(TargetAreaRadius, BlackholePullSpeed,BlackholeDuration, GetOwnerTeamId());
 	}
 	BlackholeTargetingTask->FinishSpawningActor(this, TargetActor);
 	if (BlackholeTargetActor)
@@ -110,7 +110,7 @@ void UGA_Blackhole::FinalTargetsReceived(const FGameplayAbilityTargetDataHandle&
 	{
 		BP_ApplyGameplayEffectToTarget(TargetDataHandle, FinalBlowDamageEffect, GetAbilityLevel(CurrentSpecHandle, CurrentActorInfo));
 		FVector BlowCenter = UAbilitySystemBlueprintLibrary::GetHitResultFromTargetData(TargetDataHandle, 1).ImpactPoint;
-		PushTargetsFromLocation(TargetDataHandle, BlowCenter, BlowPushSpeed);
+		PushTargetsFromLocation(TargetDataHandle, BlowCenter,  BlowPushSpeed);
 
 		UAbilityTask_PlayMontageAndWait* PlayFinalBlowMontage = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, NAME_None, FinalBlowMontage);
 		PlayFinalBlowMontage->OnBlendOut.AddDynamic(this, &UGA_Blackhole::K2_EndAbility);
@@ -131,6 +131,7 @@ void UGA_Blackhole::FinalTargetsReceived(const FGameplayAbilityTargetDataHandle&
 	GetAbilitySystemComponentFromActorInfo()->ExecuteGameplayCue(FinalBlowCueTag, FinalBlowCueParams);
 	GetAbilitySystemComponentFromActorInfo()->ExecuteGameplayCue(UCAbilitySystemStatics::GetCameraShakeGameplayCueTag(), FinalBlowCueParams);
 }
+
 
 void UGA_Blackhole::AddAimEffect()
 {

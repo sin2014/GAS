@@ -21,7 +21,7 @@ void UPlayerTeamSlotWidget::UpdateSlot(const FString& PlayerName, const UPA_Char
 	{
 		PlayerCharacterIcon->GetDynamicMaterial()->SetTextureParameterValue(CharacterIconMatParamName, CharacterDefination->LoadIcon());
 		PlayerCharacterIcon->GetDynamicMaterial()->SetScalarParameterValue(CharacterEmptyMatParamName, 0);
-		CachedCharacterNameStr = CharacterDefination->GetCharacterDisplayName();
+		CachedCharacterNameStr = CharacterDefination->GEtCharacterDisplayName();
 	}
 	else
 	{

@@ -6,6 +6,7 @@
 #include "Player/MenuPlayerController.h"
 #include "LobbyPlayerController.generated.h"
 
+
 DECLARE_DELEGATE(FOnSwitchToHeroSelection);
 /**
  * 
@@ -28,4 +29,5 @@ public:
 
 	UFUNCTION(Client, Reliable)
 	void Client_StartHeroSelection();
+
 };

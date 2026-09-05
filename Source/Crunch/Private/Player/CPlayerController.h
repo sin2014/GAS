@@ -14,23 +14,21 @@ UCLASS()
 class ACPlayerController : public APlayerController, public IGenericTeamAgentInterface
 {
 	GENERATED_BODY()
-	
 public:
 	// only called on the server
 	void OnPossess(APawn* NewPawn) override;
+
 	// only called on the client, also on the linstening server.
 	void AcknowledgePossession(APawn* NewPawn) override;
-
 	/** Assigns Team Agent to given TeamID */
 	virtual void SetGenericTeamId(const FGenericTeamId& NewTeamID) override;
-
+	
 	/** Retrieve team identifier in form of FGenericTeamId */
 	virtual FGenericTeamId GetGenericTeamId() const override;
-
-	virtual void GetLifetimeReplicatedProps(TArray< FLifetimeProperty>& OutLifetimeProps) const override;
-
+	virtual void GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const override;
 	virtual void SetupInputComponent() override;
 	void MatchFinished(AActor* ViewTarget, int WiningTeam);
+
 
 private:
 	UFUNCTION(Client, Reliable)
@@ -38,7 +36,7 @@ private:
 
 	void SpawnGameplayWidget();
 
-	UPROPERTY(EditDefaultsOnly, Category = "View")
+	UPROPERTY(EditDefaultsOnly, Category="View")
 	float MatchFinishViewBlendTimeDuration = 2.f;
 
 	UPROPERTY()
@@ -64,9 +62,8 @@ private:
 
 	UFUNCTION()
 	void ToggleShop();
-
+	
 	UFUNCTION()
 	void ToggleGameplayMenu();
-
 	void ShowWinLoseState();
 };

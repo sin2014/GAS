@@ -22,7 +22,7 @@ void ULevelGauge::NativeConstruct()
 		return;
 
 	OwnerASC = OwnerAbilitySystemComponent;
-
+	
 	UpdateGauge(FOnAttributeChangeData());
 	OwnerAbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(UCHeroAttributeSet::GetExperienceAttribute()).AddUObject(this, &ULevelGauge::UpdateGauge);
 	OwnerAbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(UCHeroAttributeSet::GetNextLevelExperienceAttribute()).AddUObject(this, &ULevelGauge::UpdateGauge);

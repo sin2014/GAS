@@ -85,6 +85,30 @@ FName UCNetStatics::GetPortKey()
 	return FName("PORT");
 }
 
+FName UCNetStatics::GetCoordinatorURLKey()
+{
+	return FName("COORDINATOR_URL");
+}
+
+FString UCNetStatics::GetCoordinatorURL()
+{
+	FString CoordinatorURL = GetCommandlineArgAsString(GetCoordinatorURLKey());
+	if (CoordinatorURL != "")
+	{
+		return CoordinatorURL;
+	}
+
+	return GetDefaultCoordinatorURL();
+}
+
+FString UCNetStatics::GetDefaultCoordinatorURL()
+{
+	FString CoordinatorURL = "";
+	GConfig->GetString(TEXT("Crunch.Net"), TEXT("CoordinatorURL"), CoordinatorURL, GGameIni);
+	UE_LOG(LogTemp, Warning, TEXT("Getting Default Coordinator URL as: %s"), *CoordinatorURL)
+	return CoordinatorURL;
+}
+
 FString UCNetStatics::GetCommandlineArgAsString(const FName& ParamName)
 {
 	FString OutVal = "";
@@ -99,4 +123,23 @@ int UCNetStatics::GetCommandlineArgAsInt(const FName& ParamName)
 	FString CommandLineArg = FString::Printf(TEXT("%s="), *(ParamName.ToString()));
 	FParse::Value(FCommandLine::Get(), *CommandLineArg, OutVal);
 	return OutVal;
+}
+
+FString UCNetStatics::GetTestingURL()
+{
+	FString TestURL = GetCommandlineArgAsString(GetTestingURLKey());
+	UE_LOG(LogTemp, Warning, TEXT("Get Testing URL: %s"), *TestURL)
+	return TestURL;
+}
+
+FName UCNetStatics::GetTestingURLKey()
+{
+	return FName("TESTING_URL");
+}
+
+void UCNetStatics::ReplacePort(FString& OutURLStr, int NewPort)
+{
+	FURL URL(nullptr, *OutURLStr, ETravelType::TRAVEL_Absolute);
+	URL.Port = NewPort;
+	OutURLStr = URL.ToString();
 }

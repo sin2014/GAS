@@ -101,12 +101,12 @@ TArray<AActor*> UGAP_Dead::GetRewardTargets() const
 			if (!OtherTeamInterface || OtherTeamInterface->GetTeamAttitudeTowards(*AvatarActor) != ETeamAttitude::Hostile)
 			{
 				continue;
-			}	
-
+			}
+			
 			if (!UCAbilitySystemStatics::IsHero(OverlapResult.GetActor()))
 			{
 				continue;
-			}	
+			}
 
 			OutActors.Add(OverlapResult.GetActor());
 		}

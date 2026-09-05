@@ -16,19 +16,19 @@ class UAbilityToolTip : public UUserWidget
 public:
 	void SetAbilityInfo(const FName& AbilityName, UTexture2D* AbilityTexture, const FText& AbilityDescription, float AbilityCooldown, float AbilityCost);
 
-private:
-	UPROPERTY(meta = (BindWidget))
+private:	
+	UPROPERTY(meta=(BindWidget))	
 	class UTextBlock* AbilityNameText;
 
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(meta=(BindWidget))	
 	class UImage* AbilityIcon;
 
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(meta=(BindWidget))	
 	class UTextBlock* AbilityDescriptionText;
 
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(meta=(BindWidget))	
 	class UTextBlock* AbilityCooldownText;
 
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(meta=(BindWidget))	
 	class UTextBlock* AbilityCostText;
 };

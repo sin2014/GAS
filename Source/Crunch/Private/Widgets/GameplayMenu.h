@@ -18,18 +18,17 @@ public:
 	virtual void NativeConstruct() override;
 	FOnButtonClickedEvent& GetResumeButtonClickedEventDelegate();
 	void SetTitleText(const FString& NewTitle);
-
 private:
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(meta=(BindWidget))
 	class UTextBlock* MenuTitle;
 
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(meta=(BindWidget))
 	class UButton* ResumeBtn;
 
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(meta=(BindWidget))
 	class UButton* MainMenuBtn;
 
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(meta=(BindWidget))
 	class UButton* QuitGameBtn;
 
 	UFUNCTION()

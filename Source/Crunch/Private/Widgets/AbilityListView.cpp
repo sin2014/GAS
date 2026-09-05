@@ -5,7 +5,7 @@
 #include "Abilities/GameplayAbility.h"
 #include "Widgets/AbilityGauge.h"
 
-void UAbilityListView::ConfigureAbilities(const TMap<ECAbilityInputID, TSubclassOf<class UGameplayAbility>>& Abilities)
+void UAbilityListView::ConfigureAbilities(const TMap<ECAbilityInputID, TSubclassOf<UGameplayAbility>>& Abilities)
 {
 	OnEntryWidgetGenerated().AddUObject(this, &UAbilityListView::AbilityGaugeGenerated);
 	for (const TPair<ECAbilityInputID, TSubclassOf<UGameplayAbility>>& AbilityPair : Abilities)
@@ -35,7 +35,7 @@ const FAbilityWidgetData* UAbilityListView::FindWidgetDataForAbility(const TSubc
 		if (WidgetData->AbilityClass == AbilityClass)
 		{
 			return WidgetData;
-		}	
+		}
 	}
 
 	return nullptr;

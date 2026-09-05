@@ -23,7 +23,7 @@ ATargetActor_GroundPick::ATargetActor_GroundPick()
 void ATargetActor_GroundPick::SetTargetAreaRadius(float NewRadius)
 {
 	TargetAreaRadius = NewRadius;
-	DecalComp->DecalSize = FVector{ NewRadius };
+	DecalComp->DecalSize = FVector{NewRadius};
 }
 
 void ATargetActor_GroundPick::ConfirmTargetingAndContinue()
@@ -45,7 +45,7 @@ void ATargetActor_GroundPick::ConfirmTargetingAndContinue()
 
 	TSet<AActor*> TargetActors;
 
-	IGenericTeamAgentInterface* OwnerTeamInterface = nullptr;
+	IGenericTeamAgentInterface* OwnerTeamInterface = nullptr; 
 	if (OwningAbility)
 	{
 		OwnerTeamInterface = Cast<IGenericTeamAgentInterface>(OwningAbility->GetAvatarActorFromActorInfo());
@@ -106,17 +106,17 @@ FVector ATargetActor_GroundPick::GetTargetPoint() const
 	if (!TraceResult.bBlockingHit)
 	{
 		GetWorld()->LineTraceSingleByChannel(TraceResult, TraceEnd, TraceEnd + FVector::DownVector * TNumericLimits<float>::Max(), ECC_Target);
-	}	
+	}
 
 	if (!TraceResult.bBlockingHit)
 	{
 		return GetActorLocation();
-	}	
+	}
 
 	if (bShouldDrawDebug)
 	{
 		DrawDebugSphere(GetWorld(), TraceResult.ImpactPoint, TargetAreaRadius, 32, FColor::Red);
-	}	
+	}
 
 	return TraceResult.ImpactPoint;
 }

@@ -4,12 +4,14 @@
 #include "Widgets/AbilityGauge.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
+
 #include "Abilities/GameplayAbility.h"
 #include "GAS/CAbilitySystemStatics.h"
 #include "GAS/CHeroAttributeSet.h"
 #include "GAS/CAttributeSet.h"
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
+
 #include "Widgets/AbilityToolTip.h"
 
 void UAbilityGauge::NativeConstruct()
@@ -23,7 +25,6 @@ void UAbilityGauge::NativeConstruct()
 		OwnerASC->AbilitySpecDirtiedCallbacks.AddUObject(this, &UAbilityGauge::AbilitySpecUpdated);
 		OwnerASC->GetGameplayAttributeValueChangeDelegate(UCHeroAttributeSet::GetUpgradePointAttribute()).AddUObject(this, &UAbilityGauge::UpgradePointUpdated);
 		OwnerASC->GetGameplayAttributeValueChangeDelegate(UCAttributeSet::GetManaAttribute()).AddUObject(this, &UAbilityGauge::ManaUpdated);
-
 		bool bFound = false;
 		float UpgradePoint = OwnerASC->GetGameplayAttributeValue(UCHeroAttributeSet::GetUpgradePointAttribute(), bFound);
 		if (bFound)
@@ -32,7 +33,8 @@ void UAbilityGauge::NativeConstruct()
 			ChangeData.NewValue = UpgradePoint;
 			UpgradePointUpdated(ChangeData);
 		}
-	}	
+	}
+
 
 	OwnerAbilitySystemComponent = OwnerASC;
 	WholeNumberFormattionOptions.MaximumFractionalDigits = 0;
@@ -93,7 +95,7 @@ void UAbilityGauge::AbilityCommitted(UGameplayAbility* Ability)
 void UAbilityGauge::StartCooldown(float CooldownTimeRemaining, float CooldownDuration)
 {
 	CooldownDurationText->SetText(FText::AsNumber(CooldownDuration));
-	CachedCooldownDuration = CooldownDuration;	
+	CachedCooldownDuration = CooldownDuration;
 	CachedCooldownTimeRemaining = CooldownTimeRemaining;
 
 	CooldownCounterText->SetVisibility(ESlateVisibility::Visible);
@@ -106,7 +108,7 @@ void UAbilityGauge::CooldownFinished()
 {
 	CachedCooldownDuration = CachedCooldownTimeRemaining = 0.f;
 	CooldownCounterText->SetVisibility(ESlateVisibility::Hidden);
-	GetWorld()->GetTimerManager().ClearTimer(CooldownTimerUpdateHandle);	
+	GetWorld()->GetTimerManager().ClearTimer(CooldownTimerUpdateHandle);
 	Icon->GetDynamicMaterial()->SetScalarParameterValue(CooldownPercentParamname, 1.f);
 }
 
@@ -132,7 +134,6 @@ const FGameplayAbilitySpec* UAbilityGauge::GetAbilitySpec()
 		FGameplayAbilitySpec* FoundAbilitySpec = OwnerAbilitySystemComponent->FindAbilitySpecFromClass(AbilityCDO->GetClass());
 		CachedAbilitySpecHandle = FoundAbilitySpec->Handle;
 		return FoundAbilitySpec;
-
 	}
 
 	return OwnerAbilitySystemComponent->FindAbilitySpecFromHandle(CachedAbilitySpecHandle);

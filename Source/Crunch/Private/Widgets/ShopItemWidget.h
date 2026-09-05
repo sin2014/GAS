@@ -31,7 +31,6 @@ public:
 
 	virtual void NativeOnListItemObjectSet(UObject* ListItemObject) override;
 	FORCEINLINE const UPA_ShopItem* GetShopItem() const { return ShopItem; }
-
 private:
 	void CopyFromOther(const UShopItemWidget* OtherWidget);
 	void InitWithShopItem(const UPA_ShopItem* NewShopItem);

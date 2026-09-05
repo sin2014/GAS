@@ -15,7 +15,7 @@ UCLASS()
 class UCNetStatics : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
-public:
+public:	
 	static FOnlineSessionSettings GenerateOnlineSesisonSettings(const FName& SessionName, const FString& SessionSearchId, int Port);
 
 	static IOnlineSessionPtr GetSessionPtr();
@@ -34,6 +34,15 @@ public:
 	static int GetSessionPort();
 	static FName GetPortKey();
 
+	static FName GetCoordinatorURLKey();
+	static FString GetCoordinatorURL();
+	static FString GetDefaultCoordinatorURL();
+
 	static FString GetCommandlineArgAsString(const FName& ParamName);
 	static int GetCommandlineArgAsInt(const FName& ParamName);
-};
+
+	static FString GetTestingURL();
+	static FName GetTestingURLKey();
+
+	static void ReplacePort(FString& OutURLStr, int NewPort);
+ };

@@ -57,6 +57,7 @@ void UCAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 
 void UCAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSeconds)
 {
+
 }
 
 bool UCAnimInstance::ShouldDoFullBody() const

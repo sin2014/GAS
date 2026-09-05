@@ -16,14 +16,15 @@ class UCharacterEntryWidget : public UUserWidget, public IUserObjectListEntry
 {
 	GENERATED_BODY()
 public:
+	
 	virtual void NativeOnListItemObjectSet(UObject* ListItemObject) override;
 	FORCEINLINE const UPA_CharacterDefination* GetCharacterDefination() const { return CharacterDefination; }
 	void SetSelected(bool bIsSelected);
-private:
-	UPROPERTY(meta = (BindWidget))
+private:	
+	UPROPERTY(meta=(BindWidget))
 	class UImage* CharacterIcon;
 
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(meta=(BindWidget))
 	class UTextBlock* CharacterNameText;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Character")

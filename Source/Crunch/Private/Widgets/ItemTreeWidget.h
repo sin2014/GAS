@@ -18,9 +18,9 @@ public:
 	void DrawFromNode(const ITreeNodeInterface* NodeInterface);
 private:
 	void DrawStream(
-		bool bUpperStream,
+		bool bUpperStream, 
 		const ITreeNodeInterface* StartingNodeInteface,
-		UUserWidget* StartingNodeWidget,
+		UUserWidget* StartingNodeWidget, 
 		class UCanvasPanelSlot* StartingNodeSlot,
 		int StartingNodeDepth,
 		float& NextLeafXPosition,
@@ -30,7 +30,7 @@ private:
 	UUserWidget* CreateWidgetForNode(const ITreeNodeInterface* Node, class UCanvasPanelSlot*& OutCanvasSlot);
 	void CreateConnection(const UUserWidget* From, UUserWidget* To);
 
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(meta=(BindWidget))
 	class UCanvasPanel* RootPanel;
 	const UObject* CurrentCenterItem;
 
@@ -38,10 +38,10 @@ private:
 	FVector2D NodeSize = FVector2D{ 60.f };
 
 	UPROPERTY(EditDefaultsOnly, Category = "Tree")
-	FVector2D NodeGap = FVector2D{ 16.f, 30.f };
+	FVector2D NodeGap = FVector2D{ 16.f, 30.f};
 
 	UPROPERTY(EditDefaultsOnly, Category = "Tree")
-	FLinearColor ConnectionColor = FLinearColor{ 0.8f, 0.8f, 0.8f, 1.f };
+	FLinearColor ConnectionColor = FLinearColor{0.8f, 0.8f, 0.8f, 1.f};
 
 	UPROPERTY(EditDefaultsOnly, Category = "Tree")
 	float ConnectionThickness = 3.f;

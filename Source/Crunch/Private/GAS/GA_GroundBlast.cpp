@@ -2,7 +2,7 @@
 
 
 #include "GAS/GA_GroundBlast.h"
-#include "AbilitySystemBlueprintlibrary.h"
+#include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
 #include "GAS/CAbilitySystemStatics.h"
 #include "GAS/TargetActor_GroundPick.h"
@@ -31,7 +31,7 @@ void UGA_GroundBlast::ActivateAbility(const FGameplayAbilitySpecHandle Handle, c
 
 	UAbilityTask_WaitTargetData* WaitTargetDataTask = UAbilityTask_WaitTargetData::WaitTargetData(this, NAME_None, EGameplayTargetingConfirmation::UserConfirmed, TargetActorClass);
 	WaitTargetDataTask->ValidData.AddDynamic(this, &UGA_GroundBlast::TargetConfirmed);
-	WaitTargetDataTask->Cancelled.AddDynamic(this, &UGA_GroundBlast::TargetConfirmed);
+	WaitTargetDataTask->Cancelled.AddDynamic(this, &UGA_GroundBlast::TargetCanceled);
 	WaitTargetDataTask->ReadyForActivation();
 
 	AGameplayAbilityTargetActor* TargetActor;
@@ -43,7 +43,7 @@ void UGA_GroundBlast::ActivateAbility(const FGameplayAbilitySpecHandle Handle, c
 		GroundPickActor->SetShouldDrawDebug(ShouldDrawDebug());
 		GroundPickActor->SetTargetAreaRadius(TargetAreaRadius);
 		GroundPickActor->SetTargetTraceRange(TargetTraceRange);
-	}	
+	}
 
 	WaitTargetDataTask->FinishSpawningActor(this, TargetActor);
 }
@@ -54,7 +54,7 @@ void UGA_GroundBlast::TargetConfirmed(const FGameplayAbilityTargetDataHandle& Ta
 	{
 		K2_EndAbility();
 		return;
-	}	
+	}
 
 	if (K2_HasAuthority())
 	{
@@ -73,7 +73,7 @@ void UGA_GroundBlast::TargetConfirmed(const FGameplayAbilityTargetDataHandle& Ta
 	if (OwnerAnimInst)
 	{
 		OwnerAnimInst->Montage_Play(CastMontage);
-	}	
+	}
 
 	K2_EndAbility();
 }

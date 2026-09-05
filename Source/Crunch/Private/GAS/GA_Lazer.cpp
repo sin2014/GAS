@@ -40,6 +40,7 @@ void UGA_Lazer::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const F
 
 void UGA_Lazer::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
+
 	UAbilitySystemComponent* OwnerAbilitySystemComponent = GetAbilitySystemComponentFromActorInfo();
 	if (OwnerAbilitySystemComponent && OnGoingConsumtionEffectHandle.IsValid())
 	{
@@ -72,7 +73,6 @@ void UGA_Lazer::ShootLazer(FGameplayEventData Payload)
 
 	AGameplayAbilityTargetActor* TargetActor;
 	WaitDamageTargetTask->BeginSpawningActor(this, LazerTargetActorClass, TargetActor);
-
 	ATargetActor_Line* LineTargetActor = Cast<ATargetActor_Line>(TargetActor);
 	if (LineTargetActor)
 	{
@@ -81,7 +81,7 @@ void UGA_Lazer::ShootLazer(FGameplayEventData Payload)
 
 	WaitDamageTargetTask->FinishSpawningActor(this, TargetActor);
 
-	if (LineTargetActor)
+	if(LineTargetActor)
 		LineTargetActor->AttachToComponent(GetOwningComponentFromActorInfo(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TargetActorAttachSocketName);
 }
 

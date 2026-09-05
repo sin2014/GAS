@@ -54,7 +54,7 @@ void UCrosshairWidget::UpdateCrosshairPosition()
 	CachedPlayerController->GetViewportSize(SizeX, SizeY);
 	if (!AimTarget)
 	{
-		FVector2D ViewportSize = FVector2D{ (float)SizeX, (float)SizeY };
+		FVector2D ViewportSize = FVector2D{(float)SizeX, (float)SizeY};
 		CrosshairCanvasPanelSlot->SetPosition(ViewportSize / 2.f / ViewportScale);
 		return;
 	}

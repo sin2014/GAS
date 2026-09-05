@@ -21,17 +21,17 @@ protected:
 
 private:
 	void ConfigureRenderActor();
-	virtual void SpawnRenderActor() PURE_VIRTUAL(URenderActorWidget::SpawnRenderActor, );
+	virtual void SpawnRenderActor() PURE_VIRTUAL(URenderActorWidget::SpawnRenderActor, ); 
 	virtual ARenderActor* GetRenderActor() const PURE_VIRTUAL(URenderActorWidget::GetRenderActor, return nullptr; );
 
 	void BeginRenderCapture();
 	void UpdateRender();
 	void StopRenderCapture();
 
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(meta=(BindWidget))
 	class UImage* DisplayImage;
 
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(meta=(BindWidget))
 	class USizeBox* RenderSizeBox;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Render Actor")

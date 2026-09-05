@@ -10,6 +10,7 @@
 class UGameplayAbility;
 struct FGameplayAbilitySpec;
 class UAbilitySystemComponent;
+
 /**
  * 
  */
@@ -18,11 +19,11 @@ class UCAbilitySystemStatics : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 public:
-	static FGameplayTag	GetBasicAttackAbilityTag();
+	static FGameplayTag GetBasicAttackAbilityTag();
 	static FGameplayTag GetBasicAttackInputPressedTag();
 	static FGameplayTag GetBasicAttackInputReleasedTag();
 	static FGameplayTag GetDeadStatTag();
-	static FGameplayTag GetStunStatTag();	
+	static FGameplayTag GetStunStatTag();
 	static FGameplayTag GetAimStatTag();
 	static FGameplayTag GetFocusStatTag();
 	static FGameplayTag GetCameraShakeGameplayCueTag();
@@ -35,6 +36,8 @@ public:
 	static FGameplayTag GetGoldAttributeTag();
 	static FGameplayTag GetCrosshairTag();
 	static FGameplayTag GetTargetUpdatedTag();
+	static FGameplayTag GetGenericDamagePointTag();
+	static FGameplayTag GetGenericTargetPointTag();
 
 	static bool IsActorDead(const AActor* ActorToCheck);
 	static bool IsHero(const AActor* ActorToCheck);
@@ -49,4 +52,5 @@ public:
 	static float GetManaCostFor(const UGameplayAbility* AbilityCDO, const UAbilitySystemComponent& ASC, int AbilityLevel);
 	static float GetCooldownDurationFor(const UGameplayAbility* AbilityCDO, const UAbilitySystemComponent& ASC, int AbilityLevel);
 	static float GetCooldownRemainingFor(const UGameplayAbility* AbilityCDO, const UAbilitySystemComponent& ASC);
+	static void SendLocalGameplayCue(AActor* CueTargetActor, const FHitResult& HitResult, const FGameplayTag& GameplayCueTag);
 };

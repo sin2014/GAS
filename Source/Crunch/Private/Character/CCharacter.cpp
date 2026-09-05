@@ -16,7 +16,6 @@
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
 #include "Perception/AISense_Sight.h"
 #include "Widgets/OverHeadStatsGauge.h"
-
 // Sets default values
 ACCharacter::ACCharacter()
 {
@@ -33,7 +32,7 @@ ACCharacter::ACCharacter()
 
 	BindGASChangeDelegates();
 
-	PerceptionStimulisourceComponent = CreateDefaultSubobject<UAIPerceptionStimuliSourceComponent>("Perception Stimuli Source Component");
+	PerceptionStimuliSourceComponent = CreateDefaultSubobject<UAIPerceptionStimuliSourceComponent>("Perception Stimuli Source Component");
 }
 
 void ACCharacter::ServerSideInit()
@@ -44,7 +43,6 @@ void ACCharacter::ServerSideInit()
 
 void ACCharacter::ClientSideInit()
 {
-
 	CAbilitySystemComponent->InitAbilityActorInfo(this, this);
 }
 
@@ -74,15 +72,6 @@ FRotator ACCharacter::GetCaptureLocalRotation() const
 	return HeadshotCaptureLocalRotation;
 }
 
-void ACCharacter::PossessedBy(AController* NewController)
-{
-	Super::PossessedBy(NewController);
-	if (NewController && !NewController->IsPlayerController())
-	{
-		ServerSideInit();
-	}
-}
-
 // Called when the game starts or when spawned
 void ACCharacter::BeginPlay()
 {
@@ -90,7 +79,16 @@ void ACCharacter::BeginPlay()
 	ConfigureOverHeadStatusWidget();
 	MeshRelativeTransform = GetMesh()->GetRelativeTransform();
 
-	PerceptionStimulisourceComponent->RegisterForSense(UAISense_Sight::StaticClass());
+	PerceptionStimuliSourceComponent->RegisterForSense(UAISense_Sight::StaticClass());
+}
+
+void ACCharacter::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+	if (NewController && !NewController->IsPlayerController())
+	{
+		ServerSideInit();
+	}
 }
 
 // Called every frame
@@ -134,15 +132,15 @@ void ACCharacter::BindGASChangeDelegates()
 {
 	if (CAbilitySystemComponent)
 	{
-		CAbilitySystemComponent->RegisterGameplayTagEvent(UCAbilitySystemStatics::GetDeadStatTag()).AddUObject(this,&ACCharacter::DeathTagUpdated);
-		CAbilitySystemComponent->RegisterGameplayTagEvent(UCAbilitySystemStatics::GetStunStatTag()).AddUObject(this,&ACCharacter::StunTagUpdated);
+		CAbilitySystemComponent->RegisterGameplayTagEvent(UCAbilitySystemStatics::GetDeadStatTag()).AddUObject(this, &ACCharacter::DeathTagUpdated);
+		CAbilitySystemComponent->RegisterGameplayTagEvent(UCAbilitySystemStatics::GetStunStatTag()).AddUObject(this, &ACCharacter::StunTagUpdated);
 		CAbilitySystemComponent->RegisterGameplayTagEvent(UCAbilitySystemStatics::GetAimStatTag()).AddUObject(this, &ACCharacter::AimTagUpdated);
 		CAbilitySystemComponent->RegisterGameplayTagEvent(UCAbilitySystemStatics::GetFocusStatTag()).AddUObject(this, &ACCharacter::FocusTagUpdated);
 
 		CAbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(UCAttributeSet::GetMoveSpeedAttribute()).AddUObject(this, &ACCharacter::MoveSpeedUpdated);
-
 		CAbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(UCAttributeSet::GetMaxHealthAttribute()).AddUObject(this, &ACCharacter::MaxHealthUpdated);
 		CAbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(UCAttributeSet::GetMaxManaAttribute()).AddUObject(this, &ACCharacter::MaxManaUpdated);
+		CAbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(UCAttributeSet::GetMoveAccelerationAttribute()).AddUObject(this, &ACCharacter::MoveSpeedAccelerationUpdated);
 	}
 }
 
@@ -191,15 +189,19 @@ void ACCharacter::SetIsAimming(bool bIsAimming)
 	OnAimStateChanged(bIsAimming);
 }
 
-void ACCharacter::OnAimStateChanged(bool bIsAiming)
+void ACCharacter::OnAimStateChanged(bool bIsAimming)
 {
 	//Override in child class
-
 }
 
 void ACCharacter::MoveSpeedUpdated(const FOnAttributeChangeData& Data)
 {
 	GetCharacterMovement()->MaxWalkSpeed = Data.NewValue;
+}
+
+void ACCharacter::MoveSpeedAccelerationUpdated(const FOnAttributeChangeData& Data)
+{
+	GetCharacterMovement()->MaxAcceleration = Data.NewValue;
 }
 
 void ACCharacter::MaxHealthUpdated(const FOnAttributeChangeData& Data)
@@ -224,6 +226,8 @@ void ACCharacter::ConfigureOverHeadStatusWidget()
 	{
 		return;
 	}
+
+	IsPlayerControlled();
 
 	if (IsLocallyControlledByPlayer())
 	{
@@ -279,7 +283,7 @@ bool ACCharacter::IsDead() const
 
 void ACCharacter::RespawnImmediately()
 {
-	if (HasAuthority())
+	if(HasAuthority())
 		GetAbilitySystemComponent()->RemoveActiveEffectsWithGrantedTags(FGameplayTagContainer(UCAbilitySystemStatics::GetDeadStatTag()));
 }
 
@@ -312,7 +316,7 @@ void ACCharacter::PlayDeathAnimation()
 	{
 		float MontageDuration = PlayAnimMontage(DeathMontage);
 		GetWorldTimerManager().SetTimer(DeathMontageTimerHandle, this, &ACCharacter::DeathMontageFinished, MontageDuration + DeathMontageFinishTimeShift);
-	}	
+	}
 }
 
 void ACCharacter::StartDeathSequence()
@@ -322,7 +326,7 @@ void ACCharacter::StartDeathSequence()
 	if (CAbilitySystemComponent)
 	{
 		CAbilitySystemComponent->CancelAllAbilities();
-	}	
+	}
 
 	PlayDeathAnimation();
 	SetStatusGaugeEnabled(false);
@@ -382,18 +386,18 @@ void ACCharacter::OnRep_TeamID()
 
 void ACCharacter::SetAIPerceptionStimuliSourceEnabled(bool bIsEnabled)
 {
-	if (!PerceptionStimulisourceComponent)
+	if (!PerceptionStimuliSourceComponent)
 	{
 		return;
 	}
-		
+
 	if (bIsEnabled)
 	{
-		PerceptionStimulisourceComponent->RegisterWithPerceptionSystem();
+		PerceptionStimuliSourceComponent->RegisterWithPerceptionSystem();
 	}
 	else
 	{
-		PerceptionStimulisourceComponent->UnregisterFromPerceptionSystem();
-	}	
+		PerceptionStimuliSourceComponent->UnregisterFromPerceptionSystem();
+	}
 }
 

@@ -26,59 +26,60 @@ public:
 	void SetGameplayMenuTitle(const FString& NewTitle);
 
 private:
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(meta=(BindWidget))
 	class UValueGauge* HealthBar;
 
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(meta=(BindWidget))
 	class UValueGauge* ManaBar;
 
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(meta=(BindWidget))
 	class UAbilityListView* AbilityListView;
 
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(meta=(BindWidget))
 	class UStatsGauge* AttackDamageGauge;
 
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(meta=(BindWidget))
 	class UStatsGauge* ArmorGauge;
 
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(meta=(BindWidget))
 	class UStatsGauge* MoveSpeedGauge;
 
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(meta=(BindWidget))
 	class UStatsGauge* IntenlligenceGauge;
 
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(meta=(BindWidget))
 	class UStatsGauge* StrengthGauge;
 
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(meta=(BindWidget))
 	class UShopWidget* ShopWidget;
 
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(meta=(BindWidget))
 	class UInventoryWidget* InventoryWidget;
 
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(meta=(BindWidget))
 	class USkeletalMeshRenderWidget* HeadshotWidget;
 
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(meta=(BindWidget))
 	class UMatchStatWidget* MatchStatWidget;
 
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(meta=(BindWidget))
 	class UGameplayMenu* GameplayMenu;
 
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(meta=(BindWidget))
 	class UWidgetSwitcher* MainSwitcher;
 
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(meta=(BindWidget))
 	class UCanvasPanel* GameplayWidgetRootPanel;
 
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(meta=(BindWidget))
 	class UCanvasPanel* GameplayMenuRootPanel;
 
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(meta=(BindWidget))
 	class UCrosshairWidget* CrosshairWidget;
 
-	UPROPERTY(Transient, meta = (BindWidgetAnim))
+	UPROPERTY(Transient, meta=(BindWidgetAnim))
 	class UWidgetAnimation* ShopPopupAnimation;
+
 
 	void PlayShopPopupAnimation(bool bPlayForward);
 	void SetOwningPawnInputEnabled(bool bPawnInputEnabled);

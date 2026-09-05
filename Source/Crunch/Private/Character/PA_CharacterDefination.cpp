@@ -28,7 +28,7 @@ TSubclassOf<ACCharacter> UPA_CharacterDefination::LoadCharacterClass() const
 	CharacterClass.LoadSynchronous();
 	if (CharacterClass.IsValid())
 		return CharacterClass.Get();
-
+	
 	return TSubclassOf<ACCharacter>();
 
 }
@@ -67,3 +67,4 @@ const TMap<ECAbilityInputID, TSubclassOf<UGameplayAbility>>* UPA_CharacterDefina
 
 	return &(Character->GetAbilities());
 }
+

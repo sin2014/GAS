@@ -161,16 +161,43 @@ void UInventoryComponent::TryActivateItemInSlot(int SlotNumber)
 	}
 }
 
-// Called when the game starts
 
+// Called when the game starts
 void UInventoryComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
+	// ...
 	OwnerAbilitySystemComponent = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetOwner());
-
 	if (OwnerAbilitySystemComponent)
 		OwnerAbilitySystemComponent->AbilityCommittedCallbacks.AddUObject(this, &UInventoryComponent::AbilityCommitted);
+}
+
+void UInventoryComponent::AbilityCommitted(UGameplayAbility* CommittedAbility)
+{
+	if (!CommittedAbility)
+		return;
+
+	float CooldownTimeRemaining = 0.f;
+	float CooldownDuration = 0.f;
+
+	CommittedAbility->GetCooldownTimeRemainingAndDuration(
+		CommittedAbility->GetCurrentAbilitySpecHandle(),
+		CommittedAbility->GetCurrentActorInfo(),
+		CooldownTimeRemaining,
+		CooldownDuration
+	);
+
+	for (TPair<FInventoryItemHandle, UInventoryItem*>& ItemPair : InventoryMap)
+	{
+		if (!ItemPair.Value)
+			continue;
+
+		if (ItemPair.Value->IsGrantintAbility(CommittedAbility->GetClass()))
+		{
+			OnItemAbilityCommitted.Broadcast(ItemPair.Key, CooldownDuration, CooldownTimeRemaining);
+		}
+	}
 }
 
 void UInventoryComponent::Server_ActivateItem_Implementation(FInventoryItemHandle ItemHandle)
@@ -202,37 +229,9 @@ void UInventoryComponent::Server_SellItem_Implementation(FInventoryItemHandle It
 	OwnerAbilitySystemComponent->ApplyModToAttribute(UCHeroAttributeSet::GetGoldAttribute(), EGameplayModOp::Additive, SellPrice * InventoryItem->GetStackCount());
 	RemoveItem(InventoryItem);
 }
-
 bool UInventoryComponent::Server_SellItem_Validate(FInventoryItemHandle ItemHandle)
 {
 	return true;
-}
-
-void UInventoryComponent::AbilityCommitted(UGameplayAbility* CommittedAbility)
-{
-	if (!CommittedAbility)
-		return;
-
-	float CooldownTimeRemaining = 0.f;
-	float CooldownDuration = 0.f;
-
-	CommittedAbility->GetCooldownTimeRemainingAndDuration(
-		CommittedAbility->GetCurrentAbilitySpecHandle(),
-		CommittedAbility->GetCurrentActorInfo(),
-		CooldownTimeRemaining,
-		CooldownDuration
-	);
-
-	for (TPair<FInventoryItemHandle, UInventoryItem*>& ItemPair : InventoryMap)
-	{
-		if (!ItemPair.Value)
-			continue;
-
-		if (ItemPair.Value->IsGrantintAbility(CommittedAbility->GetClass()))
-		{
-			OnItemAbilityCommitted.Broadcast(ItemPair.Key, CooldownDuration, CooldownTimeRemaining);
-		}
-	}
 }
 
 void UInventoryComponent::GrantItem(const UPA_ShopItem* NewItem)
@@ -259,7 +258,7 @@ void UInventoryComponent::GrantItem(const UPA_ShopItem* NewItem)
 		UE_LOG(LogTemp, Warning, TEXT("Server Adding Shop Item: %s, with Id: %d"), *(InventoryItem->GetShopItem()->GetItemName().ToString()), NewHandle.GetHandleId());
 		FGameplayAbilitySpecHandle GrantedAbilitySpecHandle = InventoryItem->GetGrantedAbilitySpecHandle();
 		Client_ItemAdded(NewHandle, NewItem, GrantedAbilitySpecHandle);
-	}	
+	}
 }
 
 void UInventoryComponent::ConsumeItem(UInventoryItem* Item)
@@ -346,7 +345,7 @@ void UInventoryComponent::Client_ItemStackCountChanged_Implementation(FInventory
 	}
 }
 
-void UInventoryComponent::Client_ItemAdded_Implementation(FInventoryItemHandle AssignedHandle, const UPA_ShopItem* Item, FGameplayAbilitySpecHandle GrantedAbilitySpecHandle)
+void UInventoryComponent::Client_ItemAdded_Implementation(FInventoryItemHandle AssignedHandle, const UPA_ShopItem* Item,  FGameplayAbilitySpecHandle GrantedAbilitySpecHandle)
 {
 	if (GetOwner()->HasAuthority())
 		return;
@@ -373,14 +372,17 @@ void UInventoryComponent::Server_Purchase_Implementation(const UPA_ShopItem* Ite
 		GrantItem(ItemToPurchase);
 		return;
 	}
-		
+	
 	if (TryItemCombination(ItemToPurchase))
 	{
 		OwnerAbilitySystemComponent->ApplyModToAttribute(UCHeroAttributeSet::GetGoldAttribute(), EGameplayModOp::Additive, -ItemToPurchase->GetPrice());
-	}	
+	}
 }
 
 bool UInventoryComponent::Server_Purchase_Validate(const UPA_ShopItem* ItemToPurchase)
 {
 	return true;
 }
+
+
+

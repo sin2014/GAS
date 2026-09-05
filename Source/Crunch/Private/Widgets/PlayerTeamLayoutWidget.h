@@ -9,7 +9,7 @@
 
 class UPlayerTeamSlotWidget;
 /**
- *
+ * 
  */
 UCLASS()
 class UPlayerTeamLayoutWidget : public UUserWidget
@@ -18,17 +18,17 @@ class UPlayerTeamLayoutWidget : public UUserWidget
 public:
 	virtual void NativeConstruct() override;
 	void UpdatePlayerSelection(const TArray<FPlayerSelection>& PlayerSelections);
-private:
+private:	
 	UPROPERTY(EditDefaultsOnly, Category = "Visual")
 	float PlayerTeamWidgetSlotMargin = 5.f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Visual")
 	TSubclassOf<UPlayerTeamSlotWidget> PlayerTeamSlotWidgetClass;
 
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(meta=(BindWidget))
 	class UHorizontalBox* TeamOneLayoutBox;
 
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(meta=(BindWidget))
 	class UHorizontalBox* TeamTwoLayoutBox;
 
 	UPROPERTY()

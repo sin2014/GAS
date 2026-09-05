@@ -13,6 +13,6 @@ UCLASS()
 class ALobbyGameMode : public ACGameMode
 {
 	GENERATED_BODY()
-public:
+public:	
 	ALobbyGameMode();
 };

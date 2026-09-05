@@ -16,6 +16,7 @@ USTRUCT(BlueprintType)
 struct FAbilityWidgetData : public FTableRowBase
 {
 	GENERATED_BODY()
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<class UGameplayAbility> AbilityClass;
 
@@ -55,7 +56,7 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Visual")
 	FName CanCastAbilityParamName = "CanCast";
-
+	
 	UPROPERTY(EditDefaultsOnly, Category = "Visual")
 	FName UpgradePointAvaliableParamName = "UpgradeAvaliable";
 
@@ -64,19 +65,19 @@ private:
 
 	void CreateToolTipWidget(const FAbilityWidgetData* AbilityWidgetData);
 
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(meta=(BindWidget))
 	class UImage* Icon;
 
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(meta=(BindWidget))
 	class UImage* LevelGauge;
 
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(meta=(BindWidget))
 	class UTextBlock* CooldownCounterText;
 
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(meta=(BindWidget))
 	class UTextBlock* CooldownDurationText;
 
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(meta=(BindWidget))
 	class UTextBlock* CostText;
 
 	UPROPERTY()
@@ -109,4 +110,5 @@ private:
 	void UpdateCanCast();
 	void UpgradePointUpdated(const FOnAttributeChangeData& Data);
 	void ManaUpdated(const FOnAttributeChangeData& Data);
+
 };

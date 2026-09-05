@@ -11,7 +11,7 @@ class UPA_CharacterDefination;
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnPlayerSelectionUpdated, const TArray<FPlayerSelection>& /*NewPlayerSelection*/);
 /**
- *
+ * 
  */
 UCLASS()
 class ACGameState : public AGameStateBase
@@ -25,11 +25,11 @@ public:
 	void SetCharacterDeselected(const UPA_CharacterDefination* DefiniationToDeselect);
 
 	FOnPlayerSelectionUpdated OnPlayerSelectionUpdated;
-	virtual void GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const override;
+	virtual void GetLifetimeReplicatedProps(TArray< FLifetimeProperty > &OutLifetimeProps) const override;
 	const TArray<FPlayerSelection>& GetPlayerSelection() const;
 	bool CanStartHeroSelection() const;
 	bool CanStartMatch() const;
-private:
+private:	
 	UPROPERTY(ReplicatedUsing = OnRep_PlayerSelectionArray)
 	TArray<FPlayerSelection> PlayerSelectionArray;
 

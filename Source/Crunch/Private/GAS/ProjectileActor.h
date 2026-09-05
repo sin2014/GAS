@@ -27,11 +27,11 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	virtual void SetGenericTeamId(const FGenericTeamId& NewTeamID);
-
+	
 	/** Retrieve team identifier in form of FGenericTeamId */
 	virtual FGenericTeamId GetGenericTeamId() const { return TeamId; }
-	virtual void NotifyActorBeginOverlap(AActor* OtherActor) override;
 
+	virtual void NotifyActorBeginOverlap(AActor* OtherActor) override;
 private:
 	UPROPERTY(EditDefaultsOnly, Category = "Gameplay Cue")
 	FGameplayTag HitGameplayCueTag;
@@ -58,7 +58,6 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-
 private:
 	void TravelMaxDIstanceReached();
 	void SendLocalGameplayCue(AActor* CueTargetActor, const FHitResult& HitResult);

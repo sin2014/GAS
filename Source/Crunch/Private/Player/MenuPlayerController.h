@@ -13,7 +13,7 @@ UCLASS()
 class AMenuPlayerController : public APlayerController
 {
 	GENERATED_BODY()
-public:
+public:	
 	virtual void BeginPlay() override;
 	virtual void OnRep_PlayerState() override;
 

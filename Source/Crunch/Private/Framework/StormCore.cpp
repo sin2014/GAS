@@ -47,7 +47,6 @@ float AStormCore::GetProgress() const
 void AStormCore::BeginPlay()
 {
 	Super::BeginPlay();
-	
 	FVector TeamOneGoalLoc = TeamOneGoal->GetActorLocation();
 	FVector TeamTwoGoalLoc = TeamTwoGoal->GetActorLocation();
 
@@ -91,7 +90,7 @@ void AStormCore::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEv
 	{
 		InfluenceRange->SetSphereRadius(InfluenceRadius);
 		FVector DecalSize = GroundDecalComponent->DecalSize;
-		GroundDecalComponent->DecalSize = FVector{ DecalSize.X, InfluenceRadius, InfluenceRadius };
+		GroundDecalComponent->DecalSize = FVector{DecalSize.X, InfluenceRadius, InfluenceRadius};
 	}
 }
 #endif
@@ -131,7 +130,7 @@ void AStormCore::InfluencerLeftRange(UPrimitiveComponent* OverlappedComponent, A
 		if (OtherTeamInterface->GetGenericTeamId().GetId() == 0)
 		{
 			TeamOneInfluncerCount--;
-			if (TeamOneInfluncerCount < 0)
+			if(TeamOneInfluncerCount< 0)
 			{
 				TeamOneInfluncerCount = 0;
 			}
@@ -139,7 +138,7 @@ void AStormCore::InfluencerLeftRange(UPrimitiveComponent* OverlappedComponent, A
 		else if (OtherTeamInterface->GetGenericTeamId().GetId() == 1)
 		{
 			TeamTwoInfluncerCount--;
-			if (TeamTwoInfluncerCount < 0)
+			if(TeamTwoInfluncerCount< 0)
 			{
 				TeamTwoInfluncerCount = 0;
 			}
@@ -163,7 +162,6 @@ void AStormCore::UpdateTeamWeight()
 		TeamWeight = TeamOffset / TeamTotal;
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("Team One Count: %d, Team Two Count: %d, Weight: %f"), TeamOneInfluncerCount, TeamTwoInfluncerCount, TeamWeight);
 	UpdateGoal();
 }
 
@@ -215,7 +213,7 @@ void AStormCore::GoalReached(int WiningTeam)
 void AStormCore::CaptureCore()
 {
 	float ExpandDuration = GetMesh()->GetAnimInstance()->Montage_Play(ExpandMontage);
-	CoreCaptureSpeed = FVector::Distance(GetMesh()->GetComponentLocation(), CoreToCapture->GetActorLocation()) / ExpandDuration;
+	CoreCaptureSpeed = FVector::Distance(GetMesh()->GetComponentLocation(), CoreToCapture->GetActorLocation())/ExpandDuration;
 
 	CoreToCapture->SetActorEnableCollision(false);
 	GetCharacterMovement()->MaxWalkSpeed = 0.f;
@@ -230,3 +228,5 @@ void AStormCore::ExpandFinished()
 	CoreToCapture->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepWorldTransform, "root");
 	GetMesh()->GetAnimInstance()->Montage_Play(CaptureMontage);
 }
+
+

@@ -16,15 +16,15 @@ class ULevelGauge : public UUserWidget
 	GENERATED_BODY()
 public:
 	virtual void NativeConstruct() override;
-
+	
 private:
 	UPROPERTY(EditDefaultsOnly, Category = "Visual")
 	FName PercentMaterialParamName = "Percent";
 
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(meta=(BindWidget))
 	class UImage* LevelProgressImage;
 
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(meta=(BindWidget))
 	class UTextBlock* LevelText;
 
 	FNumberFormattingOptions NumberFormattingOptions;

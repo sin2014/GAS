@@ -16,7 +16,7 @@ class USkeletalMeshRenderWidget : public URenderActorWidget
 public:
 	virtual void NativeConstruct() override;
 private:
-	virtual void SpawnRenderActor() override;
+	virtual void SpawnRenderActor() override; 
 	virtual ARenderActor* GetRenderActor() const override;
 	UPROPERTY(EditDefaultsOnly, Category = "SKeletal Mesh Render")
 	TSubclassOf<class ASkeletalMeshRenderActor> SKeletalMeshRenderActorClass;

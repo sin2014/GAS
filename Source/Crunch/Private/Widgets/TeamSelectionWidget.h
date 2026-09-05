@@ -20,11 +20,11 @@ public:
 	virtual void NativeConstruct() override;
 
 	FOnSlotClicked OnSlotClicked;
-private:
-	UPROPERTY(meta = (BindWidget))
+private:	
+	UPROPERTY(meta=(BindWidget))
 	class UButton* SelectButton;
 
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(meta=(BindWidget))
 	class UTextBlock* InfoText;
 
 	UFUNCTION()
@@ -32,3 +32,4 @@ private:
 
 	uint8 SlotID;
 };
+

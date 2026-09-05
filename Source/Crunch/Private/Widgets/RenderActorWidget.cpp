@@ -67,6 +67,7 @@ void URenderActorWidget::UpdateRender()
 	}
 }
 
+
 void URenderActorWidget::StopRenderCapture()
 {
 

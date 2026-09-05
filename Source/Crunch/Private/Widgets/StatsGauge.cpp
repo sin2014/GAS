@@ -7,6 +7,7 @@
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
 
+
 void UStatsGauge::NativePreConstruct()
 {
 	Super::NativePreConstruct();
@@ -27,11 +28,10 @@ void UStatsGauge::NativeConstruct()
 	{
 		bool bFound;
 		float AttributeVal = OwnerASC->GetGameplayAttributeValue(Attribute, bFound);
-
 		SetValue(AttributeVal);
 
 		OwnerASC->GetGameplayAttributeValueChangeDelegate(Attribute).AddUObject(this, &UStatsGauge::AttributeChanged);
-	}	
+	}
 }
 
 void UStatsGauge::SetValue(float NewVal)

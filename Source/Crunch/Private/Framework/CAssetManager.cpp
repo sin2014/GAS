@@ -12,7 +12,7 @@ UCAssetManager& UCAssetManager::Get()
 		return *Singleton;
 	}
 
-	UE_LOG(LogLoad, Fatal, TEXT("Asset Manager Needs to be of the type CAssetManager"));
+	UE_LOG(LogLoad, Fatal, TEXT("Asset Manager Needs to be of the type CAssetMaanger"));
 	return (*NewObject<UCAssetManager>());
 }
 
@@ -38,8 +38,7 @@ bool UCAssetManager::GetLoadedCharacterDefinations(TArray<UPA_CharacterDefinatio
 
 void UCAssetManager::LoadShopItems(const FStreamableDelegate& LoadFinishedCallback)
 {
-	LoadPrimaryAssetsWithType(UPA_ShopItem::GetShopItemAssetType(), TArray<FName>(), 
-		FStreamableDelegate::CreateUObject(this, &UCAssetManager::ShopItemLoadFinished, LoadFinishedCallback));
+	LoadPrimaryAssetsWithType(UPA_ShopItem::GetShopItemAssetType(), TArray<FName>(), FStreamableDelegate::CreateUObject(this, &UCAssetManager::ShopItemLoadFinished, LoadFinishedCallback));
 }
 
 bool UCAssetManager::GetLoadedShopItems(TArray<const UPA_ShopItem*>& OutItems) const
@@ -80,7 +79,7 @@ void UCAssetManager::BuildItemMaps()
 	if (GetLoadedShopItems(LoadedItems))
 	{
 		for (const UPA_ShopItem* Item : LoadedItems)
-		{ 
+		{
 			if (Item->GetIngredients().Num() == 0)
 			{
 				continue;
@@ -94,7 +93,7 @@ void UCAssetManager::BuildItemMaps()
 				AddToCombinationMap(IngredientItem, Item);
 			}
 
-			IngredientMap.Add(Item, FItemCollection{ Items });
+			IngredientMap.Add(Item, FItemCollection{Items});
 		}
 	}
 }
@@ -109,6 +108,6 @@ void UCAssetManager::AddToCombinationMap(const UPA_ShopItem* Ingredient, const U
 	}
 	else
 	{
-		CombinationMap.Add(Ingredient, FItemCollection{ TArray<const UPA_ShopItem*>{CombinationItem} });
+		CombinationMap.Add(Ingredient, FItemCollection{TArray<const UPA_ShopItem*>{CombinationItem}});
 	}
 }

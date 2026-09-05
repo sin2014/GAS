@@ -36,7 +36,6 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Gameplay Ability")
 	FGameplayTag EventTag;
-
 	UPROPERTY(EditAnywhere, Category = "Gameplay Ability")
 	TArray<FName> TargetSocketNames;
 

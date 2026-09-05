@@ -8,7 +8,7 @@
 
 class UPA_CharacterDefination;
 /**
- *
+ * 
  */
 UCLASS()
 class UPlayerTeamSlotWidget : public UUserWidget
@@ -18,17 +18,17 @@ public:
 	virtual void NativeConstruct() override;
 	void UpdateSlot(const FString& PlayerName, const UPA_CharacterDefination* CharacterDefination);
 
-	virtual void NativeOnMouseEnter(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
-	virtual void NativeOnMouseLeave(const FPointerEvent& InMouseEvent) override;
+	virtual void NativeOnMouseEnter( const FGeometry& InGeometry, const FPointerEvent& InMouseEvent ) override;
+	virtual void NativeOnMouseLeave( const FPointerEvent& InMouseEvent ) override;
 
-private:
-	UPROPERTY(Transient, meta = (BindWidgetAnim))
+private:	
+	UPROPERTY(Transient, meta=(BindWidgetAnim))
 	class UWidgetAnimation* HoverAnim;
 
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(meta=(BindWidget))
 	class UImage* PlayerCharacterIcon;
 
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(meta=(BindWidget))
 	class UTextBlock* NameText;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Visual")

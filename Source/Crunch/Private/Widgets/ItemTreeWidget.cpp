@@ -10,7 +10,7 @@ void UItemTreeWidget::DrawFromNode(const ITreeNodeInterface* NodeInterface)
 {
 	if (!NodeInterface)
 		return;
-
+	
 	if (CurrentCenterItem == NodeInterface->GetItemObject())
 		return;
 
@@ -28,7 +28,7 @@ void UItemTreeWidget::DrawFromNode(const ITreeNodeInterface* NodeInterface)
 	float LowerMoveAmt = 0.f - LowerStreamXMax / 2.0f;
 	for (UCanvasPanelSlot* StreamSlot : LowerStreamSlots)
 	{
-		StreamSlot->SetPosition(StreamSlot->GetPosition() + FVector2D{ LowerMoveAmt, 0.f });
+		StreamSlot->SetPosition(StreamSlot->GetPosition() + FVector2D{LowerMoveAmt, 0.f});
 	}
 
 	NextLeafXPos = 0.f;
@@ -38,7 +38,7 @@ void UItemTreeWidget::DrawFromNode(const ITreeNodeInterface* NodeInterface)
 	float UpperMoveAmt = 0.f - UpperStreamXMax / 2.0f;
 	for (UCanvasPanelSlot* StreamSlot : UpperStreamSlots)
 	{
-		StreamSlot->SetPosition(StreamSlot->GetPosition() + FVector2D{ UpperMoveAmt, 0.f });
+		StreamSlot->SetPosition(StreamSlot->GetPosition() + FVector2D{UpperMoveAmt, 0.f});
 	}
 
 	CenterWidgetPanelSlot->SetPosition(FVector2D::Zero());
@@ -51,7 +51,7 @@ void UItemTreeWidget::DrawStream(bool bUpperStream, const ITreeNodeInterface* St
 
 	if (NextTreeNodeInterfaces.Num() == 0)
 	{
-		StartingNodeSlot->SetPosition(FVector2D{ NextLeafXPosition, StartingNodeYPos });
+		StartingNodeSlot->SetPosition(FVector2D{NextLeafXPosition, StartingNodeYPos});
 		NextLeafXPosition += NodeSize.X + NodeGap.X;
 		return;
 	}
@@ -76,7 +76,7 @@ void UItemTreeWidget::DrawStream(bool bUpperStream, const ITreeNodeInterface* St
 	}
 
 	float StartingNodeXPos = NextNodeXPosSum / NextTreeNodeInterfaces.Num();
-	StartingNodeSlot->SetPosition(FVector2D{ StartingNodeXPos, StartingNodeYPos });
+	StartingNodeSlot->SetPosition(FVector2D{StartingNodeXPos, StartingNodeYPos});
 }
 
 void UItemTreeWidget::ClearTree()
@@ -112,12 +112,12 @@ void UItemTreeWidget::CreateConnection(const UUserWidget* From, UUserWidget* To)
 
 	if (ConnectionPanelSlot)
 	{
-		ConnectionPanelSlot->SetAnchors(FAnchors{ 0.f });
-		ConnectionPanelSlot->SetAlignment(FVector2D{ 0.f });
+		ConnectionPanelSlot->SetAnchors(FAnchors{0.f});
+		ConnectionPanelSlot->SetAlignment(FVector2D{0.f});
 		ConnectionPanelSlot->SetPosition(FVector2D::Zero());
 		ConnectionPanelSlot->SetZOrder(0);
 	}
-
+	
 	Connection->SetupSpline(From, To, SourePortLocalPos, DestinationPortLocalPos, SourcePortDirection, DestinationPortDirection);
 	Connection->SetSplineStyle(ConnectionColor, ConnectionThickness);
 }

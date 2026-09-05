@@ -20,14 +20,14 @@ public:
 	virtual FPrimaryAssetId GetPrimaryAssetId() const override;
 	static FPrimaryAssetType GetCharacterDefinationAssetType();
 
-	FString GetCharacterDisplayName() const { return CharacterName; }
+	FString GEtCharacterDisplayName() const { return CharacterName; }
 	UTexture2D* LoadIcon() const;
 	TSubclassOf<ACCharacter> LoadCharacterClass() const;
 	TSubclassOf<UAnimInstance> LoadDisplayAnimationBP() const;
 	class USkeletalMesh* LoadDisplayMesh() const;
 	const TMap<ECAbilityInputID, TSubclassOf<UGameplayAbility>>* GetAbilities() const;
 
-private:
+private:	
 	UPROPERTY(EditDefaultsOnly, Category = "Character")
 	FString CharacterName;
 

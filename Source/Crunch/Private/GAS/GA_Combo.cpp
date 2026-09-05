@@ -13,6 +13,7 @@ UGA_Combo::UGA_Combo()
 {
 	AbilityTags.AddTag(UCAbilitySystemStatics::GetBasicAttackAbilityTag());
 	BlockAbilitiesWithTag.AddTag(UCAbilitySystemStatics::GetBasicAttackAbilityTag());
+	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
 }
 
 void UGA_Combo::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
@@ -35,7 +36,7 @@ void UGA_Combo::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const F
 		UAbilityTask_WaitGameplayEvent* WaitComboChangeEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, GetComboChangedEventTag(), nullptr, false, false);
 		WaitComboChangeEventTask->EventReceived.AddDynamic(this, &UGA_Combo::ComboChangedEventReceived);
 		WaitComboChangeEventTask->ReadyForActivation();
-	}	
+	}
 
 	if (K2_HasAuthority())
 	{
@@ -44,6 +45,7 @@ void UGA_Combo::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const F
 		WaitTargetingEventTask->ReadyForActivation();
 	}
 
+	NextComboName = NAME_None;
 	SetupWaitComboInputPress();
 }
 
@@ -116,9 +118,10 @@ void UGA_Combo::ComboChangedEventReceived(FGameplayEventData Data)
 		NextComboName = NAME_None;
 		return;
 	}
-
+	
 	TArray<FName> TagNames;
 	UGameplayTagsManager::Get().SplitGameplayTagFName(EventTag, TagNames);
+
 	NextComboName = TagNames.Last();
 }
 

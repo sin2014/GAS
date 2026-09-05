@@ -5,5 +5,5 @@
 
 const FRealCurve* UPA_AbilitySystemGenerics::GetExperienceCurve() const
 {
-    return ExperienceCurveTable->FindCurve(ExperienceRowName, "");
+	return ExperienceCurveTable->FindCurve(ExperienceRowName, "");
 }

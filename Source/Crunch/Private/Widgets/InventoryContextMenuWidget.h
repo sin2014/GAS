@@ -20,9 +20,10 @@ public:
 	FOnButtonClickedEvent& GetUseButtonClickedEvent() const;
 
 private:
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(meta=(BindWidget))
 	UButton* UseButton;
 
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(meta=(BindWidget))
 	UButton* SellButton;
+
 };

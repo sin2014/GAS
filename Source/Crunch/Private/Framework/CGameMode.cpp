@@ -23,10 +23,9 @@ APlayerController* ACGameMode::SpawnPlayerController(ENetRole InRemoteRole, cons
 	if (NewPlayerTeamInterface)
 	{
 		NewPlayerTeamInterface->SetGenericTeamId(TeamId);
-	}	
+	}
 
 	NewPlayerController->StartSpot = FindNextStartSpotForTeam(TeamId);
-
 	return NewPlayerController;
 }
 
@@ -63,7 +62,7 @@ APawn* ACGameMode::SpawnDefaultPawnFor_Implementation(AController* NewPlayer, AA
 
 	StartSpot = FindNextStartSpotForTeam(TeamId);
 	NewPlayer->StartSpot = StartSpot;
-
+	
 	return Super::SpawnDefaultPawnFor_Implementation(NewPlayer, StartSpot);
 }
 
@@ -89,7 +88,7 @@ AActor* ACGameMode::FindNextStartSpotForTeam(const FGenericTeamId& TeamID) const
 	}
 
 	UWorld* World = GetWorld();
-
+	
 	for (TActorIterator<APlayerStart> It(World); It; ++It)
 	{
 		if (It->PlayerStartTag == *StartSpotTag)
@@ -126,4 +125,6 @@ void ACGameMode::MatchFinished(AActor* ViewTarget, int WiningTeam)
 			It->MatchFinished(ViewTarget, WiningTeam);
 		}
 	}
+
+	
 }

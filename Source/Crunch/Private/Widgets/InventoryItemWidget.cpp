@@ -35,7 +35,7 @@ void UInventoryItemWidget::UpdateInventoryItem(const UInventoryItem* Item)
 		EmptySlot();
 		return;
 	}
-
+	
 	SetIcon(Item->GetShopItem()->GetIcon());
 	UItemToolTip* ToolTip = SetToolTipWidget(InventoryItem->GetShopItem());
 	if (ToolTip)
@@ -70,7 +70,7 @@ void UInventoryItemWidget::UpdateInventoryItem(const UInventoryItem* Item)
 		ManaCostText->SetVisibility(AbilityCost == 0.f ? ESlateVisibility::Hidden : ESlateVisibility::Visible);
 		ManaCostText->SetText(FText::AsNumber(AbilityCost));
 
-		CooldownDurationText->SetVisibility(AbilityCooldownDuration == 0.f ? ESlateVisibility::Hidden : ESlateVisibility::Visible);
+		CooldownDurationText->SetVisibility(AbilityCooldownDuration == 0.f? ESlateVisibility::Hidden : ESlateVisibility::Visible);
 		CooldownDurationText->SetText(FText::AsNumber(AbilityCooldownDuration));
 		BindCanCastAbilityDelegate();
 	}
@@ -96,6 +96,7 @@ void UInventoryItemWidget::EmptySlot()
 	CooldownCountText->SetVisibility(ESlateVisibility::Hidden);
 	CooldownDurationText->SetVisibility(ESlateVisibility::Hidden);
 }
+
 
 void UInventoryItemWidget::UpdateStackCount()
 {

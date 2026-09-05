@@ -21,7 +21,7 @@ UCAbilitySystemComponent::UCAbilitySystemComponent()
 
 void UCAbilitySystemComponent::InitializeBaseAttributes()
 {
-	if (!AbilitySystemGenerics || !AbilitySystemGenerics->GetBaseStatDataTable() || !GetOwner())
+	if (!AbilitySystemGenerics || ! AbilitySystemGenerics->GetBaseStatDataTable() || !GetOwner())
 	{
 		return;
 	}
@@ -35,7 +35,7 @@ void UCAbilitySystemComponent::InitializeBaseAttributes()
 		if (BaseStats && BaseStats->Class == GetOwner()->GetClass())
 		{
 			break;
-		}	
+		}
 	}
 
 	if (BaseStats)
@@ -50,7 +50,7 @@ void UCAbilitySystemComponent::InitializeBaseAttributes()
 		SetNumericAttributeBase(UCHeroAttributeSet::GetStrengthGrowthRateAttribute(), BaseStats->StrengthGrowthRate);
 		SetNumericAttributeBase(UCHeroAttributeSet::GetIntelligenceAttribute(), BaseStats->Intelligence);
 		SetNumericAttributeBase(UCHeroAttributeSet::GetIntelligenceGrowthRateAttribute(), BaseStats->IntelligenceGrowthRate);
-	}	
+	}
 
 	const FRealCurve* ExperienceCurve = AbilitySystemGenerics->GetExperienceCurve();
 	if (ExperienceCurve)
@@ -94,12 +94,12 @@ void UCAbilitySystemComponent::GiveInitialAbilities()
 	if (!GetOwner() || !GetOwner()->HasAuthority())
 		return;
 
-	for (const TPair<ECAbilityInputID, TSubclassOf<UGameplayAbility>>& AbilityPair : Abilities)
+	for (const TPair<ECAbilityInputID,TSubclassOf<UGameplayAbility>>& AbilityPair : Abilities)
 	{
 		GiveAbility(FGameplayAbilitySpec(AbilityPair.Value, 0, (int32)AbilityPair.Key, nullptr));
 	}
 
-	for (const TPair<ECAbilityInputID, TSubclassOf<UGameplayAbility>>& AbilityPair : BasicAbilities)
+	for (const TPair<ECAbilityInputID,TSubclassOf<UGameplayAbility>>& AbilityPair : BasicAbilities)
 	{
 		GiveAbility(FGameplayAbilitySpec(AbilityPair.Value, 1, (int32)AbilityPair.Key, nullptr));
 	}
@@ -150,6 +150,7 @@ void UCAbilitySystemComponent::Server_UpgradeAbilityWithID_Implementation(ECAbil
 	Client_AbilitySpecLevelUpdated(AbilitySpec->Handle, AbilitySpec->Level);
 }
 
+
 bool UCAbilitySystemComponent::Server_UpgradeAbilityWithID_Validate(ECAbilityInputID InputID)
 {
 	return true;
@@ -167,11 +168,12 @@ void UCAbilitySystemComponent::Client_AbilitySpecLevelUpdated_Implementation(FGa
 
 void UCAbilitySystemComponent::AuthApplyGameplayEffect(TSubclassOf<UGameplayEffect> GameplayEffect, int Level)
 {
+
 	if (GetOwner() && GetOwner()->HasAuthority())
 	{
 		FGameplayEffectSpecHandle EffectSpecHandle = MakeOutgoingSpec(GameplayEffect, Level, MakeEffectContext());
 		ApplyGameplayEffectSpecToSelf(*EffectSpecHandle.Data.Get());
-	}	
+	}
 }
 
 void UCAbilitySystemComponent::HealthUpdated(const FOnAttributeChangeData& ChangeData)
@@ -186,7 +188,7 @@ void UCAbilitySystemComponent::HealthUpdated(const FOnAttributeChangeData& Chang
 		{
 			//This is done local only.
 			AddLooseGameplayTag(UCAbilitySystemStatics::GetHealthFullStatTag());
-		}	
+		}
 	}
 	else
 	{
@@ -199,7 +201,8 @@ void UCAbilitySystemComponent::HealthUpdated(const FOnAttributeChangeData& Chang
 		{
 			AddLooseGameplayTag(UCAbilitySystemStatics::GetHealthEmptyStatTag());
 
-			if (AbilitySystemGenerics && AbilitySystemGenerics->GetDeathEffect())
+			
+			if(AbilitySystemGenerics && AbilitySystemGenerics->GetDeathEffect())
 				AuthApplyGameplayEffect(AbilitySystemGenerics->GetDeathEffect());
 
 			FGameplayEventData DeadAbilityEventData;
@@ -207,7 +210,7 @@ void UCAbilitySystemComponent::HealthUpdated(const FOnAttributeChangeData& Chang
 				DeadAbilityEventData.ContextHandle = ChangeData.GEModData->EffectSpec.GetContext();
 
 			UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetOwner(), UCAbilitySystemStatics::GetDeadStatTag(), DeadAbilityEventData);
-		}	
+		}
 	}
 	else
 	{
@@ -279,7 +282,7 @@ void UCAbilitySystemComponent::ExperienceUpdated(const FOnAttributeChangeData& C
 			NextLevelExp = ExperienceToReachLevel;
 			break;
 		}
-
+				
 		PrevLevelExp = ExperienceToReachLevel;
 		NewLevel = Iter.GetIndex() + 1;
 	}
@@ -294,5 +297,4 @@ void UCAbilitySystemComponent::ExperienceUpdated(const FOnAttributeChangeData& C
 	SetNumericAttributeBase(UCHeroAttributeSet::GetPrevLevelExperienceAttribute(), PrevLevelExp);
 	SetNumericAttributeBase(UCHeroAttributeSet::GetNextLevelExperienceAttribute(), NextLevelExp);
 	SetNumericAttributeBase(UCHeroAttributeSet::GetUpgradePointAttribute(), NewUpgradePoint);
-
 }

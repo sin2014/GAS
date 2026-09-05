@@ -20,7 +20,9 @@ void UAN_SendTargetGroup::Notify(USkeletalMeshComponent* MeshComp, UAnimSequence
 		return;
 
 	if (!MeshComp->GetOwner() || !UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(MeshComp->GetOwner()))
+	{
 		return;
+	}
 
 	FGameplayEventData Data;
 	TSet<AActor*> HitActors;
@@ -44,10 +46,10 @@ void UAN_SendTargetGroup::Notify(USkeletalMeshComponent* MeshComp, UAnimSequence
 
 		EDrawDebugTrace::Type DrawDebugTrace = bDrawDebug ? EDrawDebugTrace::ForDuration : EDrawDebugTrace::None;
 
-		UKismetSystemLibrary::SphereTraceMultiForObjects(MeshComp, StartLoc, EndLoc, SphereSweepRadius,
+		UKismetSystemLibrary::SphereTraceMultiForObjects(MeshComp, StartLoc, EndLoc, SphereSweepRadius, 
 			ObjectTypes, false, ActorsToIgnore, DrawDebugTrace, HitResults, false);
 
-
+		
 		for (const FHitResult& HitResult : HitResults)
 		{
 			if (HitActors.Contains(HitResult.GetActor()))

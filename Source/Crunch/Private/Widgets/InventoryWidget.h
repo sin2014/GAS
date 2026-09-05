@@ -39,7 +39,8 @@ private:
 	void ClearContextMenu();
 	FInventoryItemHandle CurrentFocusedItemHandle;
 
-	UPROPERTY(meta = (BindWidget))
+
+	UPROPERTY(meta=(BindWidget))
 	class UWrapBox* ItemList;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Inventory")

@@ -23,9 +23,9 @@ void UInventoryWidget::NativeConstruct()
 			InventoryComponent->OnItemStackCountChanged.AddUObject(this, &UInventoryWidget::ItemStackCountChanged);
 			InventoryComponent->OnItemAbilityCommitted.AddUObject(this, &UInventoryWidget::ItemAbilityCommitted);
 			int Capacity = InventoryComponent->GetCapacity();
-
+			
 			ItemList->ClearChildren();
-
+				
 			for (int i = 0; i < Capacity; ++i)
 			{
 				UInventoryItemWidget* NewEmptyWidget = CreateWidget<UInventoryItemWidget>(GetOwningPlayer(), ItemWidgetClass);
@@ -97,6 +97,7 @@ void UInventoryWidget::ToggleContextMenu(const FInventoryItemHandle& ItemHandle)
 		ClearContextMenu();
 		return;
 	}
+
 	CurrentFocusedItemHandle = ItemHandle;
 	UInventoryItemWidget** ItemWidgetPtrPtr = PopulatedItemEntryWidgets.Find(ItemHandle);
 	if (!ItemWidgetPtrPtr)
@@ -107,7 +108,7 @@ void UInventoryWidget::ToggleContextMenu(const FInventoryItemHandle& ItemHandle)
 		return;
 
 	SetContextMenuVisible(true);
-	FVector2D ItemAbsPos = ItemWidget->GetCachedGeometry().GetAbsolutePositionAtCoordinates(FVector2D{ 1.f, 0.5f });
+	FVector2D ItemAbsPos = ItemWidget->GetCachedGeometry().GetAbsolutePositionAtCoordinates(FVector2D{1.f, 0.5f});
 
 	FVector2D ItemWidgetPixelPos, ItemWidgetViewportPos;
 	USlateBlueprintLibrary::AbsoluteToViewport(this, ItemAbsPos, ItemWidgetPixelPos, ItemWidgetViewportPos);
@@ -134,6 +135,7 @@ void UInventoryWidget::ClearContextMenu()
 	ContextMenuWidget->SetVisibility(ESlateVisibility::Hidden);
 	CurrentFocusedItemHandle = FInventoryItemHandle::InvalidHandle();
 }
+
 
 void UInventoryWidget::ItemAdded(const UInventoryItem* InventoryItem)
 {

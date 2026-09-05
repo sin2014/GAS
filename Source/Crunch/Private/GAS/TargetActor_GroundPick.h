@@ -32,7 +32,7 @@ private:
 	virtual void Tick(float DeltaTime) override;
 
 	FVector GetTargetPoint() const;
-
+	
 	UPROPERTY(EditDefaultsOnly, Category = "Targeting")
 	float TargetAreaRadius = 300.f;
 

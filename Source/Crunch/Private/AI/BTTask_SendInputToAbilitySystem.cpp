@@ -2,6 +2,7 @@
 
 
 #include "AI/BTTask_SendInputToAbilitySystem.h"
+
 #include "AbilitySystemComponent.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AIController.h"
@@ -17,7 +18,7 @@ EBTNodeResult::Type UBTTask_SendInputToAbilitySystem::ExecuteTask(UBehaviorTreeC
 		{
 			OwnerASC->PressInputID((int32)InputID);
 			return EBTNodeResult::Succeeded;
-		}	
+		}
 	}
 
 	return EBTNodeResult::Failed;

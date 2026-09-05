@@ -13,7 +13,7 @@ UCLASS()
 class UGA_Blackhole : public UCGameplayAbility
 {
 	GENERATED_BODY()
-public:
+public:	
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
 
@@ -79,7 +79,7 @@ private:
 
 	void AddAimEffect();
 	void RemoveAimEffect();
-	
+
 	void AddFocusEffect();
 	void RemoveFocusEffect();
 };

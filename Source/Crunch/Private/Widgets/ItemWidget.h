@@ -6,6 +6,7 @@
 #include "Blueprint/UserWidget.h"
 #include "ItemWidget.generated.h"
 
+
 class UItemToolTip;
 class UPA_ShopItem;
 /**
@@ -23,14 +24,14 @@ protected:
 	class UImage* GetItemIcon() const { return ItemIcon; }
 
 private:
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(meta=(BindWidget))
 	class UImage* ItemIcon;
 
 	UPROPERTY(EditDefaultsOnly, Category = "ToolTip")
 	TSubclassOf<UItemToolTip> ItemToolTipClass;
 
-	virtual FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
-	virtual FReply NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
+	virtual FReply NativeOnMouseButtonDown( const FGeometry& InGeometry, const FPointerEvent& InMouseEvent ) override;
+	virtual FReply NativeOnMouseButtonUp( const FGeometry& InGeometry, const FPointerEvent& InMouseEvent ) override;
 
 	virtual void RightButtonClicked();
 	virtual void LeftButtonClicked();

@@ -12,16 +12,17 @@ UCLASS()
 class ACharacterDisplay : public AActor
 {
 	GENERATED_BODY()
-
-public:
+	
+public:	
 	// Sets default values for this actor's properties
 	ACharacterDisplay();
 	void ConfigureWithCharacterDefination(const UPA_CharacterDefination* CharacterDefination);
 
-private:
+private:	
 	UPROPERTY(VisibleDefaultsOnly, Category = "Character Display")
 	class USkeletalMeshComponent* MeshComponent;
 
 	UPROPERTY(VisibleDefaultsOnly, Category = "Character Display")
 	class UCameraComponent* ViewCameraComponent;
+
 };

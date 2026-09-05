@@ -16,19 +16,20 @@ DECLARE_MULTICAST_DELEGATE_OneParam(FOnAbilityCanCastUpdatedDelegate, bool /*bCa
 USTRUCT()
 struct FInventoryItemHandle
 {
-
 	GENERATED_BODY()
 public:
 	FInventoryItemHandle();
 	static FInventoryItemHandle InvalidHandle();
 	static FInventoryItemHandle CreateHandle();
-	bool IsValid() const;
-	uint32 GetHandleId() const { return HandleId; }	
 
+	bool IsValid() const;
+	uint32 GetHandleId() const { return HandleId; }
 private:
 	explicit FInventoryItemHandle(uint32 Id);
+
 	UPROPERTY()
 	uint32 HandleId;
+
 	static uint32 GenerateNextId();
 	static uint32 GetInvalidId();
 };
@@ -45,7 +46,6 @@ class UInventoryItem : public UObject
 	GENERATED_BODY()
 public:
 	FOnAbilityCanCastUpdatedDelegate OnAbilityCanCastUpdated;
-
 	// return true is was able to add
 	bool AddStackCount();
 
@@ -56,6 +56,7 @@ public:
 	bool SetStackCount(int NewStackCount);
 
 	bool IsStackFull() const;
+
 	bool IsForItem(const UPA_ShopItem* Item) const;
 	bool IsGrantintAbility(TSubclassOf<class UGameplayAbility> AbilityClass) const;
 	bool IsGrantingAnyAbility() const;
@@ -69,7 +70,6 @@ public:
 	bool TryActivateGrantedAbility();
 	void ApplyConsumeEffect();
 	void RemoveGASModifications();
-
 	FORCEINLINE int GetStackCount() const { return StackCount; }
 	void SetSlot(int NewSlot);
 	int GetItemSlot() const { return Slot; }
@@ -80,7 +80,6 @@ public:
 	bool CanCastAbility() const;
 	FGameplayAbilitySpecHandle GetGrantedAbilitySpecHandle() const { return GrantedAbiltiySpecHandle; }
 	void SetGrantedAbilitySpecHandle(FGameplayAbilitySpecHandle SpecHandle) { GrantedAbiltiySpecHandle = SpecHandle; }
-
 private:
 	void ApplyGASModifications();
 	UAbilitySystemComponent* OwnerAbilitySystemComponent;

@@ -33,7 +33,6 @@ void ULobbyWidget::NativeConstruct()
 	}
 	StartHeroSelectionButton->SetIsEnabled(false);
 	StartHeroSelectionButton->OnClicked.AddDynamic(this, &ULobbyWidget::StartHeroSelectionButtonClicked);
-
 	StartMatchButton->SetIsEnabled(false);
 	StartMatchButton->OnClicked.AddDynamic(this, &ULobbyWidget::StartMatchButtonClicked);
 
@@ -95,7 +94,7 @@ void ULobbyWidget::ConfigureGameState()
 	{
 		CGameState->OnPlayerSelectionUpdated.AddUObject(this, &ULobbyWidget::UpdatePlayerSelectionDisplay);
 		UpdatePlayerSelectionDisplay(CGameState->GetPlayerSelection());
-	} 
+	}
 }
 
 void ULobbyWidget::UpdatePlayerSelectionDisplay(const TArray<FPlayerSelection>& PlayerSelections)
@@ -137,7 +136,7 @@ void ULobbyWidget::UpdatePlayerSelectionDisplay(const TArray<FPlayerSelection>& 
 		StartHeroSelectionButton->SetIsEnabled(CGameState->CanStartHeroSelection());
 		StartMatchButton->SetIsEnabled(CGameState->CanStartMatch());
 	}
-
+	
 	if (PlayerTeamLayoutWidget)
 	{
 		PlayerTeamLayoutWidget->UpdatePlayerSelection(PlayerSelections);

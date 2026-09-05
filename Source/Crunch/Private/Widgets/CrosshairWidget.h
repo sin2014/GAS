@@ -24,7 +24,7 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "View")
 	FLinearColor NoTargetColor = FLinearColor::White;
 
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(meta=(BindWidget))
 	class UImage* CrosshairImage;
 
 	void CrosshairTagUpdated(const FGameplayTag Tag, int32 NewCount);

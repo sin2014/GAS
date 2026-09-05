@@ -10,7 +10,7 @@
 #include "Inventory/PA_ShopItem.h"
 
 FInventoryItemHandle::FInventoryItemHandle()
-	: HandleId{ GetInvalidId() }
+	: HandleId{GetInvalidId()}
 {
 }
 
@@ -21,7 +21,7 @@ FInventoryItemHandle FInventoryItemHandle::InvalidHandle()
 }
 
 FInventoryItemHandle::FInventoryItemHandle(uint32 Id)
-	: HandleId{ Id }
+	: HandleId{Id}
 {
 }
 
@@ -120,7 +120,7 @@ bool UInventoryItem::IsGrantingAnyAbility() const
 }
 
 UInventoryItem::UInventoryItem()
-	:StackCount{ 1 }
+	:StackCount{1}
 {
 }
 
@@ -137,9 +137,9 @@ void UInventoryItem::InitItem(const FInventoryItemHandle& NewHandle, const UPA_S
 	OwnerAbilitySystemComponent = AbilitySystemComponent;
 	if (OwnerAbilitySystemComponent)
 		OwnerAbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(UCAttributeSet::GetManaAttribute()).AddUObject(this, &UInventoryItem::ManaUpdated);
-
 	ApplyGASModifications();
 }
+
 
 bool UInventoryItem::TryActivateGrantedAbility()
 {
@@ -191,7 +191,7 @@ void UInventoryItem::ApplyGASModifications()
 	TSubclassOf<UGameplayEffect> EquipEffect = GetShopItem()->GetEquippedEffect();
 	if (EquipEffect)
 	{
-		AppliedEquipedEffectHandle = OwnerAbilitySystemComponent->BP_ApplyGameplayEffectToSelf(EquipEffect, 1, OwnerAbilitySystemComponent->MakeEffectContext());
+		 AppliedEquipedEffectHandle = OwnerAbilitySystemComponent->BP_ApplyGameplayEffectToSelf(EquipEffect, 1, OwnerAbilitySystemComponent->MakeEffectContext());
 	}
 
 	TSubclassOf<UGameplayAbility> GrantedAbility = GetShopItem()->GetGrantedAbility();
@@ -204,6 +204,11 @@ void UInventoryItem::ApplyGASModifications()
 void UInventoryItem::ManaUpdated(const FOnAttributeChangeData& ChangeData)
 {
 	OnAbilityCanCastUpdated.Broadcast(CanCastAbility());
+}
+
+void UInventoryItem::SetSlot(int NewSlot)
+{
+	Slot = NewSlot;
 }
 
 float UInventoryItem::GetAbilityCooldownTimeRemaining() const
@@ -242,9 +247,4 @@ bool UInventoryItem::CanCastAbility() const
 	}
 
 	return UCAbilitySystemStatics::CheckAbilityCostStatic(GetShopItem()->GetGrantedAbilityCDO(), *OwnerAbilitySystemComponent);
-}
-
-void UInventoryItem::SetSlot(int NewSlot)
-{
-	Slot = NewSlot;
 }

@@ -22,13 +22,13 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Match Stat")
 	FName ProgressDynamicMaterialParamName = "Progress";
 
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(meta=(BindWidget))
 	class UImage* ProgressImage;
 
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(meta=(BindWidget))
 	class UTextBlock* TeamOneCountText;
 
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(meta=(BindWidget))
 	class UTextBlock* TeamTwoCountText;
 
 	UPROPERTY()

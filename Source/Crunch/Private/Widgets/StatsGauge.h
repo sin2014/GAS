@@ -15,16 +15,15 @@ UCLASS()
 class UStatsGauge : public UUserWidget
 {
 	GENERATED_BODY()
-
+	
 public:
 	virtual void NativePreConstruct() override;
 	virtual void NativeConstruct() override;
-	
 private:
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(meta=(BindWidget))
 	class UImage* Icon;
 
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(meta=(BindWidget))
 	class UTextBlock* AttributeText;
 
 	UPROPERTY(EditAnywhere, Category = "Attribute")
@@ -38,3 +37,4 @@ private:
 
 	void AttributeChanged(const FOnAttributeChangeData& Data);
 };
+

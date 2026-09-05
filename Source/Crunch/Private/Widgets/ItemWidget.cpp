@@ -62,7 +62,6 @@ FReply UItemWidget::NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPo
 		{
 			RightButtonClicked();
 			return FReply::Handled();
-
 		}
 		if (InMouseEvent.GetEffectingButton() == EKeys::LeftMouseButton)
 		{

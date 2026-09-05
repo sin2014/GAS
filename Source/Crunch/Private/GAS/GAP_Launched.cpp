@@ -22,7 +22,7 @@ void UGAP_Launched::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 		K2_EndAbility();
 		return;
 	}
-		
+
 	if (K2_HasAuthority())
 	{
 		PushSelf(TriggerEventData->TargetData.Get(0)->GetHitResult()->ImpactNormal);

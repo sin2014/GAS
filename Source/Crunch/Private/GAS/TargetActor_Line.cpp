@@ -141,7 +141,7 @@ void ATargetActor_Line::UpdateTargetTrace()
 			if (GetTeamAttitudeTowards(*HitResult.GetActor()) != ETeamAttitude::Friendly)
 			{
 				LineEndLocation = HitResult.ImpactPoint;
-				LineLength = FVector::Distance(GetActorLocation(), LineEndLocation);
+				LineLength = FVector::Distance(GetActorLocation() , LineEndLocation);
 				break;
 			}
 		}
@@ -150,7 +150,7 @@ void ATargetActor_Line::UpdateTargetTrace()
 	TargetEndDetectionSphere->SetWorldLocation(LineEndLocation);
 	if (LazerVFX)
 	{
-		LazerVFX->SetVariableFloat(LazerFXLengthParamName, LineLength / 100.f);
+		LazerVFX->SetVariableFloat(LazerFXLengthParamName, LineLength/100.f);
 	}
 }
 

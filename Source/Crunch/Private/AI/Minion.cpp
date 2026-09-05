@@ -38,7 +38,7 @@ void AMinion::PickSkinBasedOnTeamID()
 	if (Skin)
 	{
 		GetMesh()->SetSkeletalMesh(*Skin);
-	}	
+	}
 }
 
 void AMinion::OnRep_TeamID()

@@ -102,7 +102,7 @@ void ACPlayerController::SpawnGameplayWidget()
 
 void ACPlayerController::ToggleShop()
 {
-	if (GameplayWidget)
+	if(GameplayWidget)
 	{
 		GameplayWidget->ToggleShop();
 	}

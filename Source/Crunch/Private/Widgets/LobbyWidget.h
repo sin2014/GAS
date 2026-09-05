@@ -16,17 +16,17 @@ class ULobbyWidget : public UUserWidget
 	GENERATED_BODY()
 public:
 	virtual void NativeConstruct() override;
-private:
-	UPROPERTY(meta = (BindWidget))
+private:	
+	UPROPERTY(meta=(BindWidget))
 	class UWidgetSwitcher* MainSwitcher;
 
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(meta=(BindWidget))	
 	class UWidget* TeamSelectionRoot;
 
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(meta=(BindWidget))
 	class UButton* StartHeroSelectionButton;
 
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(meta=(BindWidget))
 	class UUniformGridPanel* TeamSelectionSlotGridPanel;
 
 	UPROPERTY(EditDefaultsOnly, Category = "TeamSelection")
@@ -38,19 +38,19 @@ private:
 	void ClearAndPopulateTeamSelectionSlots();
 	void SlotSelected(uint8 NewSlotID);
 
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(meta=(BindWidget))	
 	class UWidget* HeroSelectionRoot;
 
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(meta=(BindWidget))	
 	class UTileView* CharacterSelectionTileView;
 
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(meta=(BindWidget))	
 	class UAbilityListView* AbilityListView;
 
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(meta=(BindWidget))	
 	class UPlayerTeamLayoutWidget* PlayerTeamLayoutWidget;
 
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(meta=(BindWidget))	
 	class UButton* StartMatchButton;
 
 	UPROPERTY()

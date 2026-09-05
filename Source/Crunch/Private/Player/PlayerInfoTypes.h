@@ -5,9 +5,9 @@
 #include "CoreMinimal.h"
 #include "PlayerInfoTypes.generated.h"
 
+
 class APlayerState;
 class UPA_CharacterDefination;
-
 USTRUCT()
 struct FPlayerSelection
 {
@@ -34,7 +34,7 @@ private:
 	UPROPERTY()
 	FUniqueNetIdRepl PlayerUniqueId;
 
-	UPROPERTY()
+	UPROPERTY() 
 	FString PlayerNickName;
 
 	UPROPERTY()
